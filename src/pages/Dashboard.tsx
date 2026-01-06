@@ -209,9 +209,9 @@ export default function Dashboard() {
                             })}
                           </TableCell>
                           <TableCell>{formatCurrency(calc.annual_income)}</TableCell>
-                          <TableCell>{formatCurrency(calc.tax_result.totalTax)}</TableCell>
-                          <TableCell>{calc.tax_result.effectiveRate.toFixed(2)}%</TableCell>
-                          <TableCell>{formatCurrency(calc.tax_result.netIncome)}</TableCell>
+                          <TableCell>{formatCurrency(calc.tax_result?.totalTax ?? 0)}</TableCell>
+                          <TableCell>{(calc.tax_result?.effectiveRate ?? 0).toFixed(2)}%</TableCell>
+                          <TableCell>{formatCurrency(calc.tax_result?.netIncome ?? 0)}</TableCell>
                           <TableCell className="max-w-[200px] truncate">
                             {calc.notes || '-'}
                           </TableCell>
