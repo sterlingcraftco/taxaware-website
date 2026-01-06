@@ -476,25 +476,26 @@ export default function Dashboard() {
       {/* View Details Dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle className="flex items-center gap-2">
-                <Calculator className="w-5 h-5" />
-                Calculation Details
-              </DialogTitle>
-              {selectedCalculation && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDownloadPDF(selectedCalculation)}
-                  className="gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Download PDF
-                </Button>
-              )}
-            </div>
+          <DialogHeader className="pr-8">
+            <DialogTitle className="flex items-center gap-2">
+              <Calculator className="w-5 h-5" />
+              Calculation Details
+            </DialogTitle>
           </DialogHeader>
+          
+          {selectedCalculation && (
+            <div className="flex justify-end -mt-2 mb-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDownloadPDF(selectedCalculation)}
+                className="gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Download PDF
+              </Button>
+            </div>
+          )}
           
           {selectedCalculation && (
             <div className="space-y-6">
