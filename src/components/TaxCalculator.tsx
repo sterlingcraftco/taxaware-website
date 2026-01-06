@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { isAuthEnabled } from "@/lib/featureFlags";
 import jsPDF from "jspdf";
 
 export interface TaxBreakdown {
@@ -79,6 +80,7 @@ const TaxCalculator = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const authEnabled = isAuthEnabled();
 
   const handleCalculate = () => {
     setError("");
@@ -437,22 +439,24 @@ const TaxCalculator = () => {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 mt-8">
-                  <Button
-                    onClick={handleSaveCalculation}
-                    disabled={isSaving}
-                    className="flex-1 h-12"
-                    variant="outline"
-                  >
-                    {isSaving ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4 mr-2" />
-                    )}
-                    {user ? "Save to Dashboard" : "Sign in to Save"}
-                  </Button>
+                  {authEnabled && (
+                    <Button
+                      onClick={handleSaveCalculation}
+                      disabled={isSaving}
+                      className="flex-1 h-12"
+                      variant="outline"
+                    >
+                      {isSaving ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Save className="w-4 h-4 mr-2" />
+                      )}
+                      {user ? "Save to Dashboard" : "Sign in to Save"}
+                    </Button>
+                  )}
                   <Button
                     onClick={handleDownloadPDF}
-                    className="flex-1 h-12 gold-gradient text-accent-foreground hover:opacity-90"
+                    className={`${authEnabled ? 'flex-1' : 'w-full sm:w-auto'} h-12 gold-gradient text-accent-foreground hover:opacity-90`}
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download PDF
