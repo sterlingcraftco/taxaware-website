@@ -170,7 +170,7 @@ const TaxCalculator = () => {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
     doc.setFont("helvetica", "bold");
-    doc.text("Nigerian Tax Calculator", pageWidth / 2, 22, { align: "center" });
+    doc.text("TaxAware Nigeria", pageWidth / 2, 22, { align: "center" });
     
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
@@ -284,9 +284,9 @@ const TaxCalculator = () => {
     doc.setTextColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text("Nigerian Tax Calculator", pageWidth / 2, yPos, { align: "center" });
+    doc.text("TaxAware Nigeria", pageWidth / 2, yPos, { align: "center" });
 
-    doc.save(`nigerian-tax-calculation-${new Date().toISOString().split("T")[0]}.pdf`);
+    doc.save(`taxaware-nigeria-calculation-${new Date().toISOString().split("T")[0]}.pdf`);
     
     toast({
       title: "PDF Downloaded!",
