@@ -31,11 +31,11 @@ const CTASection = () => {
                 </a>
 
                 <a
-                  href="tel:+2349000000000"
+                  href="tel:+2342094602700"
                   className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/30 text-primary-foreground font-semibold text-lg transition-all hover:bg-primary-foreground/20"
                 >
                   <Phone className="w-5 h-5" />
-                  Call NRS Helpline
+                  Call Helpline: 0209 460 2700
                 </a>
               </div>
             </div>
