@@ -36,6 +36,14 @@ const formatCurrency = (amount: number): string => {
   }).format(amount);
 };
 
+// PDF-safe format (Helvetica doesn't support ₦ symbol)
+const formatCurrencyPDF = (amount: number): string => {
+  return "NGN " + new Intl.NumberFormat("en-NG", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
 export const calculateTax = (income: number): TaxResult => {
   let remainingIncome = income;
   let totalTax = 0;
@@ -187,10 +195,10 @@ const TaxCalculator = () => {
     doc.setTextColor(darkText.r, darkText.g, darkText.b);
     
     const summaryData = [
-      ["Annual Income:", formatCurrency(numericIncome)],
-      ["Total Tax:", formatCurrency(result.total)],
+      ["Annual Income:", formatCurrencyPDF(numericIncome)],
+      ["Total Tax:", formatCurrencyPDF(result.total)],
       ["Effective Rate:", `${effectiveRate.toFixed(1)}%`],
-      ["Take Home Pay:", formatCurrency(takeHome)],
+      ["Take Home Pay:", formatCurrencyPDF(takeHome)],
     ];
 
     summaryData.forEach(([label, value]) => {
@@ -232,10 +240,10 @@ const TaxCalculator = () => {
         doc.rect(20, yPos - 5, pageWidth - 40, 8, "F");
       }
       doc.setTextColor(darkText.r, darkText.g, darkText.b);
-      doc.text(row.band, 25, yPos);
+      doc.text(row.band.replace("₦", "NGN "), 25, yPos);
       doc.text(`${row.rate}%`, 85, yPos);
-      doc.text(formatCurrency(row.taxableInBand), 110, yPos);
-      doc.text(formatCurrency(row.taxInBand), 165, yPos);
+      doc.text(formatCurrencyPDF(row.taxableInBand), 110, yPos);
+      doc.text(formatCurrencyPDF(row.taxInBand), 165, yPos);
       yPos += 8;
     });
 
@@ -246,7 +254,7 @@ const TaxCalculator = () => {
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.text("Total Tax Liability", 25, yPos);
-    doc.text(formatCurrency(result.total), 165, yPos);
+    doc.text(formatCurrencyPDF(result.total), 165, yPos);
 
     // Footer branding
     yPos += 25;
