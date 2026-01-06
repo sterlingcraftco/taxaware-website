@@ -475,7 +475,7 @@ export default function Dashboard() {
 
       {/* View Details Dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader className="pr-8">
             <DialogTitle className="flex items-center gap-2">
               <Calculator className="w-5 h-5" />
