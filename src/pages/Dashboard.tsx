@@ -23,17 +23,29 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import DashboardCalculator from '@/components/DashboardCalculator';
+
+interface TaxBreakdown {
+  band: string;
+  rate: number;
+  taxableInBand: number;
+  taxInBand: number;
+}
 
 interface SavedCalculation {
   id: string;
   annual_income: number;
   tax_result: {
-    totalTax: number;
-    effectiveRate: number;
-    netIncome: number;
+    total: number;
+    breakdown: TaxBreakdown[];
   };
   notes: string | null;
   created_at: string;
@@ -46,6 +58,8 @@ export default function Dashboard() {
   const [loadingCalcs, setLoadingCalcs] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [calculationToDelete, setCalculationToDelete] = useState<string | null>(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [selectedCalculation, setSelectedCalculation] = useState<SavedCalculation | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -70,7 +84,7 @@ export default function Dashboard() {
       setCalculations((data || []).map(row => ({
         id: row.id,
         annual_income: row.annual_income,
-        tax_result: row.tax_result as SavedCalculation['tax_result'],
+        tax_result: row.tax_result as unknown as SavedCalculation['tax_result'],
         notes: row.notes,
         created_at: row.created_at,
       })));
@@ -119,6 +133,25 @@ export default function Dashboard() {
       currency: 'NGN',
       minimumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const getTotalTax = (calc: SavedCalculation) => {
+    return calc.tax_result?.total ?? 0;
+  };
+
+  const getEffectiveRate = (calc: SavedCalculation) => {
+    if (!calc.annual_income || calc.annual_income === 0) return 0;
+    const total = getTotalTax(calc);
+    return (total / calc.annual_income) * 100;
+  };
+
+  const getNetIncome = (calc: SavedCalculation) => {
+    return calc.annual_income - getTotalTax(calc);
+  };
+
+  const handleViewDetails = (calc: SavedCalculation) => {
+    setSelectedCalculation(calc);
+    setDetailsDialogOpen(true);
   };
 
   if (loading) {
@@ -244,7 +277,11 @@ export default function Dashboard() {
                     </TableHeader>
                     <TableBody>
                       {calculations.map((calc) => (
-                        <TableRow key={calc.id}>
+                        <TableRow 
+                          key={calc.id} 
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => handleViewDetails(calc)}
+                        >
                           <TableCell className="whitespace-nowrap">
                             {new Date(calc.created_at).toLocaleDateString('en-NG', {
                               day: 'numeric',
@@ -253,9 +290,9 @@ export default function Dashboard() {
                             })}
                           </TableCell>
                           <TableCell>{formatCurrency(calc.annual_income)}</TableCell>
-                          <TableCell>{formatCurrency(calc.tax_result?.totalTax ?? 0)}</TableCell>
-                          <TableCell>{(calc.tax_result?.effectiveRate ?? 0).toFixed(2)}%</TableCell>
-                          <TableCell>{formatCurrency(calc.tax_result?.netIncome ?? 0)}</TableCell>
+                          <TableCell>{formatCurrency(getTotalTax(calc))}</TableCell>
+                          <TableCell>{getEffectiveRate(calc).toFixed(2)}%</TableCell>
+                          <TableCell>{formatCurrency(getNetIncome(calc))}</TableCell>
                           <TableCell className="max-w-[200px] truncate">
                             {calc.notes || '-'}
                           </TableCell>
@@ -264,7 +301,10 @@ export default function Dashboard() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => handleDeleteClick(calc.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteClick(calc.id);
+                              }}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -320,6 +360,117 @@ export default function Dashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* View Details Dialog */}
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calculator className="w-5 h-5" />
+              Calculation Details
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedCalculation && (
+            <div className="space-y-6">
+              {/* Date */}
+              <p className="text-sm text-muted-foreground">
+                Saved on {new Date(selectedCalculation.created_at).toLocaleDateString('en-NG', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </p>
+
+              {/* Summary Cards */}
+              <div className="grid sm:grid-cols-3 gap-3">
+                <div className="bg-muted/50 rounded-xl p-4">
+                  <span className="text-xs font-medium text-muted-foreground">Annual Income</span>
+                  <p className="text-xl font-bold text-foreground">{formatCurrency(selectedCalculation.annual_income)}</p>
+                </div>
+
+                <div className="bg-primary/10 rounded-xl p-4">
+                  <span className="text-xs font-medium text-muted-foreground">Total Tax</span>
+                  <p className="text-xl font-bold text-foreground">{formatCurrency(getTotalTax(selectedCalculation))}</p>
+                </div>
+
+                <div className="bg-accent/10 rounded-xl p-4">
+                  <span className="text-xs font-medium text-muted-foreground">Take Home</span>
+                  <p className="text-xl font-bold text-foreground">{formatCurrency(getNetIncome(selectedCalculation))}</p>
+                </div>
+              </div>
+
+              {/* Visual Bar */}
+              <div>
+                <div className="flex justify-between text-xs font-medium mb-1">
+                  <span className="text-muted-foreground">Income Distribution</span>
+                  <span className="text-foreground">Effective Rate: {getEffectiveRate(selectedCalculation).toFixed(2)}%</span>
+                </div>
+                <div className="h-6 rounded-full overflow-hidden flex bg-muted">
+                  <div
+                    className="bg-primary transition-all duration-500"
+                    style={{ width: `${Math.min((getTotalTax(selectedCalculation) / selectedCalculation.annual_income) * 100, 100)}%` }}
+                  />
+                  <div
+                    className="bg-accent transition-all duration-500"
+                    style={{ width: `${Math.max(100 - (getTotalTax(selectedCalculation) / selectedCalculation.annual_income) * 100, 0)}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-xs mt-1">
+                  <span className="text-primary font-medium">Tax: {formatCurrency(getTotalTax(selectedCalculation))}</span>
+                  <span className="text-accent-foreground font-medium">Take Home: {formatCurrency(getNetIncome(selectedCalculation))}</span>
+                </div>
+              </div>
+
+              {/* Breakdown Table */}
+              {selectedCalculation.tax_result?.breakdown && selectedCalculation.tax_result.breakdown.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground mb-3">Tax Band Breakdown</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="text-left py-2 px-3 font-semibold text-muted-foreground">Band</th>
+                          <th className="text-right py-2 px-3 font-semibold text-muted-foreground">Rate</th>
+                          <th className="text-right py-2 px-3 font-semibold text-muted-foreground">Taxable</th>
+                          <th className="text-right py-2 px-3 font-semibold text-muted-foreground">Tax</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedCalculation.tax_result.breakdown.map((row, index) => (
+                          <tr key={index} className="border-b border-border/50 last:border-0">
+                            <td className="py-2 px-3 font-medium text-foreground">{row.band}</td>
+                            <td className="py-2 px-3 text-right text-muted-foreground">{row.rate}%</td>
+                            <td className="py-2 px-3 text-right text-foreground">{formatCurrency(row.taxableInBand)}</td>
+                            <td className="py-2 px-3 text-right font-semibold text-primary">{formatCurrency(row.taxInBand)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr className="bg-muted/50">
+                          <td colSpan={3} className="py-2 px-3 font-bold text-foreground">Total Tax Liability</td>
+                          <td className="py-2 px-3 text-right font-bold text-primary">{formatCurrency(getTotalTax(selectedCalculation))}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {selectedCalculation.notes && (
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground mb-2">Notes</h4>
+                  <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                    {selectedCalculation.notes}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
