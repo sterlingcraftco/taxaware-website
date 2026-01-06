@@ -2,20 +2,24 @@ import { XCircle, CheckCircle } from "lucide-react";
 
 const mythsFacts = [
   {
-    myth: "FIRS can automatically deduct taxes from my bank account",
-    fact: "No government agency can withdraw money from your account without due legal process. Tax payment is your responsibility.",
+    myth: "NRS (or FIRS) can automatically deduct taxes from my bank account",
+    fact: "No government agency can withdraw money from your account without due legal process. Tax payment is your responsibility to the NRS.",
   },
   {
     myth: "Every transfer I receive is taxable income",
     fact: "Only actual income is taxed. Gifts, loans, or money you're holding for others are not automatically considered income.",
   },
   {
-    myth: "If I don't file, FIRS won't know about my income",
-    fact: "Banks and employers report to tax authorities. Non-compliance can result in penalties and legal consequences.",
+    myth: "The new ₦800,000 threshold means everyone pays less tax",
+    fact: "Low earners (₦800k or less annually) now pay zero tax. Higher earners may pay similar or slightly more due to new progressive bands up to 25%.",
+  },
+  {
+    myth: "If I don't file, NRS won't know about my income",
+    fact: "Banks and employers report to tax authorities. Non-compliance can result in penalties and legal consequences under NTA 2025.",
   },
   {
     myth: "Tax is only for employed people with salaries",
-    fact: "Everyone earning above the threshold must pay tax—including business owners, freelancers, landlords, and investors.",
+    fact: "Everyone earning above the ₦800,000 threshold must pay tax—including business owners, freelancers, landlords, and investors.",
   },
 ];
 
@@ -28,10 +32,10 @@ const MythsFactsSection = () => {
             Stop The Misinformation
           </span>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Myths vs Facts
+            NTA 2025: Myths vs Facts
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Don't fall for false information circulating on social media. Here's the truth.
+            Don't fall for false information circulating on social media. Here's the truth about the new tax system.
           </p>
         </div>
 

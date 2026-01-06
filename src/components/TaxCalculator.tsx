@@ -11,12 +11,12 @@ interface TaxBreakdown {
 }
 
 const TAX_BANDS = [
-  { threshold: 300000, rate: 0.07, label: "First ₦300,000" },
-  { threshold: 300000, rate: 0.11, label: "Next ₦300,000" },
-  { threshold: 500000, rate: 0.15, label: "Next ₦500,000" },
-  { threshold: 500000, rate: 0.19, label: "Next ₦500,000" },
-  { threshold: 1600000, rate: 0.21, label: "Next ₦1,600,000" },
-  { threshold: Infinity, rate: 0.24, label: "Above ₦3,200,000" },
+  { threshold: 800000, rate: 0, label: "First ₦800,000" },
+  { threshold: 2200000, rate: 0.15, label: "Next ₦2,200,000" },
+  { threshold: 9000000, rate: 0.18, label: "Next ₦9,000,000" },
+  { threshold: 13000000, rate: 0.21, label: "Next ₦13,000,000" },
+  { threshold: 25000000, rate: 0.23, label: "Next ₦25,000,000" },
+  { threshold: Infinity, rate: 0.25, label: "Above ₦50,000,000" },
 ];
 
 const formatCurrency = (amount: number): string => {

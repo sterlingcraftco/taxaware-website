@@ -18,20 +18,20 @@ const HeroSection = () => {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 mb-8 animate-fade-in">
             <Shield className="w-4 h-4 text-accent" />
             <span className="text-sm font-medium text-primary-foreground">
-              Official Tax Education Initiative
+              Nigeria Tax Act 2025 • Official Education Initiative
             </span>
           </div>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-6 animate-fade-up text-balance">
-            Understanding Nigeria's
+            Understanding
             <span className="block mt-2">
-              <span className="text-accent">New Tax System</span>
+              <span className="text-accent">NTA 2025</span>
             </span>
           </h1>
 
           <p className="text-lg md:text-xl text-primary-foreground/85 mb-10 animate-fade-up leading-relaxed max-w-2xl mx-auto" style={{ animationDelay: "0.1s" }}>
-            Clear, simple information every Nigerian needs to know about the updated tax regulations. 
-            No jargon, no confusion—just the facts.
+            Clear, simple information every Nigerian needs to know about the new tax system. 
+            New tax bands, ₦800,000 tax-free threshold, and more—explained simply.
           </p>
 
           <button
@@ -39,7 +39,7 @@ const HeroSection = () => {
             className="group inline-flex items-center gap-2 px-8 py-4 rounded-full gold-gradient text-accent-foreground font-semibold text-lg transition-all hover:scale-105 hover:shadow-lg animate-fade-up"
             style={{ animationDelay: "0.2s" }}
           >
-            Learn What Matters
+            Learn What Changed
             <ArrowDown className="w-5 h-5 group-hover:translate-y-1 transition-transform" />
           </button>
         </div>
