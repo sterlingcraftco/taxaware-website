@@ -5,8 +5,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
+import DashboardCalculator from '@/components/DashboardCalculator';
 
 interface SavedCalculation {
   id: string;
@@ -123,10 +132,36 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <Button variant="outline" onClick={handleSignOut}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
-          </Button>
+          
+          {/* User Dropdown Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <User className="w-4 h-4" />
+                <span className="hidden sm:inline">Account</span>
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-background border border-border shadow-lg">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium">{user.user_metadata?.full_name || 'User'}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem disabled className="gap-2">
+                <Settings className="w-4 h-4" />
+                Profile Settings
+                <span className="ml-auto text-xs text-muted-foreground">Soon</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut} className="gap-2 text-destructive focus:text-destructive">
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
@@ -141,36 +176,23 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Quick Calculator Card */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/')}>
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Saved Calculations Card - Takes up 2 columns on large screens */}
+          <Card className="lg:col-span-2">
             <CardHeader>
-              <div className="p-3 rounded-lg bg-primary/10 w-fit mb-2">
-                <Calculator className="w-6 h-6 text-primary" />
-              </div>
-              <CardTitle>Tax Calculator</CardTitle>
-              <CardDescription>
-                Calculate your tax under the new NTA 2025 system
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full">Calculate Now</Button>
-            </CardContent>
-          </Card>
-
-          {/* Saved Calculations Card - Full Width */}
-          <Card className="md:col-span-2 lg:col-span-3">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-accent/10">
-                  <History className="w-6 h-6 text-accent" />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-lg bg-accent/10">
+                    <History className="w-6 h-6 text-accent" />
+                  </div>
+                  <div>
+                    <CardTitle>Saved Calculations</CardTitle>
+                    <CardDescription>
+                      View and manage your saved tax calculations
+                    </CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle>Saved Calculations</CardTitle>
-                  <CardDescription>
-                    View and manage your saved tax calculations
-                  </CardDescription>
-                </div>
+                <DashboardCalculator onCalculationSaved={fetchCalculations} />
               </div>
             </CardHeader>
             <CardContent>
@@ -179,10 +201,10 @@ export default function Dashboard() {
                   <div className="animate-pulse">Loading calculations...</div>
                 </div>
               ) : calculations.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-12 text-muted-foreground">
                   <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p className="text-sm">No saved calculations yet</p>
-                  <p className="text-xs mt-1">Your saved calculations will appear here</p>
+                  <p className="text-xs mt-1">Click "New Calculation" to get started</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -250,26 +272,6 @@ export default function Dashboard() {
                 <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p className="text-sm">Coming soon</p>
                 <p className="text-xs mt-1">Visualize your tax history</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Settings Card */}
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="p-3 rounded-lg bg-secondary/50 w-fit mb-2">
-                <Settings className="w-6 h-6 text-secondary-foreground" />
-              </div>
-              <CardTitle>Profile Settings</CardTitle>
-              <CardDescription>
-                Manage your account and preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Settings className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">Coming soon</p>
-                <p className="text-xs mt-1">Update your profile settings</p>
               </div>
             </CardContent>
           </Card>
