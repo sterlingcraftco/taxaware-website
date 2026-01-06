@@ -170,7 +170,7 @@ const TaxCalculator = () => {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
     doc.setFont("helvetica", "bold");
-    doc.text("TaxAware Nigeria", pageWidth / 2, 22, { align: "center" });
+    doc.text("Nigerian Tax Calculator", pageWidth / 2, 22, { align: "center" });
     
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
