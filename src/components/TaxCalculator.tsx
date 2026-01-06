@@ -1,13 +1,23 @@
 import { useState } from "react";
-import { Calculator, TrendingDown, Wallet, PiggyBank } from "lucide-react";
+import { Calculator, TrendingDown, Wallet, PiggyBank, Save, Download, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import jsPDF from "jspdf";
 
-interface TaxBreakdown {
+export interface TaxBreakdown {
   band: string;
   rate: number;
   taxableInBand: number;
   taxInBand: number;
+}
+
+export interface TaxResult {
+  total: number;
+  breakdown: TaxBreakdown[];
 }
 
 const TAX_BANDS = [
@@ -28,7 +38,7 @@ const formatCurrency = (amount: number): string => {
   }).format(amount);
 };
 
-const calculateTax = (income: number): { total: number; breakdown: TaxBreakdown[] } => {
+export const calculateTax = (income: number): TaxResult => {
   let remainingIncome = income;
   let totalTax = 0;
   const breakdown: TaxBreakdown[] = [];
@@ -53,10 +63,16 @@ const calculateTax = (income: number): { total: number; breakdown: TaxBreakdown[
   return { total: totalTax, breakdown };
 };
 
+export { formatCurrency };
+
 const TaxCalculator = () => {
   const [income, setIncome] = useState<string>("");
-  const [result, setResult] = useState<{ total: number; breakdown: TaxBreakdown[] } | null>(null);
+  const [result, setResult] = useState<TaxResult | null>(null);
   const [error, setError] = useState<string>("");
+  const [isSaving, setIsSaving] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleCalculate = () => {
     setError("");
@@ -90,6 +106,151 @@ const TaxCalculator = () => {
   const numericIncome = parseFloat(income.replace(/,/g, "")) || 0;
   const effectiveRate = result && numericIncome > 0 ? (result.total / numericIncome) * 100 : 0;
   const takeHome = numericIncome - (result?.total || 0);
+
+  const handleSaveCalculation = async () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+
+    if (!result) return;
+
+    setIsSaving(true);
+    try {
+      const taxResultJson = JSON.parse(JSON.stringify(result));
+      const { error } = await supabase.from("saved_calculations").insert([{
+        user_id: user.id,
+        annual_income: numericIncome,
+        tax_result: taxResultJson,
+      }]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Calculation saved!",
+        description: "Your tax calculation has been saved to your dashboard.",
+      });
+    } catch (err) {
+      toast({
+        title: "Error saving calculation",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDownloadPDF = () => {
+    if (!result) return;
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    
+    // Header
+    doc.setFillColor(22, 78, 99); // Primary color
+    doc.rect(0, 0, pageWidth, 40, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont("helvetica", "bold");
+    doc.text("Tax Calculation Report", pageWidth / 2, 25, { align: "center" });
+    
+    // Date
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth / 2, 35, { align: "center" });
+
+    // Reset text color
+    doc.setTextColor(0, 0, 0);
+
+    // Summary section
+    let yPos = 55;
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("Summary", 20, yPos);
+    
+    yPos += 15;
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    
+    const summaryData = [
+      ["Annual Income:", formatCurrency(numericIncome)],
+      ["Total Tax:", formatCurrency(result.total)],
+      ["Effective Rate:", `${effectiveRate.toFixed(1)}%`],
+      ["Take Home Pay:", formatCurrency(takeHome)],
+    ];
+
+    summaryData.forEach(([label, value]) => {
+      doc.setFont("helvetica", "bold");
+      doc.text(label, 20, yPos);
+      doc.setFont("helvetica", "normal");
+      doc.text(value, 80, yPos);
+      yPos += 10;
+    });
+
+    // Tax breakdown section
+    yPos += 10;
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("Tax Band Breakdown", 20, yPos);
+
+    yPos += 15;
+    doc.setFontSize(10);
+    
+    // Table header
+    doc.setFillColor(240, 240, 240);
+    doc.rect(20, yPos - 5, pageWidth - 40, 10, "F");
+    doc.setFont("helvetica", "bold");
+    doc.text("Band", 25, yPos);
+    doc.text("Rate", 85, yPos);
+    doc.text("Taxable Amount", 110, yPos);
+    doc.text("Tax", 165, yPos);
+
+    yPos += 10;
+    doc.setFont("helvetica", "normal");
+
+    result.breakdown.forEach((row) => {
+      doc.text(row.band, 25, yPos);
+      doc.text(`${row.rate}%`, 85, yPos);
+      doc.text(formatCurrency(row.taxableInBand), 110, yPos);
+      doc.text(formatCurrency(row.taxInBand), 165, yPos);
+      yPos += 8;
+    });
+
+    // Total row
+    yPos += 5;
+    doc.setFillColor(22, 78, 99);
+    doc.rect(20, yPos - 5, pageWidth - 40, 10, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.text("Total Tax Liability", 25, yPos);
+    doc.text(formatCurrency(result.total), 165, yPos);
+
+    // Disclaimer
+    yPos += 20;
+    doc.setTextColor(128, 128, 128);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      "This is an estimate only. Actual tax may vary based on reliefs, deductions, and allowances.",
+      pageWidth / 2,
+      yPos,
+      { align: "center" }
+    );
+    doc.text(
+      "Consult a tax professional for accurate calculations.",
+      pageWidth / 2,
+      yPos + 5,
+      { align: "center" }
+    );
+
+    doc.save(`tax-calculation-${new Date().toISOString().split("T")[0]}.pdf`);
+    
+    toast({
+      title: "PDF Downloaded!",
+      description: "Your tax calculation report has been downloaded.",
+    });
+  };
 
   return (
     <section className="py-20 md:py-28 bg-muted/50">
@@ -230,6 +391,30 @@ const TaxCalculator = () => {
                       </tfoot>
                     </table>
                   </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 mt-8">
+                  <Button
+                    onClick={handleSaveCalculation}
+                    disabled={isSaving}
+                    className="flex-1 h-12"
+                    variant="outline"
+                  >
+                    {isSaving ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4 mr-2" />
+                    )}
+                    {user ? "Save to Dashboard" : "Sign in to Save"}
+                  </Button>
+                  <Button
+                    onClick={handleDownloadPDF}
+                    className="flex-1 h-12 gold-gradient text-accent-foreground hover:opacity-90"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download PDF
+                  </Button>
                 </div>
 
                 {/* Disclaimer */}
