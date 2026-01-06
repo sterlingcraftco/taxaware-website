@@ -226,9 +226,9 @@ const TaxCalculator = () => {
     doc.setFont("helvetica", "bold");
     doc.setTextColor(darkText.r, darkText.g, darkText.b);
     doc.text("Band", 25, yPos);
-    doc.text("Rate", 85, yPos);
-    doc.text("Taxable Amount", 110, yPos);
-    doc.text("Tax", 165, yPos);
+    doc.text("Rate", 80, yPos);
+    doc.text("Taxable Amount", 105, yPos);
+    doc.text("Tax", pageWidth - 25, yPos, { align: "right" });
 
     yPos += 10;
     doc.setFont("helvetica", "normal");
@@ -241,9 +241,9 @@ const TaxCalculator = () => {
       }
       doc.setTextColor(darkText.r, darkText.g, darkText.b);
       doc.text(row.band.replace("₦", "NGN "), 25, yPos);
-      doc.text(`${row.rate}%`, 85, yPos);
-      doc.text(formatCurrencyPDF(row.taxableInBand), 110, yPos);
-      doc.text(formatCurrencyPDF(row.taxInBand), 165, yPos);
+      doc.text(`${row.rate}%`, 80, yPos);
+      doc.text(formatCurrencyPDF(row.taxableInBand), 105, yPos);
+      doc.text(formatCurrencyPDF(row.taxInBand), pageWidth - 25, yPos, { align: "right" });
       yPos += 8;
     });
 
@@ -254,7 +254,7 @@ const TaxCalculator = () => {
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.text("Total Tax Liability", 25, yPos);
-    doc.text(formatCurrencyPDF(result.total), 165, yPos);
+    doc.text(formatCurrencyPDF(result.total), pageWidth - 25, yPos, { align: "right" });
 
     // Footer branding
     yPos += 25;
