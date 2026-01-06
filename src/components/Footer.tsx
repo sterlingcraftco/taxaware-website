@@ -11,23 +11,23 @@ const Footer = () => {
               <span className="font-bold text-lg text-foreground">TaxAware Nigeria</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Educating Nigerians about tax compliance
+              Educating Nigerians about NTA 2025 tax compliance
             </p>
           </div>
 
           <div className="text-center md:text-right">
             <p className="text-sm text-muted-foreground mb-1">
-              This is an educational resource, not official FIRS communication.
+              This is an educational resource, not official NRS communication.
             </p>
             <p className="text-sm text-muted-foreground">
               For official information, visit{" "}
               <a
-                href="https://www.firs.gov.ng"
+                href="https://nrs.gov.ng"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline font-medium"
               >
-                firs.gov.ng
+                nrs.gov.ng
               </a>
             </p>
           </div>
