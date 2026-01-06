@@ -30,9 +30,7 @@ const TAX_BANDS = [
 ];
 
 const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
+  return "₦" + new Intl.NumberFormat("en-NG", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
@@ -147,31 +145,46 @@ const TaxCalculator = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     
-    // Header
-    doc.setFillColor(22, 78, 99); // Primary color
-    doc.rect(0, 0, pageWidth, 40, "F");
+    // Brand colors (matching site: primary green and gold accent)
+    const primaryGreen = { r: 34, g: 139, b: 84 }; // hsl(145 63% 32%)
+    const goldAccent = { r: 234, g: 179, b: 8 }; // hsl(43 96% 56%)
+    const darkText = { r: 27, g: 51, b: 38 }; // hsl(150 30% 12%)
+    
+    // Header with green gradient
+    doc.setFillColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
+    doc.rect(0, 0, pageWidth, 45, "F");
+    
+    // Gold accent line
+    doc.setFillColor(goldAccent.r, goldAccent.g, goldAccent.b);
+    doc.rect(0, 45, pageWidth, 4, "F");
+    
+    // Header text
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
     doc.setFont("helvetica", "bold");
-    doc.text("Tax Calculation Report", pageWidth / 2, 25, { align: "center" });
+    doc.text("Nigerian Tax Calculator", pageWidth / 2, 22, { align: "center" });
+    
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text("Personal Income Tax Estimate", pageWidth / 2, 32, { align: "center" });
     
     // Date
     doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth / 2, 35, { align: "center" });
+    doc.text(`Generated: ${new Date().toLocaleDateString("en-NG", { dateStyle: "long" })}`, pageWidth / 2, 40, { align: "center" });
 
     // Reset text color
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor(darkText.r, darkText.g, darkText.b);
 
     // Summary section
-    let yPos = 55;
+    let yPos = 65;
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
+    doc.setTextColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
     doc.text("Summary", 20, yPos);
     
     yPos += 15;
     doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
+    doc.setTextColor(darkText.r, darkText.g, darkText.b);
     
     const summaryData = [
       ["Annual Income:", formatCurrency(numericIncome)],
@@ -192,15 +205,18 @@ const TaxCalculator = () => {
     yPos += 10;
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
+    doc.setTextColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
     doc.text("Tax Band Breakdown", 20, yPos);
 
     yPos += 15;
     doc.setFontSize(10);
+    doc.setTextColor(darkText.r, darkText.g, darkText.b);
     
-    // Table header
-    doc.setFillColor(240, 240, 240);
+    // Table header with gold background
+    doc.setFillColor(goldAccent.r, goldAccent.g, goldAccent.b);
     doc.rect(20, yPos - 5, pageWidth - 40, 10, "F");
     doc.setFont("helvetica", "bold");
+    doc.setTextColor(darkText.r, darkText.g, darkText.b);
     doc.text("Band", 25, yPos);
     doc.text("Rate", 85, yPos);
     doc.text("Taxable Amount", 110, yPos);
@@ -209,7 +225,13 @@ const TaxCalculator = () => {
     yPos += 10;
     doc.setFont("helvetica", "normal");
 
-    result.breakdown.forEach((row) => {
+    result.breakdown.forEach((row, index) => {
+      // Alternate row backgrounds
+      if (index % 2 === 0) {
+        doc.setFillColor(245, 250, 247);
+        doc.rect(20, yPos - 5, pageWidth - 40, 8, "F");
+      }
+      doc.setTextColor(darkText.r, darkText.g, darkText.b);
       doc.text(row.band, 25, yPos);
       doc.text(`${row.rate}%`, 85, yPos);
       doc.text(formatCurrency(row.taxableInBand), 110, yPos);
@@ -217,17 +239,22 @@ const TaxCalculator = () => {
       yPos += 8;
     });
 
-    // Total row
+    // Total row with green background
     yPos += 5;
-    doc.setFillColor(22, 78, 99);
+    doc.setFillColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
     doc.rect(20, yPos - 5, pageWidth - 40, 10, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.text("Total Tax Liability", 25, yPos);
     doc.text(formatCurrency(result.total), 165, yPos);
 
+    // Footer branding
+    yPos += 25;
+    doc.setFillColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
+    doc.rect(0, yPos, pageWidth, 1, "F");
+    
     // Disclaimer
-    yPos += 20;
+    yPos += 15;
     doc.setTextColor(128, 128, 128);
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
@@ -243,8 +270,15 @@ const TaxCalculator = () => {
       yPos + 5,
       { align: "center" }
     );
+    
+    // Website branding
+    yPos += 15;
+    doc.setTextColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("Nigerian Tax Calculator", pageWidth / 2, yPos, { align: "center" });
 
-    doc.save(`tax-calculation-${new Date().toISOString().split("T")[0]}.pdf`);
+    doc.save(`nigerian-tax-calculation-${new Date().toISOString().split("T")[0]}.pdf`);
     
     toast({
       title: "PDF Downloaded!",
