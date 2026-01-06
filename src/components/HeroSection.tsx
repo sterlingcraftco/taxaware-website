@@ -18,7 +18,7 @@ const HeroSection = () => {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 mb-8 animate-fade-in">
             <Shield className="w-4 h-4 text-accent" />
             <span className="text-sm font-medium text-primary-foreground">
-              Nigeria Tax Act 2025 • Official Education Initiative
+              Nigeria Tax Act 2025 • Citizen Awareness Guide
             </span>
           </div>
 
