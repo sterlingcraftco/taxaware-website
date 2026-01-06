@@ -1,6 +1,11 @@
-import { Shield, ArrowDown } from "lucide-react";
+import { Shield, ArrowDown, User } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 const HeroSection = () => {
+  const { user } = useAuth();
+
   const scrollToContent = () => {
     document.getElementById("key-facts")?.scrollIntoView({ behavior: "smooth" });
   };
@@ -14,6 +19,25 @@ const HeroSection = () => {
       </div>
 
       <div className="container relative z-10 py-20 md:py-32">
+        {/* Sign in button */}
+        <div className="absolute top-4 right-4 md:top-8 md:right-8">
+          {user ? (
+            <Button asChild variant="outline" className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20">
+              <Link to="/dashboard">
+                <User className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild variant="outline" className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20">
+              <Link to="/auth">
+                <User className="w-4 h-4 mr-2" />
+                Sign In
+              </Link>
+            </Button>
+          )}
+        </div>
+
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 mb-8 animate-fade-in">
             <Shield className="w-4 h-4 text-accent" />
