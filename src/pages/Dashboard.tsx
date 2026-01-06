@@ -13,6 +13,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import DashboardCalculator from '@/components/DashboardCalculator';
@@ -34,6 +44,8 @@ export default function Dashboard() {
   const { user, loading, signOut } = useAuth();
   const [calculations, setCalculations] = useState<SavedCalculation[]>([]);
   const [loadingCalcs, setLoadingCalcs] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [calculationToDelete, setCalculationToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -70,19 +82,29 @@ export default function Dashboard() {
     }
   };
 
-  const deleteCalculation = async (id: string) => {
+  const handleDeleteClick = (id: string) => {
+    setCalculationToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!calculationToDelete) return;
+    
     try {
       const { error } = await supabase
         .from('saved_calculations')
         .delete()
-        .eq('id', id);
+        .eq('id', calculationToDelete);
 
       if (error) throw error;
-      setCalculations(prev => prev.filter(calc => calc.id !== id));
+      setCalculations(prev => prev.filter(calc => calc.id !== calculationToDelete));
       toast.success('Calculation deleted');
     } catch (error) {
       console.error('Error deleting calculation:', error);
       toast.error('Failed to delete calculation');
+    } finally {
+      setDeleteDialogOpen(false);
+      setCalculationToDelete(null);
     }
   };
 
@@ -242,7 +264,7 @@ export default function Dashboard() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => deleteCalculation(calc.id)}
+                              onClick={() => handleDeleteClick(calc.id)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -277,6 +299,27 @@ export default function Dashboard() {
           </Card>
         </div>
       </main>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Calculation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this calculation? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
