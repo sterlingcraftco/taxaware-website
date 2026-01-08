@@ -3,12 +3,14 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { isAuthEnabled } from "@/lib/featureFlags";
+import { analytics } from "@/lib/analytics";
 
 const HeroSection = () => {
   const { user } = useAuth();
   const authEnabled = isAuthEnabled();
 
   const scrollToContent = () => {
+    analytics.clickLearnMore();
     document.getElementById("key-facts")?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -25,14 +27,14 @@ const HeroSection = () => {
         {authEnabled && (
           <div className="absolute top-4 right-4 md:top-8 md:right-8">
             {user ? (
-              <Button asChild variant="outline" className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20">
+              <Button asChild variant="outline" className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => analytics.clickDashboard()}>
                 <Link to="/dashboard">
                   <User className="w-4 h-4 mr-2" />
                   Dashboard
                 </Link>
               </Button>
             ) : (
-              <Button asChild variant="outline" className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20">
+              <Button asChild variant="outline" className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => analytics.clickSignIn()}>
                 <Link to="/auth">
                   <User className="w-4 h-4 mr-2" />
                   Sign In

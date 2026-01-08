@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { isAuthEnabled } from "@/lib/featureFlags";
+import { analytics } from "@/lib/analytics";
 import jsPDF from "jspdf";
 
 export interface TaxBreakdown {
@@ -98,7 +99,9 @@ const TaxCalculator = () => {
       return;
     }
 
-    setResult(calculateTax(numericIncome));
+    const taxResult = calculateTax(numericIncome);
+    setResult(taxResult);
+    analytics.calculateTax(numericIncome, taxResult.total);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,6 +137,7 @@ const TaxCalculator = () => {
 
       if (error) throw error;
 
+      analytics.saveCalculation(numericIncome);
       toast({
         title: "Calculation saved!",
         description: "Your tax calculation has been saved to your dashboard.",
@@ -290,6 +294,7 @@ const TaxCalculator = () => {
 
     doc.save(`taxaware-nigeria-calculation-${new Date().toISOString().split("T")[0]}.pdf`);
     
+    analytics.downloadPDF(numericIncome, result.total);
     toast({
       title: "PDF Downloaded!",
       description: "Your tax calculation report has been downloaded.",

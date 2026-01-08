@@ -1,4 +1,5 @@
 import { ExternalLink, FileText, Phone } from "lucide-react";
+import { analytics } from "@/lib/analytics";
 
 const CTASection = () => {
   return (
@@ -23,6 +24,7 @@ const CTASection = () => {
                   href="https://nrs.gov.ng"
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => analytics.clickNRSPortal()}
                   className="inline-flex items-center gap-2 px-8 py-4 rounded-full gold-gradient text-accent-foreground font-semibold text-lg transition-all hover:scale-105 hover:shadow-lg"
                 >
                   <FileText className="w-5 h-5" />
@@ -32,6 +34,7 @@ const CTASection = () => {
 
                 <a
                   href="tel:+2342094602700"
+                  onClick={() => analytics.clickNRSHelpline()}
                   className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/30 text-primary-foreground font-semibold text-lg transition-all hover:bg-primary-foreground/20"
                 >
                   <Phone className="w-5 h-5" />
