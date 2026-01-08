@@ -53,7 +53,7 @@ const HeroSection = () => {
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-6 animate-fade-up text-balance">
             Understanding
             <span className="block mt-2">
-              <span className="text-accent">NTA 2025</span>
+              <span className="text-accent">Nigeria Tax Act 2025</span>
             </span>
           </h1>
 
