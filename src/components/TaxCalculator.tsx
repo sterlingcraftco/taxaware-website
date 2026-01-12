@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -116,22 +118,46 @@ export const calculateTax = (income: number): TaxResult => {
 
 export { formatCurrency };
 
+type InputPeriod = "monthly" | "annual";
+
 const TaxCalculator = () => {
+  // Input period (monthly or annual)
+  const [inputPeriod, setInputPeriod] = useState<InputPeriod>("annual");
+  
+  // Income
   const [income, setIncome] = useState<string>("");
+  
+  // Pension
+  const [hasPension, setHasPension] = useState(false);
   const [usePensionDefault, setUsePensionDefault] = useState(true);
   const [customPension, setCustomPension] = useState<string>("");
+  
+  // NHF
+  const [hasNhf, setHasNhf] = useState(false);
   const [useNhfDefault, setUseNhfDefault] = useState(true);
   const [customNhf, setCustomNhf] = useState<string>("");
-  const [annualRent, setAnnualRent] = useState<string>("");
+  
+  // Rent
+  const [paysRent, setPaysRent] = useState(false);
+  const [rent, setRent] = useState<string>("");
+  
+  // Results
   const [result, setResult] = useState<TaxResult | null>(null);
   const [error, setError] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
+  
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const authEnabled = isAuthEnabled();
 
+  // Convert input to annual value
+  const toAnnual = (value: number): number => {
+    return inputPeriod === "monthly" ? value * 12 : value;
+  };
+
   const numericIncome = parseFloat(income.replace(/,/g, "")) || 0;
+  const annualIncome = toAnnual(numericIncome);
 
   const handleCalculate = () => {
     setError("");
@@ -142,28 +168,44 @@ const TaxCalculator = () => {
       return;
     }
 
-    if (numericIncome > 100000000000) {
+    if (annualIncome > 100000000000) {
       setError("Please enter a realistic income amount");
       setResult(null);
       return;
     }
 
     // Calculate pension contribution
-    const pensionAmount = usePensionDefault
-      ? numericIncome * 0.08 // 8% of gross income
-      : parseFloat(customPension.replace(/,/g, "")) || 0;
+    let pensionAmount = 0;
+    if (hasPension) {
+      if (usePensionDefault) {
+        pensionAmount = annualIncome * 0.08; // 8% of gross income
+      } else {
+        const customPensionValue = parseFloat(customPension.replace(/,/g, "")) || 0;
+        pensionAmount = toAnnual(customPensionValue);
+      }
+    }
 
     // Calculate NHF contribution
-    const nhfAmount = useNhfDefault
-      ? numericIncome * 0.025 // 2.5% of basic salary (simplified as gross)
-      : parseFloat(customNhf.replace(/,/g, "")) || 0;
+    let nhfAmount = 0;
+    if (hasNhf) {
+      if (useNhfDefault) {
+        nhfAmount = annualIncome * 0.025; // 2.5% of basic salary
+      } else {
+        const customNhfValue = parseFloat(customNhf.replace(/,/g, "")) || 0;
+        nhfAmount = toAnnual(customNhfValue);
+      }
+    }
 
     // Annual rent
-    const rentAmount = parseFloat(annualRent.replace(/,/g, "")) || 0;
+    let annualRent = 0;
+    if (paysRent) {
+      const rentValue = parseFloat(rent.replace(/,/g, "")) || 0;
+      annualRent = toAnnual(rentValue);
+    }
 
-    const taxResult = calculateTaxWithDeductions(numericIncome, pensionAmount, nhfAmount, rentAmount);
+    const taxResult = calculateTaxWithDeductions(annualIncome, pensionAmount, nhfAmount, annualRent);
     setResult(taxResult);
-    analytics.calculateTax(numericIncome, taxResult.total);
+    analytics.calculateTax(annualIncome, taxResult.total);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
@@ -177,7 +219,7 @@ const TaxCalculator = () => {
   };
 
   const effectiveRate = result && result.grossIncome > 0 ? (result.total / result.grossIncome) * 100 : 0;
-  const takeHome = numericIncome - (result?.total || 0) - (result?.deductions.pension || 0) - (result?.deductions.nhf || 0);
+  const takeHome = annualIncome - (result?.total || 0) - (result?.deductions.pension || 0) - (result?.deductions.nhf || 0);
 
   const handleSaveCalculation = async () => {
     if (!user) {
@@ -192,13 +234,13 @@ const TaxCalculator = () => {
       const taxResultJson = JSON.parse(JSON.stringify(result));
       const { error } = await supabase.from("saved_calculations").insert([{
         user_id: user.id,
-        annual_income: numericIncome,
+        annual_income: annualIncome,
         tax_result: taxResultJson,
       }]);
 
       if (error) throw error;
 
-      analytics.saveCalculation(numericIncome);
+      analytics.saveCalculation(annualIncome);
       toast({
         title: "Calculation saved!",
         description: "Your tax calculation has been saved to your dashboard.",
@@ -375,12 +417,14 @@ const TaxCalculator = () => {
 
     doc.save(`taxaware-nigeria-calculation-${new Date().toISOString().split("T")[0]}.pdf`);
     
-    analytics.downloadPDF(numericIncome, result.total);
+    analytics.downloadPDF(annualIncome, result.total);
     toast({
       title: "PDF Downloaded!",
       description: "Your tax calculation report has been downloaded.",
     });
   };
+
+  const periodLabel = inputPeriod === "monthly" ? "Monthly" : "Annual";
 
   return (
     <section id="calculator" className="py-20 md:py-28 bg-muted/50">
@@ -394,7 +438,7 @@ const TaxCalculator = () => {
             Estimate Your Tax Liability
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Enter your income and deductions to see a breakdown of your tax based on Nigeria's 2026 progressive tax bands.
+            Answer a few questions to see your tax breakdown based on Nigeria's 2026 progressive tax bands.
           </p>
         </div>
 
@@ -402,10 +446,24 @@ const TaxCalculator = () => {
           <div className="bg-card rounded-2xl card-shadow border border-border overflow-hidden">
             {/* Input Section */}
             <div className="p-8 md:p-10 border-b border-border">
+              {/* Period Toggle */}
+              <div className="flex items-center justify-between mb-6 pb-6 border-b border-border">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">Input Values As</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Choose how you want to enter your amounts</p>
+                </div>
+                <Tabs value={inputPeriod} onValueChange={(v) => setInputPeriod(v as InputPeriod)}>
+                  <TabsList className="grid w-[200px] grid-cols-2">
+                    <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                    <TabsTrigger value="annual">Annual</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
               {/* Gross Income */}
-              <div className="mb-6">
+              <div className="mb-8">
                 <label className="block text-sm font-medium text-foreground mb-3">
-                  Annual Gross Income (₦)
+                  {periodLabel} Gross Income (₦)
                 </label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
@@ -415,147 +473,199 @@ const TaxCalculator = () => {
                     type="text"
                     value={income}
                     onChange={(e) => handleInputChange(e, setIncome)}
-                    placeholder="e.g. 5,000,000"
+                    placeholder={inputPeriod === "monthly" ? "e.g. 500,000" : "e.g. 6,000,000"}
                     className="pl-10 h-14 text-lg font-medium"
                     maxLength={20}
                   />
                 </div>
+                {inputPeriod === "monthly" && numericIncome > 0 && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Annual equivalent: {formatCurrency(annualIncome)}
+                  </p>
+                )}
               </div>
 
-              {/* Deductions Section */}
-              <div className="bg-muted/50 rounded-xl p-6 mb-6">
-                <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                  Statutory Deductions
+              {/* Deductions Questions */}
+              <div className="space-y-6">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  Deductions & Reliefs
                   <Tooltip>
                     <TooltipTrigger>
                       <HelpCircle className="w-4 h-4 text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
-                      <p>These are mandatory deductions that reduce your taxable income before tax is calculated.</p>
+                      <p>These reduce your taxable income before tax is calculated.</p>
                     </TooltipContent>
                   </Tooltip>
                 </h3>
 
-                <div className="grid sm:grid-cols-2 gap-6">
-                  {/* Pension Contribution */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium flex items-center gap-2">
-                        Pension (RSA)
+                {/* Pension Question */}
+                <div className="bg-muted/50 rounded-xl p-5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="has-pension" className="text-sm font-medium cursor-pointer">
+                          Do you contribute to a pension scheme (RSA)?
+                        </Label>
                         <Tooltip>
                           <TooltipTrigger>
                             <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />
                           </TooltipTrigger>
                           <TooltipContent className="max-w-xs">
-                            <p>Employee contribution to approved pension scheme. Standard rate is 8% of qualifying emoluments.</p>
+                            <p>Employee contribution to an approved Retirement Savings Account. Standard rate is 8% of qualifying emoluments.</p>
                           </TooltipContent>
                         </Tooltip>
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="pension-default"
-                          checked={usePensionDefault}
-                          onCheckedChange={(checked) => setUsePensionDefault(checked as boolean)}
-                        />
-                        <Label htmlFor="pension-default" className="text-xs text-muted-foreground cursor-pointer">
-                          Use 8%
-                        </Label>
                       </div>
                     </div>
-                    {usePensionDefault ? (
-                      <div className="h-10 px-4 rounded-md border border-input bg-muted/50 flex items-center text-muted-foreground">
-                        {numericIncome > 0 ? formatCurrency(numericIncome * 0.08) : "₦0"}
-                      </div>
-                    ) : (
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₦</span>
-                        <Input
-                          type="text"
-                          value={customPension}
-                          onChange={(e) => handleInputChange(e, setCustomPension)}
-                          placeholder="Enter amount"
-                          className="pl-8 h-10"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* NHF Contribution */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium flex items-center gap-2">
-                        NHF
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
-                            <p>National Housing Fund contribution. Standard rate is 2.5% of basic salary.</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="nhf-default"
-                          checked={useNhfDefault}
-                          onCheckedChange={(checked) => setUseNhfDefault(checked as boolean)}
-                        />
-                        <Label htmlFor="nhf-default" className="text-xs text-muted-foreground cursor-pointer">
-                          Use 2.5%
-                        </Label>
-                      </div>
-                    </div>
-                    {useNhfDefault ? (
-                      <div className="h-10 px-4 rounded-md border border-input bg-muted/50 flex items-center text-muted-foreground">
-                        {numericIncome > 0 ? formatCurrency(numericIncome * 0.025) : "₦0"}
-                      </div>
-                    ) : (
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₦</span>
-                        <Input
-                          type="text"
-                          value={customNhf}
-                          onChange={(e) => handleInputChange(e, setCustomNhf)}
-                          placeholder="Enter amount"
-                          className="pl-8 h-10"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Rent Relief */}
-              <div className="bg-muted/50 rounded-xl p-6 mb-6">
-                <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                  Rent Relief
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <HelpCircle className="w-4 h-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      <p>You can claim 20% of your annual rent as relief, up to a maximum of ₦500,000. Keep proof of payment (tenancy agreement, receipts).</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </h3>
-
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Annual Rent Paid (₦)</Label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">₦</span>
-                    <Input
-                      type="text"
-                      value={annualRent}
-                      onChange={(e) => handleInputChange(e, setAnnualRent)}
-                      placeholder="e.g. 1,200,000"
-                      className="pl-10 h-12"
+                    <Switch
+                      id="has-pension"
+                      checked={hasPension}
+                      onCheckedChange={setHasPension}
                     />
                   </div>
-                  {annualRent && (
-                    <p className="text-xs text-muted-foreground">
-                      Rent relief: {formatCurrency(Math.min((parseFloat(annualRent.replace(/,/g, "")) || 0) * 0.2, 500000))} 
-                      <span className="text-primary"> (20% of rent, max ₦500,000)</span>
-                    </p>
+
+                  {hasPension && (
+                    <div className="mt-4 pt-4 border-t border-border/50 animate-fade-up">
+                      <div className="flex items-center justify-between mb-3">
+                        <Label className="text-sm text-muted-foreground">{periodLabel} Contribution</Label>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="pension-default"
+                            checked={usePensionDefault}
+                            onCheckedChange={(checked) => setUsePensionDefault(checked as boolean)}
+                          />
+                          <Label htmlFor="pension-default" className="text-xs text-muted-foreground cursor-pointer">
+                            Use standard 8%
+                          </Label>
+                        </div>
+                      </div>
+                      {usePensionDefault ? (
+                        <div className="h-10 px-4 rounded-md border border-input bg-muted/50 flex items-center text-muted-foreground">
+                          {numericIncome > 0 ? formatCurrency(numericIncome * 0.08) : "₦0"} 
+                          <span className="text-xs ml-2">({inputPeriod})</span>
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₦</span>
+                          <Input
+                            type="text"
+                            value={customPension}
+                            onChange={(e) => handleInputChange(e, setCustomPension)}
+                            placeholder="Enter amount"
+                            className="pl-8 h-10"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* NHF Question */}
+                <div className="bg-muted/50 rounded-xl p-5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="has-nhf" className="text-sm font-medium cursor-pointer">
+                          Do you pay National Housing Fund (NHF)?
+                        </Label>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>Mandatory for employees earning above minimum wage. Standard rate is 2.5% of basic salary.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </div>
+                    <Switch
+                      id="has-nhf"
+                      checked={hasNhf}
+                      onCheckedChange={setHasNhf}
+                    />
+                  </div>
+
+                  {hasNhf && (
+                    <div className="mt-4 pt-4 border-t border-border/50 animate-fade-up">
+                      <div className="flex items-center justify-between mb-3">
+                        <Label className="text-sm text-muted-foreground">{periodLabel} Contribution</Label>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="nhf-default"
+                            checked={useNhfDefault}
+                            onCheckedChange={(checked) => setUseNhfDefault(checked as boolean)}
+                          />
+                          <Label htmlFor="nhf-default" className="text-xs text-muted-foreground cursor-pointer">
+                            Use standard 2.5%
+                          </Label>
+                        </div>
+                      </div>
+                      {useNhfDefault ? (
+                        <div className="h-10 px-4 rounded-md border border-input bg-muted/50 flex items-center text-muted-foreground">
+                          {numericIncome > 0 ? formatCurrency(numericIncome * 0.025) : "₦0"}
+                          <span className="text-xs ml-2">({inputPeriod})</span>
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₦</span>
+                          <Input
+                            type="text"
+                            value={customNhf}
+                            onChange={(e) => handleInputChange(e, setCustomNhf)}
+                            placeholder="Enter amount"
+                            className="pl-8 h-10"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Rent Question */}
+                <div className="bg-muted/50 rounded-xl p-5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="pays-rent" className="text-sm font-medium cursor-pointer">
+                          Do you pay rent for your accommodation?
+                        </Label>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>You can claim 20% of your rent as relief, up to ₦500,000 annually. Keep proof of payment.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </div>
+                    <Switch
+                      id="pays-rent"
+                      checked={paysRent}
+                      onCheckedChange={setPaysRent}
+                    />
+                  </div>
+
+                  {paysRent && (
+                    <div className="mt-4 pt-4 border-t border-border/50 animate-fade-up">
+                      <Label className="text-sm text-muted-foreground mb-3 block">{periodLabel} Rent Paid (₦)</Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₦</span>
+                        <Input
+                          type="text"
+                          value={rent}
+                          onChange={(e) => handleInputChange(e, setRent)}
+                          placeholder={inputPeriod === "monthly" ? "e.g. 100,000" : "e.g. 1,200,000"}
+                          className="pl-8 h-10"
+                        />
+                      </div>
+                      {rent && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Rent relief: {formatCurrency(Math.min(toAnnual(parseFloat(rent.replace(/,/g, "")) || 0) * 0.2, 500000))} 
+                          <span className="text-primary"> (20% of annual rent, max ₦500,000)</span>
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -563,7 +673,7 @@ const TaxCalculator = () => {
               {/* Calculate Button */}
               <Button
                 onClick={handleCalculate}
-                className="w-full h-14 text-lg font-semibold gold-gradient text-accent-foreground hover:opacity-90 transition-opacity"
+                className="w-full h-14 text-lg font-semibold gold-gradient text-accent-foreground hover:opacity-90 transition-opacity mt-8"
               >
                 <Calculator className="w-5 h-5 mr-2" />
                 Calculate My Tax
@@ -577,31 +687,33 @@ const TaxCalculator = () => {
             {result && (
               <div className="p-8 md:p-10 animate-fade-up">
                 {/* Deductions Summary */}
-                <div className="bg-muted/30 rounded-xl p-5 mb-6">
-                  <h4 className="text-sm font-semibold text-foreground mb-3">Deductions Applied</h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Pension</p>
-                      <p className="font-medium text-foreground">{formatCurrency(result.deductions.pension)}</p>
+                {result.deductions.totalDeductions > 0 && (
+                  <div className="bg-muted/30 rounded-xl p-5 mb-6">
+                    <h4 className="text-sm font-semibold text-foreground mb-3">Deductions Applied (Annual)</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Pension</p>
+                        <p className="font-medium text-foreground">{formatCurrency(result.deductions.pension)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">NHF</p>
+                        <p className="font-medium text-foreground">{formatCurrency(result.deductions.nhf)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Rent Relief</p>
+                        <p className="font-medium text-foreground">{formatCurrency(result.deductions.rentRelief)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Total Deductions</p>
+                        <p className="font-semibold text-primary">{formatCurrency(result.deductions.totalDeductions)}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-muted-foreground">NHF</p>
-                      <p className="font-medium text-foreground">{formatCurrency(result.deductions.nhf)}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Rent Relief</p>
-                      <p className="font-medium text-foreground">{formatCurrency(result.deductions.rentRelief)}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Total Deductions</p>
-                      <p className="font-semibold text-primary">{formatCurrency(result.deductions.totalDeductions)}</p>
+                    <div className="mt-4 pt-4 border-t border-border flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Chargeable Income</span>
+                      <span className="text-lg font-bold text-foreground">{formatCurrency(result.chargeableIncome)}</span>
                     </div>
                   </div>
-                  <div className="mt-4 pt-4 border-t border-border flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Chargeable Income</span>
-                    <span className="text-lg font-bold text-foreground">{formatCurrency(result.chargeableIncome)}</span>
-                  </div>
-                </div>
+                )}
 
                 {/* Summary Cards */}
                 <div className="grid sm:grid-cols-3 gap-4 mb-8">
@@ -610,9 +722,12 @@ const TaxCalculator = () => {
                       <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
                         <TrendingDown className="w-5 h-5 text-primary" />
                       </div>
-                      <span className="text-sm font-medium text-muted-foreground">Total Tax</span>
+                      <span className="text-sm font-medium text-muted-foreground">Annual Tax</span>
                     </div>
                     <p className="text-2xl font-bold text-foreground">{formatCurrency(result.total)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatCurrency(result.total / 12)}/month
+                    </p>
                   </div>
 
                   <div className="bg-accent/10 rounded-xl p-5">
@@ -623,6 +738,9 @@ const TaxCalculator = () => {
                       <span className="text-sm font-medium text-muted-foreground">Effective Rate</span>
                     </div>
                     <p className="text-2xl font-bold text-foreground">{effectiveRate.toFixed(1)}%</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      On gross income
+                    </p>
                   </div>
 
                   <div className="bg-secondary rounded-xl p-5">
@@ -633,21 +751,26 @@ const TaxCalculator = () => {
                       <span className="text-sm font-medium text-muted-foreground">Net Take Home</span>
                     </div>
                     <p className="text-2xl font-bold text-foreground">{formatCurrency(takeHome)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatCurrency(takeHome / 12)}/month
+                    </p>
                   </div>
                 </div>
 
                 {/* Visual Bar */}
                 <div className="mb-8">
                   <div className="flex justify-between text-sm font-medium mb-2">
-                    <span className="text-muted-foreground">Income Distribution</span>
+                    <span className="text-muted-foreground">Income Distribution (Annual)</span>
                     <span className="text-foreground">{formatCurrency(result.grossIncome)}</span>
                   </div>
                   <div className="h-8 rounded-full overflow-hidden flex bg-muted">
-                    <div
-                      className="bg-muted-foreground/30 transition-all duration-500"
-                      style={{ width: `${(result.deductions.totalDeductions / result.grossIncome) * 100}%` }}
-                      title="Deductions"
-                    />
+                    {result.deductions.totalDeductions > 0 && (
+                      <div
+                        className="bg-muted-foreground/30 transition-all duration-500"
+                        style={{ width: `${(result.deductions.totalDeductions / result.grossIncome) * 100}%` }}
+                        title="Deductions"
+                      />
+                    )}
                     <div
                       className="hero-gradient transition-all duration-500"
                       style={{ width: `${(result.total / result.grossIncome) * 100}%` }}
@@ -659,8 +782,10 @@ const TaxCalculator = () => {
                       title="Take Home"
                     />
                   </div>
-                  <div className="flex justify-between text-xs mt-2">
-                    <span className="text-muted-foreground font-medium">Deductions: {formatCurrency(result.deductions.totalDeductions)}</span>
+                  <div className="flex justify-between text-xs mt-2 flex-wrap gap-2">
+                    {result.deductions.totalDeductions > 0 && (
+                      <span className="text-muted-foreground font-medium">Deductions: {formatCurrency(result.deductions.totalDeductions)}</span>
+                    )}
                     <span className="text-primary font-medium">Tax: {formatCurrency(result.total)}</span>
                     <span className="text-accent-foreground font-medium">Take Home: {formatCurrency(takeHome)}</span>
                   </div>
