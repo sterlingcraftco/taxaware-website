@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calculator, TrendingDown, Wallet, PiggyBank, Save, Download, Loader2, HelpCircle } from "lucide-react";
+import { Calculator, TrendingDown, Wallet, PiggyBank, Save, Download, Loader2, HelpCircle, Landmark } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -716,7 +716,7 @@ const TaxCalculator = () => {
                 )}
 
                 {/* Summary Cards */}
-                <div className="grid sm:grid-cols-3 gap-4 mb-8">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                   <div className="bg-primary/10 rounded-xl p-5">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
@@ -753,6 +753,30 @@ const TaxCalculator = () => {
                     <p className="text-2xl font-bold text-foreground">{formatCurrency(takeHome)}</p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {formatCurrency(takeHome / 12)}/month
+                    </p>
+                  </div>
+
+                  {/* Recommended Monthly Savings */}
+                  <div className="bg-primary/5 rounded-xl p-5 border-2 border-dashed border-primary/30">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                        <Landmark className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm font-medium text-muted-foreground">Save Monthly</span>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>Recommended amount to set aside each month for your annual tax payment. Includes a 10% buffer for adjustments.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </div>
+                    <p className="text-2xl font-bold text-primary">{formatCurrency(Math.ceil((result.total * 1.1) / 12))}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Includes 10% buffer
                     </p>
                   </div>
                 </div>
