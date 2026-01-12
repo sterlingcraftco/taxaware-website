@@ -2,6 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HelpCircle, Shield, Building, Home } from "lucide-react";
 import { DeductionsFormData, InputPeriod } from "./types";
 import { formatCurrency } from "@/lib/taxCalculations";
@@ -31,8 +32,9 @@ export function AdditionalReliefsStep({
   const toAnnual = (value: number) => inputPeriod === "monthly" ? value * 12 : value;
   const getNumericValue = (value: string) => parseFloat(value.replace(/,/g, "")) || 0;
 
+  // Calculate rent with its own period setting
   const rentValue = getNumericValue(deductions.rent);
-  const annualRent = toAnnual(rentValue);
+  const annualRent = deductions.rentPeriod === "monthly" ? rentValue * 12 : rentValue;
   const rentRelief = Math.min(annualRent * 0.2, 500000);
 
   return (
@@ -143,7 +145,7 @@ export function AdditionalReliefsStep({
           )}
         </div>
 
-        {/* Rent */}
+        {/* Rent with separate period toggle */}
         <div className="bg-muted/50 rounded-xl p-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -175,23 +177,53 @@ export function AdditionalReliefsStep({
           </div>
 
           {deductions.paysRent && (
-            <div className="mt-4 pt-4 border-t border-border/50 animate-fade-up">
-              <Label className="text-sm text-muted-foreground mb-3 block">{periodLabel} Rent Paid (₦)</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₦</span>
-                <Input
-                  type="text"
-                  value={deductions.rent}
-                  onChange={(e) => handleInputChange("rent", e.target.value)}
-                  placeholder={inputPeriod === "monthly" ? "e.g. 100,000" : "e.g. 1,200,000"}
-                  className="pl-8 h-10"
-                />
+            <div className="mt-4 pt-4 border-t border-border/50 animate-fade-up space-y-4">
+              {/* Rent Period Toggle */}
+              <div className="flex items-center justify-between">
+                <Label className="text-sm text-muted-foreground">Enter rent as</Label>
+                <Tabs 
+                  value={deductions.rentPeriod} 
+                  onValueChange={(v) => onDeductionsChange("rentPeriod", v as InputPeriod)}
+                >
+                  <TabsList className="grid w-[160px] grid-cols-2 h-8">
+                    <TabsTrigger value="monthly" className="text-xs h-7">Monthly</TabsTrigger>
+                    <TabsTrigger value="annual" className="text-xs h-7">Annual</TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
+              
+              <div>
+                <Label className="text-sm text-muted-foreground mb-3 block">
+                  {deductions.rentPeriod === "monthly" ? "Monthly" : "Annual"} Rent Paid (₦)
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₦</span>
+                  <Input
+                    type="text"
+                    value={deductions.rent}
+                    onChange={(e) => handleInputChange("rent", e.target.value)}
+                    placeholder={deductions.rentPeriod === "monthly" ? "e.g. 100,000" : "e.g. 1,200,000"}
+                    className="pl-8 h-10"
+                  />
+                </div>
+              </div>
+
               {deductions.rent && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Rent relief: {formatCurrency(rentRelief)} 
-                  <span className="text-primary"> (20% of annual rent, max ₦500,000)</span>
-                </p>
+                <div className="bg-purple-500/10 rounded-lg p-3 text-sm">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Annual Rent:</span>
+                    <span className="font-medium text-foreground">{formatCurrency(annualRent)}</span>
+                  </div>
+                  <div className="flex justify-between mt-1">
+                    <span className="text-muted-foreground">Rent Relief (20%):</span>
+                    <span className="font-semibold text-primary">{formatCurrency(rentRelief)}</span>
+                  </div>
+                  {annualRent * 0.2 > 500000 && (
+                    <p className="text-xs text-amber-600 mt-2">
+                      Relief capped at ₦500,000 maximum
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           )}

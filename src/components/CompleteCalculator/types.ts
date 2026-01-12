@@ -31,9 +31,10 @@ export interface DeductionsFormData {
   hasMortgage: boolean;
   mortgageInterest: string;
   
-  // Rent
+  // Rent - with separate period option
   paysRent: boolean;
   rent: string;
+  rentPeriod: InputPeriod;
 }
 
 export interface CompleteCalculatorState {
@@ -73,4 +74,5 @@ export const initialDeductionsData: DeductionsFormData = {
   mortgageInterest: "",
   paysRent: false,
   rent: "",
+  rentPeriod: "annual",
 };
