@@ -333,28 +333,28 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-2">
+      <main className="container mx-auto px-4 py-4 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">
             Welcome back{user.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ''}!
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Track your tax calculations and manage your financial planning
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Saved Calculations Card - Takes up 2 columns on large screens */}
           <Card className="lg:col-span-2">
-            <CardHeader>
-              <div className="flex items-center justify-between">
+            <CardHeader className="pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-lg bg-accent/10">
-                    <History className="w-6 h-6 text-accent" />
+                  <div className="p-2 sm:p-3 rounded-lg bg-accent/10">
+                    <History className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
                   </div>
                   <div>
-                    <CardTitle>Saved Calculations</CardTitle>
-                    <CardDescription>
+                    <CardTitle className="text-base sm:text-lg">Saved Calculations</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">
                       View and manage your saved tax calculations
                     </CardDescription>
                   </div>
@@ -374,58 +374,117 @@ export default function Dashboard() {
                   <p className="text-xs mt-1">Click "New Calculation" to get started</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Annual Income</TableHead>
-                        <TableHead>Total Tax</TableHead>
-                        <TableHead>Effective Rate</TableHead>
-                        <TableHead>Net Income</TableHead>
-                        <TableHead>Notes</TableHead>
-                        <TableHead className="w-[50px]"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {calculations.map((calc) => (
-                        <TableRow 
-                          key={calc.id} 
-                          className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => handleViewDetails(calc)}
-                        >
-                          <TableCell className="whitespace-nowrap">
-                            {new Date(calc.created_at).toLocaleDateString('en-NG', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric',
-                            })}
-                          </TableCell>
-                          <TableCell>{formatCurrency(calc.annual_income)}</TableCell>
-                          <TableCell>{formatCurrency(getTotalTax(calc))}</TableCell>
-                          <TableCell>{getEffectiveRate(calc).toFixed(2)}%</TableCell>
-                          <TableCell>{formatCurrency(getNetIncome(calc))}</TableCell>
-                          <TableCell className="max-w-[200px] truncate">
-                            {calc.notes || '-'}
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteClick(calc.id);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
+                <>
+                  {/* Mobile Card Layout */}
+                  <div className="md:hidden space-y-3">
+                    {calculations.map((calc) => (
+                      <div
+                        key={calc.id}
+                        className="border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleViewDetails(calc)}
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(calc.created_at).toLocaleDateString('en-NG', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })}
+                            </p>
+                            <p className="font-semibold text-lg">
+                              {formatCurrency(calc.annual_income)}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 -mr-2 -mt-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteClick(calc.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-sm">
+                          <div>
+                            <p className="text-muted-foreground text-xs">Tax</p>
+                            <p className="font-medium">{formatCurrency(getTotalTax(calc))}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground text-xs">Rate</p>
+                            <p className="font-medium">{getEffectiveRate(calc).toFixed(1)}%</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground text-xs">Net</p>
+                            <p className="font-medium">{formatCurrency(getNetIncome(calc))}</p>
+                          </div>
+                        </div>
+                        {calc.notes && (
+                          <p className="text-xs text-muted-foreground mt-2 truncate">
+                            {calc.notes}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table Layout */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Annual Income</TableHead>
+                          <TableHead>Total Tax</TableHead>
+                          <TableHead>Effective Rate</TableHead>
+                          <TableHead>Net Income</TableHead>
+                          <TableHead>Notes</TableHead>
+                          <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                      </TableHeader>
+                      <TableBody>
+                        {calculations.map((calc) => (
+                          <TableRow 
+                            key={calc.id} 
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => handleViewDetails(calc)}
+                          >
+                            <TableCell className="whitespace-nowrap">
+                              {new Date(calc.created_at).toLocaleDateString('en-NG', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })}
+                            </TableCell>
+                            <TableCell>{formatCurrency(calc.annual_income)}</TableCell>
+                            <TableCell>{formatCurrency(getTotalTax(calc))}</TableCell>
+                            <TableCell>{getEffectiveRate(calc).toFixed(2)}%</TableCell>
+                            <TableCell>{formatCurrency(getNetIncome(calc))}</TableCell>
+                            <TableCell className="max-w-[200px] truncate">
+                              {calc.notes || '-'}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteClick(calc.id);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
