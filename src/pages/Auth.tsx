@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Calculator, Mail, Lock, User, Chrome } from 'lucide-react';
+import { Calculator, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Please enter a valid email address');
@@ -15,18 +15,20 @@ const passwordSchema = z.string().min(6, 'Password must be at least 6 characters
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { user, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
+  const { user, signInWithEmail, signUpWithEmail } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
   
   // Signup form state
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [signupFullName, setSignupFullName] = useState('');
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -34,18 +36,6 @@ export default function Auth() {
     }
   }, [user, navigate]);
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    const { error } = await signInWithGoogle();
-    if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Sign in failed',
-        description: error.message,
-      });
-    }
-    setLoading(false);
-  };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,27 +136,6 @@ export default function Auth() {
               </TabsList>
               
               <TabsContent value="login" className="space-y-4">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleGoogleSignIn}
-                  disabled={loading}
-                >
-                  <Chrome className="w-4 h-4 mr-2" />
-                  Continue with Google
-                </Button>
-                
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                      Or continue with
-                    </span>
-                  </div>
-                </div>
-
                 <form onSubmit={handleEmailLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Email</Label>
@@ -189,13 +158,25 @@ export default function Auth() {
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="login-password"
-                        type="password"
+                        type={showLoginPassword ? "text" : "password"}
                         placeholder="••••••••"
-                        className="pl-10"
+                        className="pl-10 pr-10"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         required
                       />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => setShowLoginPassword(!showLoginPassword)}
+                        tabIndex={-1}
+                      >
+                        {showLoginPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
@@ -205,27 +186,6 @@ export default function Auth() {
               </TabsContent>
               
               <TabsContent value="signup" className="space-y-4">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleGoogleSignIn}
-                  disabled={loading}
-                >
-                  <Chrome className="w-4 h-4 mr-2" />
-                  Continue with Google
-                </Button>
-                
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                      Or continue with
-                    </span>
-                  </div>
-                </div>
-
                 <form onSubmit={handleEmailSignup} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-name">Full Name (optional)</Label>
@@ -262,13 +222,25 @@ export default function Auth() {
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="signup-password"
-                        type="password"
+                        type={showSignupPassword ? "text" : "password"}
                         placeholder="••••••••"
-                        className="pl-10"
+                        className="pl-10 pr-10"
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
                         required
                       />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => setShowSignupPassword(!showSignupPassword)}
+                        tabIndex={-1}
+                      >
+                        {showSignupPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
