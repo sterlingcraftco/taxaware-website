@@ -9,6 +9,6 @@ export const isPreviewMode = (): boolean => {
 };
 
 export const isAuthEnabled = (): boolean => {
-  // Auth is enabled only in preview/development mode
-  return isPreviewMode();
+  // Auth is now enabled for all environments
+  return true;
 };
