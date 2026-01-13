@@ -37,7 +37,7 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
           New Calculation
         </Button>
       </DialogTrigger>
-      <DialogContent className={calculatorType === "complete" ? "max-w-4xl max-h-[90vh] overflow-y-auto" : "max-w-2xl max-h-[90vh] overflow-y-auto"}>
+      <DialogContent className={calculatorType === "complete" ? "max-w-[80vw] max-h-[90vh] overflow-y-auto" : "max-w-2xl max-h-[90vh] overflow-y-auto"}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calculator className="w-5 h-5" />
