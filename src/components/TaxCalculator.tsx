@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { isAuthEnabled } from "@/lib/featureFlags";
 import { analytics } from "@/lib/analytics";
-import jsPDF from "jspdf";
+import { generateTaxPDF } from "@/lib/pdfGenerator";
 
 export interface TaxBreakdown {
   band: string;
@@ -69,13 +69,13 @@ export const calculateTaxWithDeductions = (
 ): TaxResult => {
   // Calculate rent relief (20% of annual rent, max ₦500,000)
   const rentRelief = Math.min(annualRent * 0.2, 500000);
-  
+
   // Total deductions
   const totalDeductions = pensionContribution + nhfContribution + rentRelief;
-  
+
   // Chargeable income after deductions
   const chargeableIncome = Math.max(0, grossIncome - totalDeductions);
-  
+
   let remainingIncome = chargeableIncome;
   let totalTax = 0;
   const breakdown: TaxBreakdown[] = [];
@@ -123,29 +123,29 @@ type InputPeriod = "monthly" | "annual";
 const TaxCalculator = () => {
   // Input period (monthly or annual)
   const [inputPeriod, setInputPeriod] = useState<InputPeriod>("annual");
-  
+
   // Income
   const [income, setIncome] = useState<string>("");
-  
+
   // Pension
   const [hasPension, setHasPension] = useState(false);
   const [usePensionDefault, setUsePensionDefault] = useState(true);
   const [customPension, setCustomPension] = useState<string>("");
-  
+
   // NHF
   const [hasNhf, setHasNhf] = useState(false);
   const [useNhfDefault, setUseNhfDefault] = useState(true);
   const [customNhf, setCustomNhf] = useState<string>("");
-  
+
   // Rent
   const [paysRent, setPaysRent] = useState(false);
   const [rent, setRent] = useState<string>("");
-  
+
   // Results
   const [result, setResult] = useState<TaxResult | null>(null);
   const [error, setError] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
-  
+
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -259,169 +259,11 @@ const TaxCalculator = () => {
   const handleDownloadPDF = () => {
     if (!result) return;
 
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    
-    // Brand colors
-    const primaryGreen = { r: 34, g: 139, b: 84 };
-    const goldAccent = { r: 234, g: 179, b: 8 };
-    const darkText = { r: 27, g: 51, b: 38 };
-    
-    // Header with green gradient
-    doc.setFillColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
-    doc.rect(0, 0, pageWidth, 45, "F");
-    
-    // Gold accent line
-    doc.setFillColor(goldAccent.r, goldAccent.g, goldAccent.b);
-    doc.rect(0, 45, pageWidth, 4, "F");
-    
-    // Header text
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
-    doc.setFont("helvetica", "bold");
-    doc.text("Nigerian Tax Calculator", pageWidth / 2, 22, { align: "center" });
-    
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text("Personal Income Tax Estimate", pageWidth / 2, 32, { align: "center" });
-    
-    // Date
-    doc.setFontSize(10);
-    doc.text(`Generated: ${new Date().toLocaleDateString("en-NG", { dateStyle: "long" })}`, pageWidth / 2, 40, { align: "center" });
-
-    // Reset text color
-    doc.setTextColor(darkText.r, darkText.g, darkText.b);
-
-    // Summary section
-    let yPos = 65;
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
-    doc.text("Income Summary", 20, yPos);
-    
-    yPos += 12;
-    doc.setFontSize(11);
-    doc.setTextColor(darkText.r, darkText.g, darkText.b);
-    
-    const summaryData = [
-      ["Gross Annual Income:", formatCurrencyPDF(result.grossIncome)],
-      ["Less: Pension Contribution:", `(${formatCurrencyPDF(result.deductions.pension)})`],
-      ["Less: NHF Contribution:", `(${formatCurrencyPDF(result.deductions.nhf)})`],
-      ["Less: Rent Relief (20% of rent, max 500k):", `(${formatCurrencyPDF(result.deductions.rentRelief)})`],
-      ["Total Deductions:", formatCurrencyPDF(result.deductions.totalDeductions)],
-      ["Chargeable Income:", formatCurrencyPDF(result.chargeableIncome)],
-    ];
-
-    summaryData.forEach(([label, value]) => {
-      doc.setFont("helvetica", "normal");
-      doc.text(label, 20, yPos);
-      doc.setFont("helvetica", "bold");
-      doc.text(value, pageWidth - 20, yPos, { align: "right" });
-      yPos += 8;
+    generateTaxPDF(result as any, {
+      filename: `taxaware-nigeria-calculation-${new Date().toISOString().split("T")[0]}.pdf`
     });
 
-    // Tax Results
-    yPos += 10;
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
-    doc.text("Tax Calculation", 20, yPos);
-
-    yPos += 12;
-    doc.setFontSize(11);
-    doc.setTextColor(darkText.r, darkText.g, darkText.b);
-
-    const taxSummary = [
-      ["Total Tax Liability:", formatCurrencyPDF(result.total)],
-      ["Effective Tax Rate:", `${effectiveRate.toFixed(1)}%`],
-      ["Net Take Home (after tax & deductions):", formatCurrencyPDF(takeHome)],
-    ];
-
-    taxSummary.forEach(([label, value]) => {
-      doc.setFont("helvetica", "normal");
-      doc.text(label, 20, yPos);
-      doc.setFont("helvetica", "bold");
-      doc.text(value, pageWidth - 20, yPos, { align: "right" });
-      yPos += 8;
-    });
-
-    // Tax breakdown section
-    yPos += 10;
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
-    doc.text("Tax Band Breakdown", 20, yPos);
-
-    yPos += 12;
-    doc.setFontSize(10);
-    doc.setTextColor(darkText.r, darkText.g, darkText.b);
-    
-    // Table header
-    doc.setFillColor(goldAccent.r, goldAccent.g, goldAccent.b);
-    doc.rect(20, yPos - 5, pageWidth - 40, 10, "F");
-    doc.setFont("helvetica", "bold");
-    doc.text("Band", 25, yPos);
-    doc.text("Rate", 80, yPos);
-    doc.text("Taxable Amount", 105, yPos);
-    doc.text("Tax", pageWidth - 25, yPos, { align: "right" });
-
-    yPos += 10;
-    doc.setFont("helvetica", "normal");
-
-    result.breakdown.forEach((row, index) => {
-      if (index % 2 === 0) {
-        doc.setFillColor(245, 250, 247);
-        doc.rect(20, yPos - 5, pageWidth - 40, 8, "F");
-      }
-      doc.setTextColor(darkText.r, darkText.g, darkText.b);
-      doc.text(row.band.replace("₦", "NGN "), 25, yPos);
-      doc.text(`${row.rate}%`, 80, yPos);
-      doc.text(formatCurrencyPDF(row.taxableInBand), 105, yPos);
-      doc.text(formatCurrencyPDF(row.taxInBand), pageWidth - 25, yPos, { align: "right" });
-      yPos += 8;
-    });
-
-    // Total row
-    yPos += 5;
-    doc.setFillColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
-    doc.rect(20, yPos - 5, pageWidth - 40, 10, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.text("Total Tax Liability", 25, yPos);
-    doc.text(formatCurrencyPDF(result.total), pageWidth - 25, yPos, { align: "right" });
-
-    // Disclaimer
-    yPos += 20;
-    doc.setTextColor(128, 128, 128);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
-    doc.text(
-      "This is an estimate only. Actual tax may vary based on additional reliefs and allowances.",
-      pageWidth / 2,
-      yPos,
-      { align: "center" }
-    );
-    doc.text(
-      "Consult a tax professional for accurate calculations.",
-      pageWidth / 2,
-      yPos + 5,
-      { align: "center" }
-    );
-    
-    // Website branding
-    yPos += 15;
-    doc.setTextColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.text("TaxAware Nigeria", pageWidth / 2, yPos, { align: "center" });
-
-    doc.save(`taxaware-nigeria-calculation-${new Date().toISOString().split("T")[0]}.pdf`);
-    
     analytics.downloadPDF(annualIncome, result.total);
-    toast({
-      title: "PDF Downloaded!",
-      description: "Your tax calculation report has been downloaded.",
-    });
   };
 
   const periodLabel = inputPeriod === "monthly" ? "Monthly" : "Annual";
@@ -541,7 +383,7 @@ const TaxCalculator = () => {
                       </div>
                       {usePensionDefault ? (
                         <div className="h-10 px-4 rounded-md border border-input bg-muted/50 flex items-center text-muted-foreground">
-                          {numericIncome > 0 ? formatCurrency(numericIncome * 0.08) : "₦0"} 
+                          {numericIncome > 0 ? formatCurrency(numericIncome * 0.08) : "₦0"}
                           <span className="text-xs ml-2">({inputPeriod})</span>
                         </div>
                       ) : (
@@ -661,7 +503,7 @@ const TaxCalculator = () => {
                       </div>
                       {rent && (
                         <p className="text-xs text-muted-foreground mt-2">
-                          Rent relief: {formatCurrency(Math.min(toAnnual(parseFloat(rent.replace(/,/g, "")) || 0) * 0.2, 500000))} 
+                          Rent relief: {formatCurrency(Math.min(toAnnual(parseFloat(rent.replace(/,/g, "")) || 0) * 0.2, 500000))}
                           <span className="text-primary"> (20% of annual rent, max ₦500,000)</span>
                         </p>
                       )}
@@ -876,7 +718,7 @@ const TaxCalculator = () => {
 
                 {/* Disclaimer */}
                 <p className="mt-6 text-xs text-muted-foreground text-center">
-                  This is an estimate only. Actual tax may vary based on additional reliefs and allowances. 
+                  This is an estimate only. Actual tax may vary based on additional reliefs and allowances.
                   Consult a tax professional for accurate calculations.
                 </p>
               </div>

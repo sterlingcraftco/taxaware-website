@@ -10,8 +10,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import jsPDF from "jspdf";
-import { calculateSimpleTax, formatCurrency, formatCurrencyPDF, CompleteTaxResult } from "@/lib/taxCalculations";
+import { calculateSimpleTax, formatCurrency, CompleteTaxResult } from "@/lib/taxCalculations";
+import { generateTaxPDF } from "@/lib/pdfGenerator";
 
 type InputPeriod = "monthly" | "annual";
 
@@ -98,168 +98,7 @@ export default function SimpleCalculatorContent({ onCalculationSaved, onClose }:
 
   const handleDownloadPDF = () => {
     if (!result) return;
-
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    
-    // Brand colors
-    const primaryGreen = { r: 34, g: 139, b: 84 };
-    const goldAccent = { r: 234, g: 179, b: 8 };
-    const darkText = { r: 27, g: 51, b: 38 };
-    
-    const effectiveRatePDF = result.grossIncome > 0 ? (result.total / result.grossIncome) * 100 : 0;
-    const takeHomeValue = result.grossIncome - result.total - result.deductions.pension - result.deductions.nhf;
-    
-    // Header with green gradient
-    doc.setFillColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
-    doc.rect(0, 0, pageWidth, 45, "F");
-    
-    // Gold accent line
-    doc.setFillColor(goldAccent.r, goldAccent.g, goldAccent.b);
-    doc.rect(0, 45, pageWidth, 4, "F");
-    
-    // Header text
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
-    doc.setFont("helvetica", "bold");
-    doc.text("Nigerian Tax Calculator", pageWidth / 2, 22, { align: "center" });
-    
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text("Personal Income Tax Estimate", pageWidth / 2, 32, { align: "center" });
-    
-    // Date
-    doc.setFontSize(10);
-    doc.text(`Generated: ${new Date().toLocaleDateString("en-NG", { dateStyle: "long" })}`, pageWidth / 2, 40, { align: "center" });
-
-    // Reset text color
-    doc.setTextColor(darkText.r, darkText.g, darkText.b);
-
-    // Summary section
-    let yPos = 65;
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
-    doc.text("Income Summary", 20, yPos);
-    
-    yPos += 12;
-    doc.setFontSize(11);
-    doc.setTextColor(darkText.r, darkText.g, darkText.b);
-    
-    const summaryData = [
-      ["Gross Annual Income:", formatCurrencyPDF(result.grossIncome)],
-      ["Less: Pension Contribution:", `(${formatCurrencyPDF(result.deductions.pension)})`],
-      ["Less: NHF Contribution:", `(${formatCurrencyPDF(result.deductions.nhf)})`],
-      ["Less: Rent Relief (20% of rent, max 500k):", `(${formatCurrencyPDF(result.deductions.rentRelief)})`],
-      ["Total Deductions:", formatCurrencyPDF(result.deductions.totalDeductions)],
-      ["Chargeable Income:", formatCurrencyPDF(result.chargeableIncome)],
-    ];
-
-    summaryData.forEach(([label, value]) => {
-      doc.setFont("helvetica", "normal");
-      doc.text(label, 20, yPos);
-      doc.setFont("helvetica", "bold");
-      doc.text(value, pageWidth - 20, yPos, { align: "right" });
-      yPos += 8;
-    });
-
-    // Tax Results
-    yPos += 10;
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
-    doc.text("Tax Calculation", 20, yPos);
-
-    yPos += 12;
-    doc.setFontSize(11);
-    doc.setTextColor(darkText.r, darkText.g, darkText.b);
-
-    const taxSummary = [
-      ["Total Tax Liability:", formatCurrencyPDF(result.total)],
-      ["Effective Tax Rate:", `${effectiveRatePDF.toFixed(1)}%`],
-      ["Net Take Home (after tax & deductions):", formatCurrencyPDF(takeHomeValue)],
-    ];
-
-    taxSummary.forEach(([label, value]) => {
-      doc.setFont("helvetica", "normal");
-      doc.text(label, 20, yPos);
-      doc.setFont("helvetica", "bold");
-      doc.text(value, pageWidth - 20, yPos, { align: "right" });
-      yPos += 8;
-    });
-
-    // Tax breakdown section
-    yPos += 10;
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
-    doc.text("Tax Band Breakdown", 20, yPos);
-
-    yPos += 12;
-    doc.setFontSize(10);
-    doc.setTextColor(darkText.r, darkText.g, darkText.b);
-    
-    // Table header
-    doc.setFillColor(goldAccent.r, goldAccent.g, goldAccent.b);
-    doc.rect(20, yPos - 5, pageWidth - 40, 10, "F");
-    doc.setFont("helvetica", "bold");
-    doc.text("Band", 25, yPos);
-    doc.text("Rate", 80, yPos);
-    doc.text("Taxable Amount", 105, yPos);
-    doc.text("Tax", pageWidth - 25, yPos, { align: "right" });
-
-    yPos += 10;
-    doc.setFont("helvetica", "normal");
-
-    result.breakdown.forEach((row, index) => {
-      if (index % 2 === 0) {
-        doc.setFillColor(245, 250, 247);
-        doc.rect(20, yPos - 5, pageWidth - 40, 8, "F");
-      }
-      doc.setTextColor(darkText.r, darkText.g, darkText.b);
-      doc.text(row.band.replace("₦", "NGN "), 25, yPos);
-      doc.text(`${row.rate}%`, 80, yPos);
-      doc.text(formatCurrencyPDF(row.taxableInBand), 105, yPos);
-      doc.text(formatCurrencyPDF(row.taxInBand), pageWidth - 25, yPos, { align: "right" });
-      yPos += 8;
-    });
-
-    // Total row
-    yPos += 5;
-    doc.setFillColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
-    doc.rect(20, yPos - 5, pageWidth - 40, 10, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.text("Total Tax Liability", 25, yPos);
-    doc.text(formatCurrencyPDF(result.total), pageWidth - 25, yPos, { align: "right" });
-
-    // Disclaimer
-    yPos += 20;
-    doc.setTextColor(128, 128, 128);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
-    doc.text(
-      "This is an estimate only. Actual tax may vary based on additional reliefs and allowances.",
-      pageWidth / 2,
-      yPos,
-      { align: "center" }
-    );
-    doc.text(
-      "Consult a tax professional for accurate calculations.",
-      pageWidth / 2,
-      yPos + 5,
-      { align: "center" }
-    );
-    
-    // Website branding
-    yPos += 15;
-    doc.setTextColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.text("TaxAware Nigeria", pageWidth / 2, yPos, { align: "center" });
-
-    doc.save(`taxaware-nigeria-calculation-${new Date().toISOString().split("T")[0]}.pdf`);
-    toast.success("PDF Downloaded!");
+    generateTaxPDF(result);
   };
 
   const periodLabel = inputPeriod === "monthly" ? "Monthly" : "Annual";
@@ -288,11 +127,11 @@ export default function SimpleCalculatorContent({ onCalculationSaved, onClose }:
         <Label className="mb-2 block text-sm font-medium">{periodLabel} Gross Income (₦)</Label>
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₦</span>
-          <Input 
-            value={income} 
-            onChange={(e) => handleInputChange(e.target.value, setIncome)} 
-            placeholder={inputPeriod === "monthly" ? "e.g. 500,000" : "e.g. 6,000,000"} 
-            className="pl-8 h-12 text-lg" 
+          <Input
+            value={income}
+            onChange={(e) => handleInputChange(e.target.value, setIncome)}
+            placeholder={inputPeriod === "monthly" ? "e.g. 500,000" : "e.g. 6,000,000"}
+            className="pl-8 h-12 text-lg"
           />
         </div>
         {inputPeriod === "monthly" && numericIncome > 0 && (
@@ -345,7 +184,7 @@ export default function SimpleCalculatorContent({ onCalculationSaved, onClose }:
               </div>
               {usePensionDefault ? (
                 <div className="h-10 px-4 rounded-md border border-input bg-muted/50 flex items-center text-muted-foreground">
-                  {numericIncome > 0 ? formatCurrency(numericIncome * 0.08) : "₦0"} 
+                  {numericIncome > 0 ? formatCurrency(numericIncome * 0.08) : "₦0"}
                   <span className="text-xs ml-2">({inputPeriod})</span>
                 </div>
               ) : (
@@ -417,16 +256,16 @@ export default function SimpleCalculatorContent({ onCalculationSaved, onClose }:
               <Label className="text-sm text-muted-foreground mb-3 block">{periodLabel} Rent Paid (₦)</Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₦</span>
-                <Input 
-                  value={rent} 
-                  onChange={(e) => handleInputChange(e.target.value, setRent)} 
-                  placeholder={inputPeriod === "monthly" ? "e.g. 100,000" : "e.g. 1,200,000"} 
-                  className="pl-8 h-10" 
+                <Input
+                  value={rent}
+                  onChange={(e) => handleInputChange(e.target.value, setRent)}
+                  placeholder={inputPeriod === "monthly" ? "e.g. 100,000" : "e.g. 1,200,000"}
+                  className="pl-8 h-10"
                 />
               </div>
               {rent && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  Rent relief: {formatCurrency(Math.min(toAnnual(getNumericValue(rent)) * 0.2, 500000))} 
+                  Rent relief: {formatCurrency(Math.min(toAnnual(getNumericValue(rent)) * 0.2, 500000))}
                   <span className="text-primary"> (20% of annual rent, max ₦500,000)</span>
                 </p>
               )}

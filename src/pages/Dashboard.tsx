@@ -30,9 +30,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download } from 'lucide-react';
-import jsPDF from 'jspdf';
 import { toast } from 'sonner';
 import DashboardCalculator from '@/components/DashboardCalculator';
+import { generateTaxPDF } from '@/lib/pdfGenerator';
 
 interface TaxBreakdown {
   band: string;
@@ -156,114 +156,22 @@ export default function Dashboard() {
   };
 
   const handleDownloadPDF = (calc: SavedCalculation) => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    let y = 20;
+    // Construct a compatible result object for the PDF generator
+    const taxResult = calc.tax_result as unknown as any;
 
-    // Title
-    doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Tax Calculation Report', pageWidth / 2, y, { align: 'center' });
-    y += 10;
+    // Ensure we have at least the basic structure expected by the generator
+    const pdfData = {
+      ...taxResult,
+      grossIncome: calc.annual_income,
+      total: taxResult.total || 0,
+      breakdown: taxResult.breakdown || [],
+      // If deductions are missing in the saved data, the generator will handle it
+    };
 
-    // Date
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100);
-    doc.text(`Generated on ${new Date(calc.created_at).toLocaleDateString('en-NG', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    })}`, pageWidth / 2, y, { align: 'center' });
-    y += 15;
-
-    // Summary Section
-    doc.setTextColor(0);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Summary', 20, y);
-    y += 8;
-
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    const summaryData = [
-      ['Annual Income', formatCurrency(calc.annual_income)],
-      ['Total Tax', formatCurrency(getTotalTax(calc))],
-      ['Take Home', formatCurrency(getNetIncome(calc))],
-      ['Effective Rate', `${getEffectiveRate(calc).toFixed(2)}%`],
-    ];
-
-    summaryData.forEach(([label, value]) => {
-      doc.text(`${label}:`, 20, y);
-      doc.setFont('helvetica', 'bold');
-      doc.text(value, 80, y);
-      doc.setFont('helvetica', 'normal');
-      y += 7;
+    generateTaxPDF(pdfData, {
+      notes: calc.notes || undefined,
+      filename: `tax-calculation-${new Date(calc.created_at).toISOString().split('T')[0]}.pdf`,
     });
-
-    y += 10;
-
-    // Tax Band Breakdown
-    if (calc.tax_result?.breakdown && calc.tax_result.breakdown.length > 0) {
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Tax Band Breakdown', 20, y);
-      y += 10;
-
-      // Table Header
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.setFillColor(240, 240, 240);
-      doc.rect(20, y - 5, pageWidth - 40, 8, 'F');
-      doc.text('Band', 22, y);
-      doc.text('Rate', 80, y);
-      doc.text('Taxable', 110, y);
-      doc.text('Tax', 160, y);
-      y += 8;
-
-      // Table Rows
-      doc.setFont('helvetica', 'normal');
-      calc.tax_result.breakdown.forEach((row) => {
-        doc.text(row.band, 22, y);
-        doc.text(`${row.rate}%`, 80, y);
-        doc.text(formatCurrency(row.taxableInBand), 110, y);
-        doc.text(formatCurrency(row.taxInBand), 160, y);
-        y += 7;
-      });
-
-      // Total Row
-      y += 3;
-      doc.setFont('helvetica', 'bold');
-      doc.setFillColor(240, 240, 240);
-      doc.rect(20, y - 5, pageWidth - 40, 8, 'F');
-      doc.text('Total Tax Liability', 22, y);
-      doc.text(formatCurrency(getTotalTax(calc)), 160, y);
-      y += 12;
-    }
-
-    // Notes
-    if (calc.notes) {
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Notes', 20, y);
-      y += 8;
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      const splitNotes = doc.splitTextToSize(calc.notes, pageWidth - 40);
-      doc.text(splitNotes, 20, y);
-    }
-
-    // Footer
-    const pageHeight = doc.internal.pageSize.getHeight();
-    doc.setFontSize(8);
-    doc.setTextColor(150);
-    doc.text('NTA 2025 Tax Calculator', pageWidth / 2, pageHeight - 10, { align: 'center' });
-
-    // Save PDF
-    const fileName = `tax-calculation-${new Date(calc.created_at).toISOString().split('T')[0]}.pdf`;
-    doc.save(fileName);
-    toast.success('PDF downloaded successfully');
   };
 
   if (loading) {
