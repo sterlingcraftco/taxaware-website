@@ -32,9 +32,7 @@ import {
 import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import DashboardCalculator from '@/components/DashboardCalculator';
-import { generateTaxPDF } from '@/lib/pdfGenerator';
-
-import { CompleteTaxResult } from '@/lib/taxCalculations';
+import { CompleteTaxResult, migrateToCompleteTaxResult } from '@/lib/taxCalculations';
 
 interface SavedCalculation {
   id: string;
@@ -74,13 +72,17 @@ export default function Dashboard() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCalculations((data || []).map(row => ({
+
+      const safeCalculations = (data || []).map(row => ({
         id: row.id,
         annual_income: row.annual_income,
-        tax_result: row.tax_result as unknown as CompleteTaxResult,
+        // Validate and migrate data to ensure it meets CompleteTaxResult interface
+        tax_result: migrateToCompleteTaxResult(row.tax_result, row.annual_income),
         notes: row.notes,
         created_at: row.created_at,
-      })));
+      }));
+
+      setCalculations(safeCalculations);
     } catch (error) {
       console.error('Error fetching calculations:', error);
       toast.error('Failed to load saved calculations');

@@ -68,23 +68,23 @@ export const calculateCompleteTax = (
 ): CompleteTaxResult => {
   // Total gross income from all sources
   const grossIncome = income.salary + income.freelance + income.business + income.benefitsInKind;
-  
+
   // Calculate rent relief (20% of annual rent, max ₦500,000)
   const rentRelief = Math.min(annualRent * 0.2, 500000);
-  
+
   // Life assurance relief (capped at gross income * 0.1 or actual amount)
   const cappedLifeAssurance = Math.min(lifeAssurance, grossIncome * 0.1);
-  
+
   // Mortgage interest relief (capped at certain limits based on property value - simplified to actual amount for now)
   const cappedMortgageInterest = mortgageInterest;
-  
+
   // Total deductions
-  const totalDeductions = pensionContribution + nhfContribution + nhisContribution + 
+  const totalDeductions = pensionContribution + nhfContribution + nhisContribution +
     cappedLifeAssurance + cappedMortgageInterest + rentRelief;
-  
+
   // Chargeable income after deductions
   const chargeableIncome = Math.max(0, grossIncome - totalDeductions);
-  
+
   let remainingIncome = chargeableIncome;
   let totalTax = 0;
   const breakdown: TaxBreakdown[] = [];
@@ -144,4 +144,58 @@ export const calculateSimpleTax = (
     0,
     annualRent
   );
+};
+// Type guard to validate tax result data
+export const isCompleteTaxResult = (data: any): data is CompleteTaxResult => {
+  return (
+    data &&
+    typeof data.total === 'number' &&
+    Array.isArray(data.breakdown) &&
+    typeof data.grossIncome === 'number' &&
+    typeof data.chargeableIncome === 'number' &&
+    data.totalIncome &&
+    typeof data.totalIncome.salary === 'number' &&
+    data.deductions &&
+    typeof data.deductions.totalDeductions === 'number'
+  );
+};
+
+// Helper to migrate legacy/simple tax results to CompleteTaxResult
+export const migrateToCompleteTaxResult = (data: any, fallbackGrossIncome: number): CompleteTaxResult => {
+  if (isCompleteTaxResult(data)) {
+    return data;
+  }
+
+  // Construct a default complete result from partial data
+  const grossIncome = typeof data.grossIncome === 'number' ? data.grossIncome : fallbackGrossIncome;
+  const total = typeof data.total === 'number' ? data.total : 0;
+
+  // Try to extract known deductions or use defaults
+  const pension = data.deductions?.pension || 0;
+  const nhf = data.deductions?.nhf || 0;
+
+  // For legacy "Simple" calculations, we might not have everything.
+  // Reconstruct minimal valid object.
+  return {
+    total,
+    breakdown: Array.isArray(data.breakdown) ? data.breakdown : [],
+    grossIncome,
+    totalIncome: {
+      salary: grossIncome,
+      freelance: 0,
+      business: 0,
+      benefitsInKind: 0
+    },
+    chargeableIncome: typeof data.chargeableIncome === 'number' ? data.chargeableIncome : (grossIncome - (pension + nhf)),
+    deductions: {
+      pension,
+      nhf,
+      nhis: data.deductions?.nhis || 0,
+      lifeAssurance: data.deductions?.lifeAssurance || 0,
+      mortgageInterest: data.deductions?.mortgageInterest || 0,
+      rentRelief: data.deductions?.rentRelief || 0,
+      totalDeductions: data.deductions?.totalDeductions || (pension + nhf)
+    },
+    monthlySavingsRecommended: data.monthlySavingsRecommended || Math.ceil((total * 1.1) / 12)
+  };
 };
