@@ -32,6 +32,7 @@ import {
 import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import DashboardCalculator from '@/components/DashboardCalculator';
+import { generateTaxPDF } from '@/lib/pdfGenerator';
 import { CompleteTaxResult, migrateToCompleteTaxResult } from '@/lib/taxCalculations';
 
 interface SavedCalculation {
