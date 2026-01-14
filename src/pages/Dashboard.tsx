@@ -104,7 +104,7 @@ export default function Dashboard() {
 
   const confirmDelete = async () => {
     if (!calculationToDelete) return;
-    
+
     try {
       const { error } = await supabase
         .from('saved_calculations')
@@ -299,7 +299,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          
+
           {/* User Dropdown Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -447,8 +447,8 @@ export default function Dashboard() {
                       </TableHeader>
                       <TableBody>
                         {calculations.map((calc) => (
-                          <TableRow 
-                            key={calc.id} 
+                          <TableRow
+                            key={calc.id}
                             className="cursor-pointer hover:bg-muted/50"
                             onClick={() => handleViewDetails(calc)}
                           >
@@ -541,21 +541,19 @@ export default function Dashboard() {
               Calculation Details
             </DialogTitle>
           </DialogHeader>
-          
+
           {selectedCalculation && (
-            <div className="flex justify-end -mt-2 mb-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDownloadPDF(selectedCalculation)}
-                className="gap-2"
-              >
-                <Download className="w-4 h-4" />
-                Download PDF
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDownloadPDF(selectedCalculation)}
+              className="absolute right-12 top-4 gap-2"
+            >
+              <Download className="w-4 h-4" />
+              PDF
+            </Button>
           )}
-          
+
           {selectedCalculation && (
             <div className="space-y-6">
               {/* Date */}
