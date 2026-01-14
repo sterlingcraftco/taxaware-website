@@ -34,20 +34,12 @@ import { toast } from 'sonner';
 import DashboardCalculator from '@/components/DashboardCalculator';
 import { generateTaxPDF } from '@/lib/pdfGenerator';
 
-interface TaxBreakdown {
-  band: string;
-  rate: number;
-  taxableInBand: number;
-  taxInBand: number;
-}
+import { CompleteTaxResult } from '@/lib/taxCalculations';
 
 interface SavedCalculation {
   id: string;
   annual_income: number;
-  tax_result: {
-    total: number;
-    breakdown: TaxBreakdown[];
-  };
+  tax_result: CompleteTaxResult;
   notes: string | null;
   created_at: string;
 }
@@ -85,7 +77,7 @@ export default function Dashboard() {
       setCalculations((data || []).map(row => ({
         id: row.id,
         annual_income: row.annual_income,
-        tax_result: row.tax_result as unknown as SavedCalculation['tax_result'],
+        tax_result: row.tax_result as unknown as CompleteTaxResult,
         notes: row.notes,
         created_at: row.created_at,
       })));
@@ -156,19 +148,7 @@ export default function Dashboard() {
   };
 
   const handleDownloadPDF = (calc: SavedCalculation) => {
-    // Construct a compatible result object for the PDF generator
-    const taxResult = calc.tax_result as unknown as any;
-
-    // Ensure we have at least the basic structure expected by the generator
-    const pdfData = {
-      ...taxResult,
-      grossIncome: calc.annual_income,
-      total: taxResult.total || 0,
-      breakdown: taxResult.breakdown || [],
-      // If deductions are missing in the saved data, the generator will handle it
-    };
-
-    generateTaxPDF(pdfData, {
+    generateTaxPDF(calc.tax_result, {
       notes: calc.notes || undefined,
       filename: `tax-calculation-${new Date(calc.created_at).toISOString().split('T')[0]}.pdf`,
     });
