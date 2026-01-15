@@ -32,6 +32,7 @@ import {
 import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import DashboardCalculator from '@/components/DashboardCalculator';
+import TINLookup from '@/components/TINLookup';
 import { generateTaxPDF } from '@/lib/pdfGenerator';
 import { CompleteTaxResult, migrateToCompleteTaxResult } from '@/lib/taxCalculations';
 
@@ -379,6 +380,9 @@ export default function Dashboard() {
               )}
             </CardContent>
           </Card>
+
+          {/* TIN Lookup Card */}
+          <TINLookup />
 
           {/* Tax Trends Card */}
           <Card className="hover:shadow-lg transition-shadow">
