@@ -29,10 +29,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import DashboardCalculator from '@/components/DashboardCalculator';
 import TINLookup from '@/components/TINLookup';
+import { TransactionManager } from '@/components/transactions';
 import { generateTaxPDF } from '@/lib/pdfGenerator';
 import { CompleteTaxResult, migrateToCompleteTaxResult } from '@/lib/taxCalculations';
 
@@ -234,134 +236,82 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Saved Calculations Card - Takes up 2 columns on large screens */}
-          <Card className="lg:col-span-2">
-            <CardHeader className="pb-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 sm:p-3 rounded-lg bg-accent/10">
-                    <History className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base sm:text-lg">Saved Calculations</CardTitle>
-                    <CardDescription className="text-xs sm:text-sm">
-                      View and manage your saved tax calculations
-                    </CardDescription>
-                  </div>
-                </div>
-                <DashboardCalculator onCalculationSaved={fetchCalculations} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              {loadingCalcs ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <div className="animate-pulse">Loading calculations...</div>
-                </div>
-              ) : calculations.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-sm">No saved calculations yet</p>
-                  <p className="text-xs mt-1">Click "New Calculation" to get started</p>
-                </div>
-              ) : (
-                <>
-                  {/* Mobile Card Layout */}
-                  <div className="md:hidden space-y-3">
-                    {calculations.map((calc) => (
-                      <div
-                        key={calc.id}
-                        className="border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                        onClick={() => handleViewDetails(calc)}
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <p className="text-sm text-muted-foreground">
-                              {new Date(calc.created_at).toLocaleDateString('en-NG', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric',
-                              })}
-                            </p>
-                            <p className="font-semibold text-lg">
-                              {formatCurrency(calc.annual_income)}
-                            </p>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 -mr-2 -mt-1"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteClick(calc.id);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="grid grid-cols-3 gap-2 text-sm">
-                          <div>
-                            <p className="text-muted-foreground text-xs">Tax</p>
-                            <p className="font-medium">{formatCurrency(getTotalTax(calc))}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground text-xs">Rate</p>
-                            <p className="font-medium">{getEffectiveRate(calc).toFixed(1)}%</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground text-xs">Net</p>
-                            <p className="font-medium">{formatCurrency(getNetIncome(calc))}</p>
-                          </div>
-                        </div>
-                        {calc.notes && (
-                          <p className="text-xs text-muted-foreground mt-2 truncate">
-                            {calc.notes}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+        <Tabs defaultValue="transactions" className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="transactions" className="gap-2">
+              <Wallet className="w-4 h-4" />
+              Income/Expenses
+            </TabsTrigger>
+            <TabsTrigger value="calculations" className="gap-2">
+              <Calculator className="w-4 h-4" />
+              Tax Calculations
+            </TabsTrigger>
+          </TabsList>
 
-                  {/* Desktop Table Layout */}
-                  <div className="hidden md:block overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Annual Income</TableHead>
-                          <TableHead>Total Tax</TableHead>
-                          <TableHead>Effective Rate</TableHead>
-                          <TableHead>Net Income</TableHead>
-                          <TableHead>Notes</TableHead>
-                          <TableHead className="w-[50px]"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
+          {/* Transactions Tab */}
+          <TabsContent value="transactions" className="space-y-6">
+            <TransactionManager />
+          </TabsContent>
+
+          {/* Tax Calculations Tab */}
+          <TabsContent value="calculations">
+            <div className="grid md:grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Saved Calculations Card - Takes up 2 columns on large screens */}
+              <Card className="lg:col-span-2">
+                <CardHeader className="pb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 sm:p-3 rounded-lg bg-accent/10">
+                        <History className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-base sm:text-lg">Saved Calculations</CardTitle>
+                        <CardDescription className="text-xs sm:text-sm">
+                          View and manage your saved tax calculations
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <DashboardCalculator onCalculationSaved={fetchCalculations} />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {loadingCalcs ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <div className="animate-pulse">Loading calculations...</div>
+                    </div>
+                  ) : calculations.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p className="text-sm">No saved calculations yet</p>
+                      <p className="text-xs mt-1">Click "New Calculation" to get started</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Mobile Card Layout */}
+                      <div className="md:hidden space-y-3">
                         {calculations.map((calc) => (
-                          <TableRow
+                          <div
                             key={calc.id}
-                            className="cursor-pointer hover:bg-muted/50"
+                            className="border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors"
                             onClick={() => handleViewDetails(calc)}
                           >
-                            <TableCell className="whitespace-nowrap">
-                              {new Date(calc.created_at).toLocaleDateString('en-NG', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric',
-                              })}
-                            </TableCell>
-                            <TableCell>{formatCurrency(calc.annual_income)}</TableCell>
-                            <TableCell>{formatCurrency(getTotalTax(calc))}</TableCell>
-                            <TableCell>{getEffectiveRate(calc).toFixed(2)}%</TableCell>
-                            <TableCell>{formatCurrency(getNetIncome(calc))}</TableCell>
-                            <TableCell className="max-w-[200px] truncate">
-                              {calc.notes || '-'}
-                            </TableCell>
-                            <TableCell>
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <p className="text-sm text-muted-foreground">
+                                  {new Date(calc.created_at).toLocaleDateString('en-NG', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                  })}
+                                </p>
+                                <p className="font-semibold text-lg">
+                                  {formatCurrency(calc.annual_income)}
+                                </p>
+                              </div>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 -mr-2 -mt-1"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleDeleteClick(calc.id);
@@ -369,40 +319,113 @@ export default function Dashboard() {
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
-                            </TableCell>
-                          </TableRow>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 text-sm">
+                              <div>
+                                <p className="text-muted-foreground text-xs">Tax</p>
+                                <p className="font-medium">{formatCurrency(getTotalTax(calc))}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground text-xs">Rate</p>
+                                <p className="font-medium">{getEffectiveRate(calc).toFixed(1)}%</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground text-xs">Net</p>
+                                <p className="font-medium">{formatCurrency(getNetIncome(calc))}</p>
+                              </div>
+                            </div>
+                            {calc.notes && (
+                              <p className="text-xs text-muted-foreground mt-2 truncate">
+                                {calc.notes}
+                              </p>
+                            )}
+                          </div>
                         ))}
-                      </TableBody>
-                    </Table>
+                      </div>
+
+                      {/* Desktop Table Layout */}
+                      <div className="hidden md:block overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Date</TableHead>
+                              <TableHead>Annual Income</TableHead>
+                              <TableHead>Total Tax</TableHead>
+                              <TableHead>Effective Rate</TableHead>
+                              <TableHead>Net Income</TableHead>
+                              <TableHead>Notes</TableHead>
+                              <TableHead className="w-[50px]"></TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {calculations.map((calc) => (
+                              <TableRow
+                                key={calc.id}
+                                className="cursor-pointer hover:bg-muted/50"
+                                onClick={() => handleViewDetails(calc)}
+                              >
+                                <TableCell className="whitespace-nowrap">
+                                  {new Date(calc.created_at).toLocaleDateString('en-NG', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                  })}
+                                </TableCell>
+                                <TableCell>{formatCurrency(calc.annual_income)}</TableCell>
+                                <TableCell>{formatCurrency(getTotalTax(calc))}</TableCell>
+                                <TableCell>{getEffectiveRate(calc).toFixed(2)}%</TableCell>
+                                <TableCell>{formatCurrency(getNetIncome(calc))}</TableCell>
+                                <TableCell className="max-w-[200px] truncate">
+                                  {calc.notes || '-'}
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteClick(calc.id);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* TIN Lookup Card */}
+              <TINLookup />
+
+              {/* Tax Trends Card */}
+              <Card className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="p-3 rounded-lg bg-green-500/10 w-fit mb-2">
+                    <TrendingUp className="w-6 h-6 text-green-500" />
                   </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* TIN Lookup Card */}
-          <TINLookup />
-
-          {/* Tax Trends Card */}
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="p-3 rounded-lg bg-green-500/10 w-fit mb-2">
-                <TrendingUp className="w-6 h-6 text-green-500" />
-              </div>
-              <CardTitle>Tax Trends</CardTitle>
-              <CardDescription>
-                Track your tax obligations over time
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">Coming soon</p>
-                <p className="text-xs mt-1">Visualize your tax history</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                  <CardTitle>Tax Trends</CardTitle>
+                  <CardDescription>
+                    Track your tax obligations over time
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 text-muted-foreground">
+                    <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p className="text-sm">Coming soon</p>
+                    <p className="text-xs mt-1">Visualize your tax history</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Delete Confirmation Dialog */}
