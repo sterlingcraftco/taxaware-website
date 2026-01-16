@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Wallet, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, Wallet, TrendingUp, TrendingDown, Download, FileSpreadsheet, FileText } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,6 +12,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useTransactions, Transaction } from '@/hooks/useTransactions';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -19,6 +25,7 @@ import { TransactionForm } from './TransactionForm';
 import { TransactionList } from './TransactionList';
 import { DocumentUpload } from './DocumentUpload';
 import { TransactionFiltersComponent, TransactionFilters } from './TransactionFilters';
+import { exportTransactionsToCSV, exportTransactionsToPDF } from '@/lib/transactionExport';
 import { format, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 
 const defaultFilters: TransactionFilters = {
@@ -252,6 +259,25 @@ export function TransactionManager() {
   const netBalance = filteredTotals.income - filteredTotals.expense;
   const hasActiveFilters = filters.dateFrom || filters.dateTo || filters.type !== 'all' || filters.categoryId || filters.taxYear;
 
+  // Export handlers
+  const handleExportCSV = () => {
+    exportTransactionsToCSV({
+      transactions: filteredTransactions,
+      categories,
+      filters,
+      getCategoryById,
+    });
+  };
+
+  const handleExportPDF = () => {
+    exportTransactionsToPDF({
+      transactions: filteredTransactions,
+      categories,
+      filters,
+      getCategoryById,
+    });
+  };
+
   return (
     <>
       {/* Summary Cards */}
@@ -338,10 +364,30 @@ export function TransactionManager() {
                 </CardDescription>
               </div>
             </div>
-            <Button onClick={handleAdd} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Add Transaction
-            </Button>
+            <div className="flex gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <Download className="w-4 h-4" />
+                    <span className="hidden sm:inline">Export</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleExportCSV} className="gap-2">
+                    <FileSpreadsheet className="w-4 h-4" />
+                    Export as CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportPDF} className="gap-2">
+                    <FileText className="w-4 h-4" />
+                    Export as PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button onClick={handleAdd} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add Transaction
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
