@@ -21,15 +21,11 @@ interface ExportOptions {
 }
 
 const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-NG', {
-    style: 'currency',
-    currency: 'NGN',
-    minimumFractionDigits: 0,
-  }).format(amount);
+  return `NGN ${amount.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
 const formatCurrencyPlain = (amount: number): string => {
-  return amount.toLocaleString('en-NG');
+  return amount.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
 const getFilterDescription = (filters: TransactionFilters): string => {
@@ -313,7 +309,7 @@ export const exportTransactionsToPDF = (options: ExportOptions): void => {
     // Amount with color
     doc.setTextColor(t.type === 'income' ? 22 : 153, t.type === 'income' ? 101 : 27, t.type === 'income' ? 52 : 27);
     doc.setFont("helvetica", "bold");
-    const amountText = `${t.type === 'income' ? '+' : '-'}₦${formatCurrencyPlain(t.amount)}`;
+    const amountText = `${t.type === 'income' ? '+' : '-'}NGN ${formatCurrencyPlain(t.amount)}`;
     doc.text(amountText, tableStartX + pageWidth - 33, yPos, { align: "right" });
     doc.setFont("helvetica", "normal");
     
