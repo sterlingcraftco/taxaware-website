@@ -187,17 +187,17 @@ export function CompleteCalculator({ onCalculationSaved, onClose, initialTransac
   const grossIncome = getTotalIncome();
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
       {/* Left Column - Form Steps */}
-      <div className="lg:col-span-2 space-y-6">
+      <div className="lg:col-span-2 space-y-4 lg:space-y-6">
         {/* Period Toggle */}
-        <div className="flex items-center justify-between pb-6 border-b border-border">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 lg:pb-6 border-b border-border">
           <div>
             <h3 className="text-sm font-semibold text-foreground">Input Values As</h3>
             <p className="text-xs text-muted-foreground mt-1">Choose how you want to enter amounts</p>
           </div>
           <Tabs value={inputPeriod} onValueChange={(v) => setInputPeriod(v as InputPeriod)}>
-            <TabsList className="grid w-[200px] grid-cols-2">
+            <TabsList className="grid w-full sm:w-[200px] grid-cols-2">
               <TabsTrigger value="monthly">Monthly</TabsTrigger>
               <TabsTrigger value="annual">Annual</TabsTrigger>
             </TabsList>
@@ -208,7 +208,7 @@ export function CompleteCalculator({ onCalculationSaved, onClose, initialTransac
         <StepIndicator currentStep={currentStep} onStepClick={(step) => step <= currentStep && setCurrentStep(step)} />
 
         {/* Step Content */}
-        <div className="min-h-[400px]">
+        <div className="min-h-[300px] lg:min-h-[400px]">
           {currentStep === 1 && (
             <IncomeStep
               income={income}
@@ -244,7 +244,7 @@ export function CompleteCalculator({ onCalculationSaved, onClose, initialTransac
 
         {/* Navigation Buttons */}
         {currentStep < 4 && (
-          <div className="flex justify-between pt-6 border-t border-border">
+          <div className="flex justify-between pt-4 lg:pt-6 border-t border-border">
             <Button
               variant="outline"
               onClick={handleBack}
@@ -252,7 +252,7 @@ export function CompleteCalculator({ onCalculationSaved, onClose, initialTransac
               className="gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back
+              <span className="hidden sm:inline">Back</span>
             </Button>
             <Button
               onClick={handleNext}
@@ -262,7 +262,8 @@ export function CompleteCalculator({ onCalculationSaved, onClose, initialTransac
               {currentStep === 3 ? (
                 <>
                   <Calculator className="w-4 h-4" />
-                  View Results
+                  <span className="hidden sm:inline">View Results</span>
+                  <span className="sm:hidden">Results</span>
                 </>
               ) : (
                 <>
@@ -276,17 +277,33 @@ export function CompleteCalculator({ onCalculationSaved, onClose, initialTransac
 
         {/* Validation message */}
         {currentStep === 1 && !canProceed() && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center">
-            <AlertCircle className="w-4 h-4" />
-            Enter at least one income source to continue
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground justify-center">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>Enter at least one income source to continue</span>
           </div>
         )}
       </div>
 
-      {/* Right Column - Live Tax Summary */}
+      {/* Right Column - Live Tax Summary (Desktop) */}
       <div className="hidden lg:block">
         <TaxSummaryPanel result={liveResult} />
       </div>
+
+      {/* Mobile Tax Summary - Collapsible at bottom */}
+      {currentStep < 4 && liveResult && (
+        <div className="lg:hidden mt-4 border-t pt-4">
+          <details className="group">
+            <summary className="flex items-center justify-between cursor-pointer list-none">
+              <span className="text-sm font-semibold text-foreground">Tax Summary Preview</span>
+              <span className="text-xs text-muted-foreground group-open:hidden">Tap to expand</span>
+              <span className="text-xs text-muted-foreground hidden group-open:inline">Tap to collapse</span>
+            </summary>
+            <div className="mt-3">
+              <TaxSummaryPanel result={liveResult} />
+            </div>
+          </details>
+        </div>
+      )}
     </div>
   );
 }
