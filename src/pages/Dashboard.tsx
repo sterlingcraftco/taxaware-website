@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download, Wallet, CalendarClock, BarChart3 } from 'lucide-react';
+import { MobileBottomNav } from '@/components/dashboard/MobileBottomNav';
 import { toast } from 'sonner';
 import DashboardCalculator from '@/components/DashboardCalculator';
 import TINLookup from '@/components/TINLookup';
@@ -82,7 +83,7 @@ function AnalyticsTab() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Income</p>
-                <p className="text-xl font-bold text-green-600">
+                <p className="text-lg sm:text-xl font-bold text-green-600 truncate">
                   {formatCurrency(totals.income)}
                 </p>
               </div>
@@ -98,7 +99,7 @@ function AnalyticsTab() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Expenses</p>
-                <p className="text-xl font-bold text-destructive">
+                <p className="text-lg sm:text-xl font-bold text-destructive truncate">
                   {formatCurrency(totals.expense)}
                 </p>
               </div>
@@ -114,7 +115,7 @@ function AnalyticsTab() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Net Balance</p>
-                <p className={`text-xl font-bold ${netBalance >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                <p className={`text-lg sm:text-xl font-bold truncate ${netBalance >= 0 ? 'text-green-600' : 'text-destructive'}`}>
                   {formatCurrency(netBalance)}
                 </p>
               </div>
@@ -144,6 +145,7 @@ export default function Dashboard() {
   const [calculationToDelete, setCalculationToDelete] = useState<string | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedCalculation, setSelectedCalculation] = useState<SavedCalculation | null>(null);
+  const [activeTab, setActiveTab] = useState('transactions');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -262,7 +264,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-muted/30 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-muted/30 to-background pb-20 md:pb-0">
       {/* Header */}
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -325,27 +327,24 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <Tabs defaultValue="transactions" className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-4 h-auto p-1">
-            <TabsTrigger value="transactions" className="flex flex-col sm:flex-row gap-1 sm:gap-2 py-2 px-1 sm:px-3 text-xs sm:text-sm">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+          {/* Desktop Tab List - hidden on mobile since we use bottom nav */}
+          <TabsList className="hidden md:grid w-full grid-cols-4 h-auto p-1">
+            <TabsTrigger value="transactions" className="flex flex-row gap-2 py-2 px-3">
               <Wallet className="w-4 h-4" />
-              <span className="hidden sm:inline">Transactions</span>
-              <span className="sm:hidden">Trans</span>
+              <span>Transactions</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex flex-col sm:flex-row gap-1 sm:gap-2 py-2 px-1 sm:px-3 text-xs sm:text-sm">
+            <TabsTrigger value="analytics" className="flex flex-row gap-2 py-2 px-3">
               <BarChart3 className="w-4 h-4" />
-              <span className="hidden sm:inline">Analytics</span>
-              <span className="sm:hidden">Stats</span>
+              <span>Analytics</span>
             </TabsTrigger>
-            <TabsTrigger value="recurring" className="flex flex-col sm:flex-row gap-1 sm:gap-2 py-2 px-1 sm:px-3 text-xs sm:text-sm">
+            <TabsTrigger value="recurring" className="flex flex-row gap-2 py-2 px-3">
               <CalendarClock className="w-4 h-4" />
-              <span className="hidden sm:inline">Recurring</span>
-              <span className="sm:hidden">Repeat</span>
+              <span>Recurring</span>
             </TabsTrigger>
-            <TabsTrigger value="calculations" className="flex flex-col sm:flex-row gap-1 sm:gap-2 py-2 px-1 sm:px-3 text-xs sm:text-sm">
+            <TabsTrigger value="calculations" className="flex flex-row gap-2 py-2 px-3">
               <Calculator className="w-4 h-4" />
-              <span className="hidden sm:inline">Tax Tools</span>
-              <span className="sm:hidden">Tax</span>
+              <span>Tax Tools</span>
             </TabsTrigger>
           </TabsList>
 
@@ -415,7 +414,7 @@ export default function Dashboard() {
                                     year: 'numeric',
                                   })}
                                 </p>
-                                <p className="font-semibold text-lg">
+                                <p className="font-semibold text-base sm:text-lg truncate">
                                   {formatCurrency(calc.annual_income)}
                                 </p>
                               </div>
@@ -431,18 +430,18 @@ export default function Dashboard() {
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
-                            <div className="grid grid-cols-3 gap-2 text-sm">
-                              <div>
+                            <div className="grid grid-cols-3 gap-1 text-sm">
+                              <div className="min-w-0">
                                 <p className="text-muted-foreground text-xs">Tax</p>
-                                <p className="font-medium">{formatCurrency(getTotalTax(calc))}</p>
+                                <p className="font-medium text-xs sm:text-sm truncate">{formatCurrency(getTotalTax(calc))}</p>
                               </div>
-                              <div>
+                              <div className="min-w-0">
                                 <p className="text-muted-foreground text-xs">Rate</p>
-                                <p className="font-medium">{getEffectiveRate(calc).toFixed(1)}%</p>
+                                <p className="font-medium text-xs sm:text-sm">{getEffectiveRate(calc).toFixed(1)}%</p>
                               </div>
-                              <div>
+                              <div className="min-w-0">
                                 <p className="text-muted-foreground text-xs">Net</p>
-                                <p className="font-medium">{formatCurrency(getNetIncome(calc))}</p>
+                                <p className="font-medium text-xs sm:text-sm truncate">{formatCurrency(getNetIncome(calc))}</p>
                               </div>
                             </div>
                             {calc.notes && (
@@ -683,6 +682,9 @@ export default function Dashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 }
