@@ -51,18 +51,18 @@ serve(async (req) => {
         firstName,
         lastName,
         dateOfBirth: (() => {
-          // Try to convert YYYY-MM-DD to DD-MM-YYYY
+          // Try to convert YYYY-MM-DD to DD/MM/YYYY
           if (/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
             const [year, month, day] = dateOfBirth.split('-');
-            return `${day}-${month}-${year}`;
+            return `${day}/${month}/${year}`;
           }
-          // If it's already DD-MM-YYYY or another format, try parsing carefully
+          // If it's already DD/MM/YYYY or another format, try parsing carefully
           const date = new Date(dateOfBirth);
           if (!isNaN(date.getTime())) {
             const d = String(date.getDate()).padStart(2, '0');
             const m = String(date.getMonth() + 1).padStart(2, '0');
             const y = date.getFullYear();
-            return `${d}-${m}-${y}`;
+            return `${d}/${m}/${y}`;
           }
           return dateOfBirth;
         })(),
