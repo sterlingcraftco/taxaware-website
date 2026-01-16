@@ -5,3 +5,5 @@ export { RecurringTransactionForm } from './RecurringTransactionForm';
 export { RecurringTransactionList } from './RecurringTransactionList';
 export { RecurringTransactionManager } from './RecurringTransactionManager';
 export { DocumentUpload } from './DocumentUpload';
+export { TransactionFiltersComponent } from './TransactionFilters';
+export type { TransactionFilters } from './TransactionFilters';

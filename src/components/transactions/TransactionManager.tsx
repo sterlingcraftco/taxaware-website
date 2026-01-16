@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, Wallet, TrendingUp, TrendingDown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,16 @@ import { toast } from 'sonner';
 import { TransactionForm } from './TransactionForm';
 import { TransactionList } from './TransactionList';
 import { DocumentUpload } from './DocumentUpload';
-import { format } from 'date-fns';
+import { TransactionFiltersComponent, TransactionFilters } from './TransactionFilters';
+import { format, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
+
+const defaultFilters: TransactionFilters = {
+  dateFrom: undefined,
+  dateTo: undefined,
+  type: 'all',
+  categoryId: null,
+  taxYear: null,
+};
 
 export function TransactionManager() {
   const {
@@ -32,6 +41,8 @@ export function TransactionManager() {
     getCategoryById,
   } = useTransactions();
 
+  const [filters, setFilters] = useState<TransactionFilters>(defaultFilters);
+
   const [formOpen, setFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -41,6 +52,53 @@ export function TransactionManager() {
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
   const [selectedTransactionForDocs, setSelectedTransactionForDocs] = useState<Transaction | null>(null);
   const [documentCounts, setDocumentCounts] = useState<Record<string, number>>({});
+
+  // Apply filters to transactions
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((transaction) => {
+      const transactionDate = new Date(transaction.transaction_date);
+
+      // Date range filter
+      if (filters.dateFrom && isBefore(transactionDate, startOfDay(filters.dateFrom))) {
+        return false;
+      }
+      if (filters.dateTo && isAfter(transactionDate, endOfDay(filters.dateTo))) {
+        return false;
+      }
+
+      // Type filter
+      if (filters.type !== 'all' && transaction.type !== filters.type) {
+        return false;
+      }
+
+      // Category filter
+      if (filters.categoryId && transaction.category_id !== filters.categoryId) {
+        return false;
+      }
+
+      // Tax year filter
+      if (filters.taxYear && transaction.tax_year !== filters.taxYear) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [transactions, filters]);
+
+  // Calculate filtered totals
+  const filteredTotals = useMemo(() => {
+    return filteredTransactions.reduce(
+      (acc, t) => {
+        if (t.type === 'income') {
+          acc.income += t.amount;
+        } else {
+          acc.expense += t.amount;
+        }
+        return acc;
+      },
+      { income: 0, expense: 0 }
+    );
+  }, [filteredTransactions]);
 
   // Fetch document counts for all transactions
   const fetchDocumentCounts = useCallback(async () => {
@@ -191,7 +249,8 @@ export function TransactionManager() {
     }
   };
 
-  const netBalance = totals.income - totals.expense;
+  const netBalance = filteredTotals.income - filteredTotals.expense;
+  const hasActiveFilters = filters.dateFrom || filters.dateTo || filters.type !== 'all' || filters.categoryId || filters.taxYear;
 
   return (
     <>
@@ -204,10 +263,17 @@ export function TransactionManager() {
                 <TrendingUp className="w-5 h-5 text-green-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Income</p>
-                <p className="text-xl font-bold text-green-600">
-                  {formatCurrency(totals.income)}
+                <p className="text-sm text-muted-foreground">
+                  {hasActiveFilters ? 'Filtered Income' : 'Total Income'}
                 </p>
+                <p className="text-xl font-bold text-green-600">
+                  {formatCurrency(filteredTotals.income)}
+                </p>
+                {hasActiveFilters && filteredTotals.income !== totals.income && (
+                  <p className="text-xs text-muted-foreground">
+                    of {formatCurrency(totals.income)} total
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -220,10 +286,17 @@ export function TransactionManager() {
                 <TrendingDown className="w-5 h-5 text-destructive" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Expenses</p>
-                <p className="text-xl font-bold text-destructive">
-                  {formatCurrency(totals.expense)}
+                <p className="text-sm text-muted-foreground">
+                  {hasActiveFilters ? 'Filtered Expenses' : 'Total Expenses'}
                 </p>
+                <p className="text-xl font-bold text-destructive">
+                  {formatCurrency(filteredTotals.expense)}
+                </p>
+                {hasActiveFilters && filteredTotals.expense !== totals.expense && (
+                  <p className="text-xs text-muted-foreground">
+                    of {formatCurrency(totals.expense)} total
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -236,7 +309,9 @@ export function TransactionManager() {
                 <Wallet className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Net Balance</p>
+                <p className="text-sm text-muted-foreground">
+                  {hasActiveFilters ? 'Filtered Balance' : 'Net Balance'}
+                </p>
                 <p className={`text-xl font-bold ${netBalance >= 0 ? 'text-green-600' : 'text-destructive'}`}>
                   {formatCurrency(netBalance)}
                 </p>
@@ -257,7 +332,9 @@ export function TransactionManager() {
               <div>
                 <CardTitle className="text-base sm:text-lg">Transactions</CardTitle>
                 <CardDescription className="text-xs sm:text-sm">
-                  Track your income and expenses
+                  {hasActiveFilters
+                    ? `Showing ${filteredTransactions.length} of ${transactions.length} transactions`
+                    : 'Track your income and expenses'}
                 </CardDescription>
               </div>
             </div>
@@ -267,14 +344,21 @@ export function TransactionManager() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Filters */}
+          <TransactionFiltersComponent
+            filters={filters}
+            onFiltersChange={setFilters}
+            categories={categories}
+          />
+
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">
               <div className="animate-pulse">Loading transactions...</div>
             </div>
           ) : (
             <TransactionList
-              transactions={transactions}
+              transactions={filteredTransactions}
               getCategoryById={getCategoryById}
               onEdit={handleEdit}
               onDelete={handleDeleteClick}
