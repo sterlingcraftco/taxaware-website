@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, Wallet, TrendingUp, TrendingDown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,8 +13,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useTransactions, Transaction } from '@/hooks/useTransactions';
+import { supabase } from '@/integrations/supabase/client';
 import { TransactionForm } from './TransactionForm';
 import { TransactionList } from './TransactionList';
+import { DocumentUpload } from './DocumentUpload';
 import { format } from 'date-fns';
 
 export function TransactionManager() {
@@ -33,6 +35,40 @@ export function TransactionManager() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
+  
+  // Document upload state
+  const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
+  const [selectedTransactionForDocs, setSelectedTransactionForDocs] = useState<Transaction | null>(null);
+  const [documentCounts, setDocumentCounts] = useState<Record<string, number>>({});
+
+  // Fetch document counts for all transactions
+  const fetchDocumentCounts = useCallback(async () => {
+    if (transactions.length === 0) {
+      setDocumentCounts({});
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('transaction_documents')
+        .select('transaction_id');
+
+      if (error) throw error;
+
+      // Count documents per transaction
+      const counts: Record<string, number> = {};
+      (data || []).forEach(doc => {
+        counts[doc.transaction_id] = (counts[doc.transaction_id] || 0) + 1;
+      });
+      setDocumentCounts(counts);
+    } catch (error) {
+      console.error('Error fetching document counts:', error);
+    }
+  }, [transactions.length]);
+
+  useEffect(() => {
+    fetchDocumentCounts();
+  }, [fetchDocumentCounts]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -63,6 +99,19 @@ export function TransactionManager() {
     }
     setDeleteDialogOpen(false);
     setTransactionToDelete(null);
+  };
+
+  const handleViewDocuments = (transaction: Transaction) => {
+    setSelectedTransactionForDocs(transaction);
+    setDocumentDialogOpen(true);
+  };
+
+  const handleDocumentDialogClose = (open: boolean) => {
+    setDocumentDialogOpen(open);
+    if (!open) {
+      // Refresh document counts when dialog closes
+      fetchDocumentCounts();
+    }
   };
 
   const handleSubmit = async (data: {
@@ -176,6 +225,8 @@ export function TransactionManager() {
               getCategoryById={getCategoryById}
               onEdit={handleEdit}
               onDelete={handleDeleteClick}
+              onViewDocuments={handleViewDocuments}
+              documentCounts={documentCounts}
             />
           )}
         </CardContent>
@@ -188,6 +239,14 @@ export function TransactionManager() {
         transaction={editingTransaction}
         categories={categories}
         onSubmit={handleSubmit}
+      />
+
+      {/* Document Upload Dialog */}
+      <DocumentUpload
+        open={documentDialogOpen}
+        onOpenChange={handleDocumentDialogClose}
+        transactionId={selectedTransactionForDocs?.id || null}
+        transactionDescription={selectedTransactionForDocs?.description}
       />
 
       {/* Delete Confirmation Dialog */}

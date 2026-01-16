@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { MoreHorizontal, Pencil, Trash2, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, ArrowUpCircle, ArrowDownCircle, Paperclip } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -13,6 +13,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +25,8 @@ interface TransactionListProps {
   getCategoryById: (id: string | null) => TransactionCategory | null;
   onEdit: (transaction: Transaction) => void;
   onDelete: (id: string) => void;
+  onViewDocuments: (transaction: Transaction) => void;
+  documentCounts?: Record<string, number>;
 }
 
 export function TransactionList({
@@ -31,6 +34,8 @@ export function TransactionList({
   getCategoryById,
   onEdit,
   onDelete,
+  onViewDocuments,
+  documentCounts = {},
 }: TransactionListProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -81,7 +86,17 @@ export function TransactionList({
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" className="bg-background border shadow-lg">
+                    <DropdownMenuItem onClick={() => onViewDocuments(transaction)}>
+                      <Paperclip className="mr-2 h-4 w-4" />
+                      Documents
+                      {documentCounts[transaction.id] > 0 && (
+                        <Badge variant="secondary" className="ml-2 h-5 px-1.5">
+                          {documentCounts[transaction.id]}
+                        </Badge>
+                      )}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => onEdit(transaction)}>
                       <Pencil className="mr-2 h-4 w-4" />
                       Edit
@@ -101,6 +116,16 @@ export function TransactionList({
                   {category && (
                     <Badge variant="secondary" className="text-xs">
                       {category.icon} {category.name}
+                    </Badge>
+                  )}
+                  {documentCounts[transaction.id] > 0 && (
+                    <Badge 
+                      variant="outline" 
+                      className="text-xs cursor-pointer hover:bg-muted"
+                      onClick={() => onViewDocuments(transaction)}
+                    >
+                      <Paperclip className="w-3 h-3 mr-1" />
+                      {documentCounts[transaction.id]}
                     </Badge>
                   )}
                 </div>
@@ -129,6 +154,7 @@ export function TransactionList({
               <TableHead>Category</TableHead>
               <TableHead>Type</TableHead>
               <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="w-[60px]">Docs</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -184,13 +210,45 @@ export function TransactionList({
                     {formatCurrency(transaction.amount)}
                   </TableCell>
                   <TableCell>
+                    {documentCounts[transaction.id] > 0 ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2"
+                        onClick={() => onViewDocuments(transaction)}
+                      >
+                        <Paperclip className="w-4 h-4 mr-1" />
+                        {documentCounts[transaction.id]}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2 text-muted-foreground"
+                        onClick={() => onViewDocuments(transaction)}
+                      >
+                        <Paperclip className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" className="bg-background border shadow-lg">
+                        <DropdownMenuItem onClick={() => onViewDocuments(transaction)}>
+                          <Paperclip className="mr-2 h-4 w-4" />
+                          Documents
+                          {documentCounts[transaction.id] > 0 && (
+                            <Badge variant="secondary" className="ml-2 h-5 px-1.5">
+                              {documentCounts[transaction.id]}
+                            </Badge>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => onEdit(transaction)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Edit
