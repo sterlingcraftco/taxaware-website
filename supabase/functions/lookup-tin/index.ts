@@ -38,35 +38,41 @@ serve(async (req) => {
       );
     }
 
+    const formattedDateOfBirth = (() => {
+      // Try to convert YYYY-MM-DD to DD/MM/YYYY
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
+        const [year, month, day] = dateOfBirth.split('-');
+        return `${day}/${month}/${year}`;
+      }
+      // If it's already DD/MM/YYYY or another format, try parsing carefully
+      const date = new Date(dateOfBirth);
+      if (!isNaN(date.getTime())) {
+        const d = String(date.getDate()).padStart(2, '0');
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const y = date.getFullYear();
+        return `${d}/${m}/${y}`;
+      }
+      return dateOfBirth;
+    })();
+
+    const requestBody = {
+      nin,
+      firstName,
+      lastName,
+      dateOfBirth: formattedDateOfBirth,
+    };
+
+    console.log('Sending request to NIMC API:', JSON.stringify(requestBody, null, 2));
+
     // Make request to NIMC API
     const response = await fetch("https://live.ninauth.nimc.gov.ng/v1/resolve", {
       method: 'POST',
       headers: {
         'Accept': 'application/json, text/plain, */*',
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
+        'X-Api-Key': apiKey,
       },
-      body: JSON.stringify({
-        nin,
-        firstName,
-        lastName,
-        dateOfBirth: (() => {
-          // Try to convert YYYY-MM-DD to DD/MM/YYYY
-          if (/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
-            const [year, month, day] = dateOfBirth.split('-');
-            return `${day}/${month}/${year}`;
-          }
-          // If it's already DD/MM/YYYY or another format, try parsing carefully
-          const date = new Date(dateOfBirth);
-          if (!isNaN(date.getTime())) {
-            const d = String(date.getDate()).padStart(2, '0');
-            const m = String(date.getMonth() + 1).padStart(2, '0');
-            const y = date.getFullYear();
-            return `${d}/${m}/${y}`;
-          }
-          return dateOfBirth;
-        })(),
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     const data = await response.json();
