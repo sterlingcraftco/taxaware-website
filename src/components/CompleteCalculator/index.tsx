@@ -19,6 +19,9 @@ import {
   CALCULATOR_STEPS,
   initialIncomeData,
   initialDeductionsData,
+  TransactionTaxData,
+  createIncomeFromTransactions,
+  createDeductionsFromTransactions,
 } from "./types";
 import { calculateCompleteTax, formatCurrency, formatCurrencyPDF, CompleteTaxResult } from "@/lib/taxCalculations";
 import { generateTaxPDF } from "@/lib/pdfGenerator";
@@ -26,17 +29,23 @@ import { generateTaxPDF } from "@/lib/pdfGenerator";
 interface CompleteCalculatorProps {
   onCalculationSaved?: () => void;
   onClose?: () => void;
+  initialTransactionData?: TransactionTaxData | null;
 }
 
-export function CompleteCalculator({ onCalculationSaved, onClose }: CompleteCalculatorProps) {
+export function CompleteCalculator({ onCalculationSaved, onClose, initialTransactionData }: CompleteCalculatorProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [inputPeriod, setInputPeriod] = useState<InputPeriod>("monthly");
-  const [income, setIncome] = useState<IncomeFormData>(initialIncomeData);
-  const [deductions, setDeductions] = useState<DeductionsFormData>(initialDeductionsData);
+  const [inputPeriod, setInputPeriod] = useState<InputPeriod>("annual"); // Default to annual when pre-filled
+  const [income, setIncome] = useState<IncomeFormData>(() => 
+    initialTransactionData ? createIncomeFromTransactions(initialTransactionData) : initialIncomeData
+  );
+  const [deductions, setDeductions] = useState<DeductionsFormData>(() =>
+    initialTransactionData ? createDeductionsFromTransactions(initialTransactionData) : initialDeductionsData
+  );
   const [currentStep, setCurrentStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPreFilled, setIsPreFilled] = useState(!!initialTransactionData);
 
   const toAnnual = (value: number) => inputPeriod === "monthly" ? value * 12 : value;
   const getNumericValue = (value: string) => parseFloat(value.replace(/,/g, "")) || 0;

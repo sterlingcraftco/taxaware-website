@@ -76,3 +76,45 @@ export const initialDeductionsData: DeductionsFormData = {
   rent: "",
   rentPeriod: "annual",
 };
+
+// Helper to create pre-filled data from transaction aggregates
+export interface TransactionTaxData {
+  salary: number;
+  freelance: number;
+  businessIncome: number;
+  pension: number;
+  nhf: number;
+  nhis: number;
+  lifeInsurance: number;
+  rent: number;
+}
+
+export function createIncomeFromTransactions(data: TransactionTaxData): IncomeFormData {
+  return {
+    salary: data.salary > 0 ? data.salary.toString() : "",
+    freelance: data.freelance > 0 ? data.freelance.toString() : "",
+    business: data.businessIncome > 0 ? data.businessIncome.toString() : "",
+    benefitsInKind: "",
+  };
+}
+
+export function createDeductionsFromTransactions(data: TransactionTaxData): DeductionsFormData {
+  return {
+    hasPension: data.pension > 0,
+    usePensionDefault: false,
+    customPension: data.pension > 0 ? data.pension.toString() : "",
+    hasNhf: data.nhf > 0,
+    useNhfDefault: false,
+    customNhf: data.nhf > 0 ? data.nhf.toString() : "",
+    hasNhis: data.nhis > 0,
+    useNhisDefault: false,
+    customNhis: data.nhis > 0 ? data.nhis.toString() : "",
+    hasLifeAssurance: data.lifeInsurance > 0,
+    lifeAssurance: data.lifeInsurance > 0 ? data.lifeInsurance.toString() : "",
+    hasMortgage: false,
+    mortgageInterest: "",
+    paysRent: data.rent > 0,
+    rent: data.rent > 0 ? data.rent.toString() : "",
+    rentPeriod: "annual",
+  };
+}

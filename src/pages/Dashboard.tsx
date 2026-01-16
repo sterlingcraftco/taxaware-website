@@ -344,7 +344,7 @@ export default function Dashboard() {
             </TabsTrigger>
             <TabsTrigger value="calculations" className="gap-2">
               <Calculator className="w-4 h-4" />
-              <span className="hidden sm:inline">Tax</span>
+              <span className="hidden sm:inline">Tax Tools</span>
               <span className="sm:hidden">Tax</span>
             </TabsTrigger>
           </TabsList>

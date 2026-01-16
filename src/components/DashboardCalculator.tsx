@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Calculator, Plus, Smartphone, Monitor, Zap, Sparkles } from "lucide-react";
+import { Calculator, Plus, Smartphone, Monitor, Zap, Sparkles, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCanUseCompleteCalculator } from "@/hooks/useDeviceType";
+import { useTransactionTaxData } from "@/hooks/useTransactionTaxData";
 import { CompleteCalculator } from "@/components/CompleteCalculator";
 import SimpleCalculatorContent from "./SimpleCalculatorContent";
 
@@ -15,19 +17,29 @@ type CalculatorType = "choice" | "simple" | "complete";
 export default function DashboardCalculator({ onCalculationSaved }: DashboardCalculatorProps) {
   const [open, setOpen] = useState(false);
   const [calculatorType, setCalculatorType] = useState<CalculatorType>("choice");
+  const [useTransactionData, setUseTransactionData] = useState(false);
   const canUseComplete = useCanUseCompleteCalculator();
+  const { data: transactionData, hasData: hasTransactionData } = useTransactionTaxData();
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (!isOpen) {
       setCalculatorType("choice");
+      setUseTransactionData(false);
     }
   };
 
   const handleClose = () => {
     setOpen(false);
     setCalculatorType("choice");
+    setUseTransactionData(false);
   };
+
+  const handleSelectComplete = (prefill: boolean) => {
+    setUseTransactionData(prefill);
+    setCalculatorType("complete");
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -50,6 +62,16 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
             <p className="text-muted-foreground text-center">
               Select the calculator that best fits your needs
             </p>
+            
+            {/* Auto-populate banner */}
+            {hasTransactionData && canUseComplete && (
+              <Alert className="border-primary/30 bg-primary/5">
+                <Database className="h-4 w-4 text-primary" />
+                <AlertDescription className="text-sm">
+                  <span className="font-medium">Transaction data available!</span> You can auto-populate the calculator with your {transactionData.taxYear} logged income and deductions.
+                </AlertDescription>
+              </Alert>
+            )}
             
             <div className="grid sm:grid-cols-2 gap-4">
               {/* Simple Calculator Option */}
@@ -76,18 +98,14 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
               </button>
 
               {/* Complete Calculator Option */}
-              <button
-                onClick={() => canUseComplete && setCalculatorType("complete")}
-                disabled={!canUseComplete}
-                className={`group relative rounded-xl p-6 text-left transition-all border-2 ${
-                  canUseComplete 
-                    ? "bg-primary/5 hover:bg-primary/10 border-primary/20 hover:border-primary/40" 
-                    : "bg-muted/30 border-transparent opacity-60 cursor-not-allowed"
-                }`}
-              >
+              <div className={`group relative rounded-xl p-6 text-left transition-all border-2 ${
+                canUseComplete 
+                  ? "bg-primary/5 border-primary/20" 
+                  : "bg-muted/30 border-transparent opacity-60"
+              }`}>
                 <div className="flex items-center gap-3 mb-3">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
-                    canUseComplete ? "bg-primary/20 group-hover:bg-primary/30" : "bg-muted"
+                    canUseComplete ? "bg-primary/20" : "bg-muted"
                   }`}>
                     <Sparkles className={`w-6 h-6 ${canUseComplete ? "text-primary" : "text-muted-foreground"}`} />
                   </div>
@@ -96,16 +114,39 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
                     <p className="text-xs text-muted-foreground">Comprehensive analysis</p>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mb-4">
                   Multiple income sources, all deductions (NHIS, life assurance, mortgage)
                 </p>
-                <div className="mt-4 flex items-center gap-1 text-xs">
-                  <Monitor className={`w-3.5 h-3.5 ${canUseComplete ? "text-primary" : "text-muted-foreground"}`} />
-                  <span className={canUseComplete ? "text-primary" : "text-muted-foreground"}>
-                    {canUseComplete ? "Tablet & Desktop" : "Requires tablet or desktop"}
-                  </span>
-                </div>
-              </button>
+                
+                {canUseComplete ? (
+                  <div className="space-y-2">
+                    {hasTransactionData && (
+                      <Button
+                        onClick={() => handleSelectComplete(true)}
+                        className="w-full gap-2"
+                        size="sm"
+                      >
+                        <Database className="w-4 h-4" />
+                        Auto-fill from Transactions
+                      </Button>
+                    )}
+                    <Button
+                      onClick={() => handleSelectComplete(false)}
+                      variant={hasTransactionData ? "outline" : "default"}
+                      className="w-full gap-2"
+                      size="sm"
+                    >
+                      <Calculator className="w-4 h-4" />
+                      {hasTransactionData ? "Start Fresh" : "Start Calculator"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Monitor className="w-3.5 h-3.5" />
+                    Requires tablet or desktop
+                  </div>
+                )}
+              </div>
             </div>
 
             {!canUseComplete && (
@@ -127,6 +168,7 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
           <CompleteCalculator 
             onCalculationSaved={onCalculationSaved}
             onClose={handleClose}
+            initialTransactionData={useTransactionData ? transactionData : null}
           />
         )}
       </DialogContent>
