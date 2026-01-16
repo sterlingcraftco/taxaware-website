@@ -30,11 +30,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download, Wallet } from 'lucide-react';
+import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download, Wallet, CalendarClock } from 'lucide-react';
 import { toast } from 'sonner';
 import DashboardCalculator from '@/components/DashboardCalculator';
 import TINLookup from '@/components/TINLookup';
-import { TransactionManager } from '@/components/transactions';
+import { TransactionManager, RecurringTransactionManager } from '@/components/transactions';
 import { generateTaxPDF } from '@/lib/pdfGenerator';
 import { CompleteTaxResult, migrateToCompleteTaxResult } from '@/lib/taxCalculations';
 
@@ -237,20 +237,32 @@ export default function Dashboard() {
         </div>
 
         <Tabs defaultValue="transactions" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="transactions" className="gap-2">
               <Wallet className="w-4 h-4" />
-              Income/Expenses
+              <span className="hidden sm:inline">Income/Expenses</span>
+              <span className="sm:hidden">Transactions</span>
+            </TabsTrigger>
+            <TabsTrigger value="recurring" className="gap-2">
+              <CalendarClock className="w-4 h-4" />
+              <span className="hidden sm:inline">Recurring</span>
+              <span className="sm:hidden">Recurring</span>
             </TabsTrigger>
             <TabsTrigger value="calculations" className="gap-2">
               <Calculator className="w-4 h-4" />
-              Tax Calculations
+              <span className="hidden sm:inline">Tax Calculations</span>
+              <span className="sm:hidden">Tax</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Transactions Tab */}
           <TabsContent value="transactions" className="space-y-6">
             <TransactionManager />
+          </TabsContent>
+
+          {/* Recurring Tab */}
+          <TabsContent value="recurring" className="space-y-6">
+            <RecurringTransactionManager />
           </TabsContent>
 
           {/* Tax Calculations Tab */}

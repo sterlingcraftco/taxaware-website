@@ -1,1 +1,7 @@
 project_id = "vifclbtfrgfilomwllir"
+
+[functions.lookup-tin]
+verify_jwt = false
+
+[functions.process-recurring]
+verify_jwt = false
