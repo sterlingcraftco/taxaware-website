@@ -30,11 +30,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download, Wallet, CalendarClock } from 'lucide-react';
+import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download, Wallet, CalendarClock, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import DashboardCalculator from '@/components/DashboardCalculator';
 import TINLookup from '@/components/TINLookup';
 import { TransactionManager, RecurringTransactionManager } from '@/components/transactions';
+import { IncomeExpenseChart, CategoryBreakdownChart, MonthlyTrendChart } from '@/components/dashboard';
+import { useTransactions } from '@/hooks/useTransactions';
 import { generateTaxPDF } from '@/lib/pdfGenerator';
 import { CompleteTaxResult, migrateToCompleteTaxResult } from '@/lib/taxCalculations';
 
@@ -44,6 +46,93 @@ interface SavedCalculation {
   tax_result: CompleteTaxResult;
   notes: string | null;
   created_at: string;
+}
+
+// Analytics Tab Component
+function AnalyticsTab() {
+  const { transactions, categories, loading, totals } = useTransactions();
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const netBalance = totals.income - totals.expense;
+
+  if (loading) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <div className="animate-pulse">Loading analytics...</div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-green-500/10">
+                <TrendingUp className="w-5 h-5 text-green-500" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Income</p>
+                <p className="text-xl font-bold text-green-600">
+                  {formatCurrency(totals.income)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-destructive/10">
+                <Wallet className="w-5 h-5 text-destructive" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Expenses</p>
+                <p className="text-xl font-bold text-destructive">
+                  {formatCurrency(totals.expense)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <BarChart3 className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Net Balance</p>
+                <p className={`text-xl font-bold ${netBalance >= 0 ? 'text-green-600' : 'text-destructive'}`}>
+                  {formatCurrency(netBalance)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <IncomeExpenseChart transactions={transactions} />
+        <CategoryBreakdownChart transactions={transactions} categories={categories} />
+      </div>
+
+      {/* Trend Chart */}
+      <MonthlyTrendChart transactions={transactions} />
+    </>
+  );
 }
 
 export default function Dashboard() {
@@ -237,11 +326,16 @@ export default function Dashboard() {
         </div>
 
         <Tabs defaultValue="transactions" className="space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4">
             <TabsTrigger value="transactions" className="gap-2">
               <Wallet className="w-4 h-4" />
-              <span className="hidden sm:inline">Income/Expenses</span>
-              <span className="sm:hidden">Transactions</span>
+              <span className="hidden sm:inline">Transactions</span>
+              <span className="sm:hidden">Trans.</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-2">
+              <BarChart3 className="w-4 h-4" />
+              <span className="hidden sm:inline">Analytics</span>
+              <span className="sm:hidden">Charts</span>
             </TabsTrigger>
             <TabsTrigger value="recurring" className="gap-2">
               <CalendarClock className="w-4 h-4" />
@@ -250,7 +344,7 @@ export default function Dashboard() {
             </TabsTrigger>
             <TabsTrigger value="calculations" className="gap-2">
               <Calculator className="w-4 h-4" />
-              <span className="hidden sm:inline">Tax Calculations</span>
+              <span className="hidden sm:inline">Tax</span>
               <span className="sm:hidden">Tax</span>
             </TabsTrigger>
           </TabsList>
@@ -258,6 +352,11 @@ export default function Dashboard() {
           {/* Transactions Tab */}
           <TabsContent value="transactions" className="space-y-6">
             <TransactionManager />
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6">
+            <AnalyticsTab />
           </TabsContent>
 
           {/* Recurring Tab */}
