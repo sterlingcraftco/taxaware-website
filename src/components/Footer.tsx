@@ -6,12 +6,15 @@ const Footer = () => {
           <div className="text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
               <div className="w-8 h-8 rounded-lg hero-gradient flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">NG</span>
+                <span className="text-primary-foreground font-bold text-sm">TA</span>
               </div>
-              <span className="font-bold text-lg text-foreground">TaxAware Nigeria</span>
+              <span className="font-bold text-lg text-foreground">TaxAware NG</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Educating Nigerians about NTA 2025 tax compliance
+              Helping individual Nigerians understand NTA 2025 tax compliance
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Business/Company tax tools coming soon
             </p>
           </div>
 
@@ -35,7 +38,7 @@ const Footer = () => {
 
         <div className="mt-8 pt-8 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} TaxAware Nigeria. Built with 💚 for Nigerians.
+            © {new Date().getFullYear()} TaxAware NG. Built with 💚 for Nigerians.
           </p>
         </div>
       </div>
