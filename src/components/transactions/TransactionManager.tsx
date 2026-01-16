@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Wallet, TrendingUp, TrendingDown, Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { Plus, Wallet, TrendingUp, TrendingDown, Download, FileSpreadsheet, FileText, BarChart3 } from 'lucide-react';
+import { IncomeExpenseChart, CategoryBreakdownChart } from '@/components/dashboard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -345,6 +346,12 @@ export function TransactionManager() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Analytics Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <IncomeExpenseChart transactions={transactions} />
+        <CategoryBreakdownChart transactions={transactions} categories={categories} />
       </div>
 
       {/* Transactions List Card */}
