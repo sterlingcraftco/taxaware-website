@@ -325,24 +325,24 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <Tabs defaultValue="transactions" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
-            <TabsTrigger value="transactions" className="gap-2">
+        <Tabs defaultValue="transactions" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-4 h-auto p-1">
+            <TabsTrigger value="transactions" className="flex flex-col sm:flex-row gap-1 sm:gap-2 py-2 px-1 sm:px-3 text-xs sm:text-sm">
               <Wallet className="w-4 h-4" />
               <span className="hidden sm:inline">Transactions</span>
-              <span className="sm:hidden">Trans.</span>
+              <span className="sm:hidden">Trans</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="gap-2">
+            <TabsTrigger value="analytics" className="flex flex-col sm:flex-row gap-1 sm:gap-2 py-2 px-1 sm:px-3 text-xs sm:text-sm">
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">Analytics</span>
-              <span className="sm:hidden">Charts</span>
+              <span className="sm:hidden">Stats</span>
             </TabsTrigger>
-            <TabsTrigger value="recurring" className="gap-2">
+            <TabsTrigger value="recurring" className="flex flex-col sm:flex-row gap-1 sm:gap-2 py-2 px-1 sm:px-3 text-xs sm:text-sm">
               <CalendarClock className="w-4 h-4" />
               <span className="hidden sm:inline">Recurring</span>
-              <span className="sm:hidden">Recurring</span>
+              <span className="sm:hidden">Repeat</span>
             </TabsTrigger>
-            <TabsTrigger value="calculations" className="gap-2">
+            <TabsTrigger value="calculations" className="flex flex-col sm:flex-row gap-1 sm:gap-2 py-2 px-1 sm:px-3 text-xs sm:text-sm">
               <Calculator className="w-4 h-4" />
               <span className="hidden sm:inline">Tax Tools</span>
               <span className="sm:hidden">Tax</span>
@@ -562,10 +562,10 @@ export default function Dashboard() {
 
       {/* View Details Dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto p-4 sm:p-6">
-          <DialogHeader className="pr-8">
-            <DialogTitle className="flex items-center gap-2">
-              <Calculator className="w-5 h-5" />
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+          <DialogHeader className="pr-2 sm:pr-8">
+            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Calculator className="w-4 h-4 sm:w-5 sm:h-5" />
               Calculation Details
             </DialogTitle>
           </DialogHeader>
@@ -575,17 +575,17 @@ export default function Dashboard() {
               variant="outline"
               size="sm"
               onClick={() => handleDownloadPDF(selectedCalculation)}
-              className="absolute right-12 top-4 gap-2"
+              className="absolute right-10 sm:right-12 top-3 sm:top-4 gap-1 sm:gap-2 h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm"
             >
-              <Download className="w-4 h-4" />
-              PDF
+              <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">PDF</span>
             </Button>
           )}
 
           {selectedCalculation && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Date */}
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Saved on {new Date(selectedCalculation.created_at).toLocaleDateString('en-NG', {
                   weekday: 'long',
                   day: 'numeric',
@@ -595,20 +595,20 @@ export default function Dashboard() {
               </p>
 
               {/* Summary Cards */}
-              <div className="grid sm:grid-cols-3 gap-3">
-                <div className="bg-muted/50 rounded-xl p-4">
-                  <span className="text-xs font-medium text-muted-foreground">Annual Income</span>
-                  <p className="text-xl font-bold text-foreground">{formatCurrency(selectedCalculation.annual_income)}</p>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <div className="bg-muted/50 rounded-lg sm:rounded-xl p-2 sm:p-4">
+                  <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">Annual Income</span>
+                  <p className="text-sm sm:text-xl font-bold text-foreground">{formatCurrency(selectedCalculation.annual_income)}</p>
                 </div>
 
-                <div className="bg-primary/10 rounded-xl p-4">
-                  <span className="text-xs font-medium text-muted-foreground">Total Tax</span>
-                  <p className="text-xl font-bold text-foreground">{formatCurrency(getTotalTax(selectedCalculation))}</p>
+                <div className="bg-primary/10 rounded-lg sm:rounded-xl p-2 sm:p-4">
+                  <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">Total Tax</span>
+                  <p className="text-sm sm:text-xl font-bold text-foreground">{formatCurrency(getTotalTax(selectedCalculation))}</p>
                 </div>
 
-                <div className="bg-accent/10 rounded-xl p-4">
-                  <span className="text-xs font-medium text-muted-foreground">Take Home</span>
-                  <p className="text-xl font-bold text-foreground">{formatCurrency(getNetIncome(selectedCalculation))}</p>
+                <div className="bg-accent/10 rounded-lg sm:rounded-xl p-2 sm:p-4">
+                  <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">Take Home</span>
+                  <p className="text-sm sm:text-xl font-bold text-foreground">{formatCurrency(getNetIncome(selectedCalculation))}</p>
                 </div>
               </div>
 
