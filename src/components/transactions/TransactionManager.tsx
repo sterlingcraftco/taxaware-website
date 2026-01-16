@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useTransactions, Transaction } from '@/hooks/useTransactions';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { TransactionForm } from './TransactionForm';
 import { TransactionList } from './TransactionList';
 import { DocumentUpload } from './DocumentUpload';
@@ -114,14 +115,55 @@ export function TransactionManager() {
     }
   };
 
-  const handleSubmit = async (data: {
-    description: string;
-    amount: number;
-    type: 'income' | 'expense';
-    category_id?: string;
-    transaction_date: Date;
-    notes?: string;
-  }) => {
+  // Upload files for a transaction
+  const uploadFilesForTransaction = async (transactionId: string, files: File[]) => {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) return;
+
+    const userId = userData.user.id;
+
+    for (const file of files) {
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `${userId}/${transactionId}/${fileName}`;
+
+        // Upload to storage
+        const { error: uploadError } = await supabase.storage
+          .from('transaction-documents')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          continue;
+        }
+
+        // Create database record
+        await supabase.from('transaction_documents').insert({
+          transaction_id: transactionId,
+          user_id: userId,
+          file_name: file.name,
+          file_path: filePath,
+          file_size: file.size,
+          mime_type: file.type,
+        });
+      } catch (error) {
+        console.error('Error uploading file:', error);
+      }
+    }
+  };
+
+  const handleSubmit = async (
+    data: {
+      description: string;
+      amount: number;
+      type: 'income' | 'expense';
+      category_id?: string;
+      transaction_date: Date;
+      notes?: string;
+    },
+    pendingFiles?: File[]
+  ) => {
     const payload = {
       description: data.description,
       amount: data.amount,
@@ -131,10 +173,21 @@ export function TransactionManager() {
       notes: data.notes || null,
     };
 
+    let transactionId: string | null = null;
+
     if (editingTransaction) {
       await updateTransaction(editingTransaction.id, payload);
+      transactionId = editingTransaction.id;
     } else {
-      await addTransaction(payload);
+      const newTransaction = await addTransaction(payload);
+      transactionId = newTransaction?.id || null;
+    }
+
+    // Upload pending files if any
+    if (transactionId && pendingFiles && pendingFiles.length > 0) {
+      await uploadFilesForTransaction(transactionId, pendingFiles);
+      toast.success(`${pendingFiles.length} document${pendingFiles.length !== 1 ? 's' : ''} uploaded`);
+      fetchDocumentCounts();
     }
   };
 
