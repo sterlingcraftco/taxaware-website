@@ -108,6 +108,11 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Safe area padding for iOS devices with notch/home indicator */
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
 
 @layer utilities {

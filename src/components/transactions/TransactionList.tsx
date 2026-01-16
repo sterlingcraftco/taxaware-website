@@ -133,7 +133,7 @@ export function TransactionList({
                 </div>
                 <p
                   className={cn(
-                    'font-semibold',
+                    'font-semibold text-sm truncate max-w-[120px]',
                     transaction.type === 'income' ? 'text-green-600' : 'text-destructive'
                   )}
                 >
