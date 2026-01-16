@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Wallet, TrendingUp, TrendingDown, Download, FileSpreadsheet, FileText, BarChart3, ChevronDown, ChevronUp } from 'lucide-react';
-import { IncomeExpenseChart, CategoryBreakdownChart, MonthlyTrendChart } from '@/components/dashboard';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Plus, Wallet, TrendingUp, TrendingDown, Download, FileSpreadsheet, FileText } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -51,7 +49,6 @@ export function TransactionManager() {
   } = useTransactions();
 
   const [filters, setFilters] = useState<TransactionFilters>(defaultFilters);
-  const [showAnalytics, setShowAnalytics] = useState(true);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -349,33 +346,6 @@ export function TransactionManager() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Analytics Charts - Collapsible */}
-      <Collapsible open={showAnalytics} onOpenChange={setShowAnalytics} className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="gap-2 px-0 hover:bg-transparent">
-              <BarChart3 className="w-5 h-5 text-primary" />
-              <span className="font-semibold">Analytics</span>
-              {showAnalytics ? (
-                <ChevronUp className="w-4 h-4 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
-              )}
-            </Button>
-          </CollapsibleTrigger>
-          {!showAnalytics && (
-            <span className="text-xs text-muted-foreground">Click to expand charts</span>
-          )}
-        </div>
-        <CollapsibleContent className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <IncomeExpenseChart transactions={transactions} />
-            <CategoryBreakdownChart transactions={transactions} categories={categories} />
-          </div>
-          <MonthlyTrendChart transactions={transactions} />
-        </CollapsibleContent>
-      </Collapsible>
 
       {/* Transactions List Card */}
       <Card>
