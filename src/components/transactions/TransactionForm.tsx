@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { CalendarIcon, Upload, X, File, Image, Paperclip } from 'lucide-react';
+import { CategoryIcon } from '@/components/CategoryIcon';
 import {
   Dialog,
   DialogContent,
@@ -291,8 +292,10 @@ export function TransactionForm({
                     <SelectContent>
                       {filteredCategories.map((category) => (
                         <SelectItem key={category.id} value={category.id}>
-                          {category.icon && <span className="mr-2">{category.icon}</span>}
-                          {category.name}
+                          <span className="flex items-center gap-2">
+                            <CategoryIcon name={category.icon} className="w-4 h-4" />
+                            {category.name}
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>

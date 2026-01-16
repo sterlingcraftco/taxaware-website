@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { CategoryIcon } from '@/components/CategoryIcon';
 import type { Transaction, TransactionCategory } from '@/hooks/useTransactions';
 
 interface TransactionListProps {
@@ -114,8 +115,9 @@ export function TransactionList({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {category && (
-                    <Badge variant="secondary" className="text-xs">
-                      {category.icon} {category.name}
+                    <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                      <CategoryIcon name={category.icon} className="w-3 h-3" />
+                      {category.name}
                     </Badge>
                   )}
                   {documentCounts[transaction.id] > 0 && (
@@ -178,8 +180,9 @@ export function TransactionList({
                   </TableCell>
                   <TableCell>
                     {category ? (
-                      <Badge variant="secondary">
-                        {category.icon} {category.name}
+                      <Badge variant="secondary" className="flex items-center gap-1 w-fit">
+                        <CategoryIcon name={category.icon} className="w-3.5 h-3.5" />
+                        {category.name}
                       </Badge>
                     ) : (
                       <span className="text-muted-foreground">—</span>
