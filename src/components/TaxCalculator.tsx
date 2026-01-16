@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { isAuthEnabled } from "@/lib/featureFlags";
 import { analytics } from "@/lib/analytics";
 import { generateTaxPDF } from "@/lib/pdfGenerator";
@@ -274,13 +274,16 @@ const TaxCalculator = () => {
         <div className="text-center mb-16">
           <span className="inline-block px-4 py-1.5 rounded-full bg-accent/20 text-accent-foreground text-sm font-medium mb-4">
             <Calculator className="w-4 h-4 inline mr-1" />
-            Interactive Tool
+            TaxAware NG Calculator
           </span>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Estimate Your Tax Liability
+            Estimate Your Personal Tax
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Answer a few questions to see your tax breakdown based on Nigeria's 2026 progressive tax bands.
+            Quick estimate for <strong>individual taxpayers</strong> based on Nigeria's 2026 progressive tax bands.
+          </p>
+          <p className="text-sm text-muted-foreground mt-2">
+            <Link to="/auth" className="text-primary hover:underline font-medium">Sign in</Link> for a more comprehensive calculation with additional reliefs and saved history.
           </p>
         </div>
 

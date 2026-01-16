@@ -23,7 +23,14 @@ const HeroSection = () => {
       </div>
 
       <div className="container relative z-10 py-20 md:py-32">
-        {/* Sign in button - only show when auth is enabled */}
+        {/* Header with logo and sign in */}
+        <div className="absolute top-4 left-4 md:top-8 md:left-8 flex items-center gap-2">
+          <div className="w-10 h-10 rounded-xl bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 flex items-center justify-center">
+            <span className="text-accent font-bold text-lg">TA</span>
+          </div>
+          <span className="font-bold text-lg text-primary-foreground hidden sm:inline">TaxAware NG</span>
+        </div>
+
         {authEnabled && (
           <div className="absolute top-4 right-4 md:top-8 md:right-8">
             {user ? (
@@ -44,34 +51,41 @@ const HeroSection = () => {
           </div>
         )}
 
-        <div className="max-w-3xl mx-auto text-center">
+        <div className="max-w-3xl mx-auto text-center pt-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 mb-8 animate-fade-in">
             <Shield className="w-4 h-4 text-accent" />
             <span className="text-sm font-medium text-primary-foreground">
-              Nigeria Tax Act 2025 • Citizen Awareness Guide
+              For Individuals • Nigeria Tax Act 2025
             </span>
           </div>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-6 animate-fade-up text-balance">
-            Understanding
+            Your Personal Tax Guide
             <span className="block mt-2">
-              <span className="text-accent">Nigeria Tax Act 2025</span>
+              <span className="text-accent">Under NTA 2025</span>
             </span>
           </h1>
 
           <p className="text-lg md:text-xl text-primary-foreground/85 mb-10 animate-fade-up leading-relaxed max-w-2xl mx-auto" style={{ animationDelay: "0.1s" }}>
-            Clear, simple information every Nigerian needs to know about the new tax system. 
-            New tax bands, ₦800,000 tax-free threshold, and more—explained simply.
+            TaxAware Nigeria helps <strong>individuals</strong> understand the new tax system. 
+            New tax bands, ₦800,000 tax-free threshold, and your personal deductions—explained simply.
           </p>
 
-          <button
-            onClick={scrollToContent}
-            className="group inline-flex items-center gap-2 px-8 py-4 rounded-full gold-gradient text-accent-foreground font-semibold text-lg transition-all hover:scale-105 hover:shadow-lg animate-fade-up"
-            style={{ animationDelay: "0.2s" }}
-          >
-            Learn What Changed
-            <ArrowDown className="w-5 h-5 group-hover:translate-y-1 transition-transform" />
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up" style={{ animationDelay: "0.2s" }}>
+            <button
+              onClick={scrollToContent}
+              className="group inline-flex items-center gap-2 px-8 py-4 rounded-full gold-gradient text-accent-foreground font-semibold text-lg transition-all hover:scale-105 hover:shadow-lg"
+            >
+              Learn What Changed
+              <ArrowDown className="w-5 h-5 group-hover:translate-y-1 transition-transform" />
+            </button>
+            
+            <div className="text-sm text-primary-foreground/70 flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full bg-primary-foreground/10 border border-primary-foreground/20">
+                Business/Company Tax — Coming Soon
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
