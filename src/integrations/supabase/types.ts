@@ -18,27 +18,39 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          date_of_birth: string | null
           email: string | null
           full_name: string | null
           id: string
+          nin: string | null
+          tax_residency: string | null
+          tin: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
+          nin?: string | null
+          tax_residency?: string | null
+          tin?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
+          nin?: string | null
+          tax_residency?: string | null
+          tin?: string | null
           updated_at?: string
           user_id?: string
         }
