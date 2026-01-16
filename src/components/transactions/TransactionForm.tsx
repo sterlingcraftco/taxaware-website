@@ -263,9 +263,19 @@ export function TransactionForm({
                   <FormControl>
                     <Input
                       type="number"
+                      inputMode="decimal"
+                      step="0.01"
+                      min="0"
                       placeholder="0.00"
                       {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      value={field.value || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Allow decimal input with up to 2 decimal places
+                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                          field.onChange(parseFloat(value) || 0);
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage />

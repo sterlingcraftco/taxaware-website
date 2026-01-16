@@ -26,6 +26,7 @@ import { TransactionList } from './TransactionList';
 import { DocumentUpload } from './DocumentUpload';
 import { TransactionFiltersComponent, TransactionFilters } from './TransactionFilters';
 import { exportTransactionsToCSV, exportTransactionsToPDF } from '@/lib/transactionExport';
+import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { format, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 
 const defaultFilters: TransactionFilters = {
@@ -46,6 +47,7 @@ export function TransactionManager() {
     updateTransaction,
     deleteTransaction,
     getCategoryById,
+    refresh,
   } = useTransactions();
 
   const [filters, setFilters] = useState<TransactionFilters>(defaultFilters);
@@ -140,8 +142,14 @@ export function TransactionManager() {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency: 'NGN',
-      minimumFractionDigits: 0,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
+  };
+
+  const handleRefresh = async () => {
+    await refresh();
+    toast.success('Transactions refreshed');
   };
 
   const handleAdd = () => {
@@ -403,14 +411,32 @@ export function TransactionManager() {
               <div className="animate-pulse">Loading transactions...</div>
             </div>
           ) : (
-            <TransactionList
-              transactions={filteredTransactions}
-              getCategoryById={getCategoryById}
-              onEdit={handleEdit}
-              onDelete={handleDeleteClick}
-              onViewDocuments={handleViewDocuments}
-              documentCounts={documentCounts}
-            />
+            <div className="md:hidden">
+              <PullToRefresh onRefresh={handleRefresh}>
+                <TransactionList
+                  transactions={filteredTransactions}
+                  getCategoryById={getCategoryById}
+                  onEdit={handleEdit}
+                  onDelete={handleDeleteClick}
+                  onViewDocuments={handleViewDocuments}
+                  documentCounts={documentCounts}
+                />
+              </PullToRefresh>
+            </div>
+          )}
+          
+          {/* Desktop - no pull to refresh */}
+          {!loading && (
+            <div className="hidden md:block">
+              <TransactionList
+                transactions={filteredTransactions}
+                getCategoryById={getCategoryById}
+                onEdit={handleEdit}
+                onDelete={handleDeleteClick}
+                onViewDocuments={handleViewDocuments}
+                documentCounts={documentCounts}
+              />
+            </div>
           )}
         </CardContent>
       </Card>
