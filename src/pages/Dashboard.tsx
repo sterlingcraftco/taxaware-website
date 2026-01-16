@@ -209,10 +209,9 @@ export default function Dashboard() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem disabled className="gap-2">
+              <DropdownMenuItem onClick={() => navigate('/profile')} className="gap-2 cursor-pointer">
                 <Settings className="w-4 h-4" />
                 Profile Settings
-                <span className="ml-auto text-xs text-muted-foreground">Soon</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut} className="gap-2 text-destructive focus:text-destructive">
