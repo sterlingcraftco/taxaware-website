@@ -56,6 +56,68 @@ export type Database = {
         }
         Relationships: []
       }
+      recurring_transactions: {
+        Row: {
+          amount: number
+          category_id: string | null
+          created_at: string
+          description: string
+          end_date: string | null
+          frequency: Database["public"]["Enums"]["recurrence_frequency"]
+          id: string
+          is_active: boolean | null
+          last_processed_at: string | null
+          next_occurrence: string
+          notes: string | null
+          start_date: string
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category_id?: string | null
+          created_at?: string
+          description: string
+          end_date?: string | null
+          frequency: Database["public"]["Enums"]["recurrence_frequency"]
+          id?: string
+          is_active?: boolean | null
+          last_processed_at?: string | null
+          next_occurrence: string
+          notes?: string | null
+          start_date: string
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          end_date?: string | null
+          frequency?: Database["public"]["Enums"]["recurrence_frequency"]
+          id?: string
+          is_active?: boolean | null
+          last_processed_at?: string | null
+          next_occurrence?: string
+          notes?: string | null
+          start_date?: string
+          type?: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_transactions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_calculations: {
         Row: {
           annual_income: number
@@ -83,6 +145,152 @@ export type Database = {
         }
         Relationships: []
       }
+      transaction_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          icon: string | null
+          id: string
+          is_system: boolean | null
+          is_tax_deductible: boolean | null
+          name: string
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_system?: boolean | null
+          is_tax_deductible?: boolean | null
+          name: string
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_system?: boolean | null
+          is_tax_deductible?: boolean | null
+          name?: string
+          type?: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transaction_documents: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          transaction_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          transaction_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          transaction_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_documents_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          category_id: string | null
+          created_at: string
+          description: string
+          id: string
+          is_recurring: boolean | null
+          notes: string | null
+          recurring_id: string | null
+          status: Database["public"]["Enums"]["transaction_status"] | null
+          tax_year: number | null
+          transaction_date: string
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category_id?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          is_recurring?: boolean | null
+          notes?: string | null
+          recurring_id?: string | null
+          status?: Database["public"]["Enums"]["transaction_status"] | null
+          tax_year?: number | null
+          transaction_date: string
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          is_recurring?: boolean | null
+          notes?: string | null
+          recurring_id?: string | null
+          status?: Database["public"]["Enums"]["transaction_status"] | null
+          tax_year?: number | null
+          transaction_date?: string
+          type?: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_transactions_recurring"
+            columns: ["recurring_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -91,7 +299,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      recurrence_frequency:
+        | "daily"
+        | "weekly"
+        | "bi-weekly"
+        | "monthly"
+        | "quarterly"
+        | "annually"
+      transaction_status: "pending" | "completed" | "cancelled"
+      transaction_type: "income" | "expense"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -218,6 +434,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      recurrence_frequency: [
+        "daily",
+        "weekly",
+        "bi-weekly",
+        "monthly",
+        "quarterly",
+        "annually",
+      ],
+      transaction_status: ["pending", "completed", "cancelled"],
+      transaction_type: ["income", "expense"],
+    },
   },
 } as const
