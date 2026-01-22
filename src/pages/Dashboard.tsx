@@ -39,6 +39,7 @@ import { TransactionManager, RecurringTransactionManager } from '@/components/tr
 import { IncomeExpenseChart, CategoryBreakdownChart, MonthlyTrendChart } from '@/components/dashboard';
 import { useTransactions } from '@/hooks/useTransactions';
 import { generateTaxPDF } from '@/lib/pdfGenerator';
+import { CompleteTaxResult, migrateToCompleteTaxResult } from '@/lib/taxCalculations';
 import { SavingsDashboard } from '@/components/savings';
 import { useAdmin } from '@/hooks/useAdmin';
 
