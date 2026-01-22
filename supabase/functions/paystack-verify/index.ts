@@ -6,10 +6,15 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// In-memory rate limiting (per function instance)
+const processingReferences = new Set<string>();
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  let reference: string | null = null;
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -34,10 +39,51 @@ serve(async (req) => {
       throw new Error("Unauthorized");
     }
 
-    const { reference } = await req.json();
+    const body = await req.json();
+    reference = body.reference;
 
     if (!reference) {
       throw new Error("Reference is required");
+    }
+
+    // Check if this reference is currently being processed
+    if (processingReferences.has(reference)) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Payment verification in progress",
+          data: { already_processing: true },
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
+
+    // Mark as processing
+    processingReferences.add(reference);
+
+    // Check if this transaction was already processed (database check first)
+    const { data: existingTransaction } = await supabaseClient
+      .from("savings_transactions")
+      .select("id")
+      .eq("paystack_reference", reference)
+      .single();
+
+    if (existingTransaction) {
+      processingReferences.delete(reference);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Payment already processed",
+          data: { already_processed: true },
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
     }
 
     // Verify transaction with Paystack
@@ -60,38 +106,32 @@ serve(async (req) => {
       throw new Error(`Payment ${transaction.status}`);
     }
 
-    // Check if this transaction was already processed
-    const { data: existingTransaction } = await supabaseClient
-      .from("savings_transactions")
-      .select("id")
-      .eq("paystack_reference", reference)
-      .single();
-
-    if (existingTransaction) {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: "Payment already processed",
-          data: { already_processed: true },
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        }
-      );
-    }
-
     const amount = transaction.amount / 100; // Convert from kobo to naira
 
-    // Get user's savings account
-    const { data: account, error: accountError } = await supabaseClient
+    // Get or create user's savings account
+    let account;
+    const { data: existingAccount, error: accountError } = await supabaseClient
       .from("tax_savings_accounts")
       .select("*")
       .eq("user_id", user.id)
       .single();
 
-    if (accountError || !account) {
-      throw new Error("Savings account not found");
+    if (accountError && accountError.code === 'PGRST116') {
+      // No account exists, create one
+      const { data: newAccount, error: createError } = await supabaseClient
+        .from("tax_savings_accounts")
+        .insert({ user_id: user.id })
+        .select()
+        .single();
+
+      if (createError) {
+        throw new Error("Failed to create savings account");
+      }
+      account = newAccount;
+    } else if (accountError) {
+      throw new Error("Failed to fetch savings account");
+    } else {
+      account = existingAccount;
     }
 
     const newBalance = Number(account.balance) + amount;
@@ -131,6 +171,9 @@ serve(async (req) => {
       console.error("Error recording transaction:", transactionError);
     }
 
+    // Clean up processing set
+    processingReferences.delete(reference);
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -146,6 +189,11 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    // Clean up processing set on error
+    if (reference) {
+      processingReferences.delete(reference);
+    }
+    
     console.error("Error verifying payment:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(

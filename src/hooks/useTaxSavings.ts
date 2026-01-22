@@ -168,7 +168,7 @@ export function useTaxSavings() {
     }
   };
 
-  const verifyDeposit = async (reference: string) => {
+  const verifyDeposit = useCallback(async (reference: string) => {
     try {
       const { data: session } = await supabase.auth.getSession();
       
@@ -183,15 +183,19 @@ export function useTaxSavings() {
         throw new Error(response.data?.error || 'Failed to verify payment');
       }
 
+      // Only show toast if not already processed
+      if (!response.data.data?.already_processed) {
+        toast.success('Deposit successful!');
+      }
+      
       await loadData();
-      toast.success('Deposit successful!');
       return response.data.data;
     } catch (error) {
       console.error('Error verifying deposit:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to verify payment');
       return null;
     }
-  };
+  }, [loadData]);
 
   const requestWithdrawal = async (data: {
     amount: number;
