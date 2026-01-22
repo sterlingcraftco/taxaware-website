@@ -141,6 +141,7 @@ function AnalyticsTab() {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, loading, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
   const [calculations, setCalculations] = useState<SavedCalculation[]>([]);
   const [loadingCalcs, setLoadingCalcs] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -308,6 +309,15 @@ export default function Dashboard() {
                 <Settings className="w-4 h-4" />
                 Profile Settings
               </DropdownMenuItem>
+              {isAdmin && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/admin')} className="gap-2 cursor-pointer">
+                    <Shield className="w-4 h-4" />
+                    Admin Dashboard
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut} className="gap-2 text-destructive focus:text-destructive">
                 <LogOut className="w-4 h-4" />
