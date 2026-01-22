@@ -145,6 +145,95 @@ export type Database = {
         }
         Relationships: []
       }
+      savings_transactions: {
+        Row: {
+          account_id: string
+          amount: number
+          balance_after: number
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          paystack_reference: string | null
+          reference: string | null
+          type: Database["public"]["Enums"]["savings_transaction_type"]
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          balance_after: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          paystack_reference?: string | null
+          reference?: string | null
+          type: Database["public"]["Enums"]["savings_transaction_type"]
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          balance_after?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          paystack_reference?: string | null
+          reference?: string | null
+          type?: Database["public"]["Enums"]["savings_transaction_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "savings_transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "tax_savings_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_savings_accounts: {
+        Row: {
+          balance: number
+          created_at: string
+          has_withdrawal_this_quarter: boolean
+          id: string
+          last_interest_date: string | null
+          total_deposits: number
+          total_interest_earned: number
+          total_withdrawals: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          has_withdrawal_this_quarter?: boolean
+          id?: string
+          last_interest_date?: string | null
+          total_deposits?: number
+          total_interest_earned?: number
+          total_withdrawals?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          has_withdrawal_this_quarter?: boolean
+          id?: string
+          last_interest_date?: string | null
+          total_deposits?: number
+          total_interest_earned?: number
+          total_withdrawals?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       transaction_categories: {
         Row: {
           color: string | null
@@ -291,14 +380,105 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      withdrawal_requests: {
+        Row: {
+          account_id: string
+          account_name: string | null
+          account_number: string | null
+          amount: number
+          bank_name: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          processed_at: string | null
+          processed_by: string | null
+          status: Database["public"]["Enums"]["withdrawal_status"]
+          updated_at: string
+          user_id: string
+          withdrawal_type: string
+        }
+        Insert: {
+          account_id: string
+          account_name?: string | null
+          account_number?: string | null
+          amount: number
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: Database["public"]["Enums"]["withdrawal_status"]
+          updated_at?: string
+          user_id: string
+          withdrawal_type: string
+        }
+        Update: {
+          account_id?: string
+          account_name?: string | null
+          account_number?: string | null
+          amount?: number
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: Database["public"]["Enums"]["withdrawal_status"]
+          updated_at?: string
+          user_id?: string
+          withdrawal_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_requests_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "tax_savings_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      reset_quarterly_withdrawal_flags: { Args: never; Returns: undefined }
     }
     Enums: {
+      app_role: "admin" | "user"
       recurrence_frequency:
         | "daily"
         | "weekly"
@@ -306,8 +486,14 @@ export type Database = {
         | "monthly"
         | "quarterly"
         | "annually"
+      savings_transaction_type:
+        | "deposit"
+        | "withdrawal"
+        | "interest"
+        | "withdrawal_request"
       transaction_status: "pending" | "completed" | "cancelled"
       transaction_type: "income" | "expense"
+      withdrawal_status: "pending" | "processing" | "completed" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -435,6 +621,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "user"],
       recurrence_frequency: [
         "daily",
         "weekly",
@@ -443,8 +630,15 @@ export const Constants = {
         "quarterly",
         "annually",
       ],
+      savings_transaction_type: [
+        "deposit",
+        "withdrawal",
+        "interest",
+        "withdrawal_request",
+      ],
       transaction_status: ["pending", "completed", "cancelled"],
       transaction_type: ["income", "expense"],
+      withdrawal_status: ["pending", "processing", "completed", "cancelled"],
     },
   },
 } as const
