@@ -1,4 +1,4 @@
-import { Wallet, BarChart3, CalendarClock, Calculator } from 'lucide-react';
+import { Wallet, BarChart3, CalendarClock, Calculator, PiggyBank } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MobileBottomNavProps {
@@ -8,6 +8,7 @@ interface MobileBottomNavProps {
 
 const tabs = [
   { id: 'transactions', label: 'Trans', icon: Wallet },
+  { id: 'savings', label: 'Savings', icon: PiggyBank },
   { id: 'analytics', label: 'Stats', icon: BarChart3 },
   { id: 'recurring', label: 'Repeat', icon: CalendarClock },
   { id: 'calculations', label: 'Tax', icon: Calculator },
