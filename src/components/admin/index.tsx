@@ -4,8 +4,9 @@ import { useAdmin } from '@/hooks/useAdmin';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { AdminSavingsManager } from './AdminSavingsManager';
+import { AdminUsersManager } from './AdminUsersManager';
+import { AdminSettings } from './AdminSettings';
 import { 
-  LayoutDashboard, 
   PiggyBank, 
   Users, 
   Settings, 
@@ -81,11 +82,11 @@ export function AdminDashboard() {
               <PiggyBank className="h-4 w-4" />
               <span className="hidden sm:inline">Savings</span>
             </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-2" disabled>
+            <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Users</span>
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2" disabled>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               <span className="hidden sm:inline">Settings</span>
             </TabsTrigger>
@@ -96,17 +97,11 @@ export function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="users">
-            <div className="text-center py-12 text-muted-foreground">
-              <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>User management coming soon</p>
-            </div>
+            <AdminUsersManager />
           </TabsContent>
 
           <TabsContent value="settings">
-            <div className="text-center py-12 text-muted-foreground">
-              <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Settings coming soon</p>
-            </div>
+            <AdminSettings />
           </TabsContent>
         </Tabs>
       </main>
@@ -115,3 +110,5 @@ export function AdminDashboard() {
 }
 
 export { AdminSavingsManager };
+export { AdminUsersManager };
+export { AdminSettings };
