@@ -30,7 +30,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download, Wallet, CalendarClock, BarChart3 } from 'lucide-react';
+import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download, Wallet, CalendarClock, BarChart3, PiggyBank, Shield } from 'lucide-react';
 import { MobileBottomNav } from '@/components/dashboard/MobileBottomNav';
 import { toast } from 'sonner';
 import DashboardCalculator from '@/components/DashboardCalculator';
@@ -39,7 +39,8 @@ import { TransactionManager, RecurringTransactionManager } from '@/components/tr
 import { IncomeExpenseChart, CategoryBreakdownChart, MonthlyTrendChart } from '@/components/dashboard';
 import { useTransactions } from '@/hooks/useTransactions';
 import { generateTaxPDF } from '@/lib/pdfGenerator';
-import { CompleteTaxResult, migrateToCompleteTaxResult } from '@/lib/taxCalculations';
+import { SavingsDashboard } from '@/components/savings';
+import { useAdmin } from '@/hooks/useAdmin';
 
 interface SavedCalculation {
   id: string;
@@ -329,10 +330,14 @@ export default function Dashboard() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           {/* Desktop Tab List - hidden on mobile since we use bottom nav */}
-          <TabsList className="hidden md:grid w-full grid-cols-4 h-auto p-1">
+          <TabsList className="hidden md:grid w-full grid-cols-5 h-auto p-1">
             <TabsTrigger value="transactions" className="flex flex-row gap-2 py-2 px-3">
               <Wallet className="w-4 h-4" />
               <span>Transactions</span>
+            </TabsTrigger>
+            <TabsTrigger value="savings" className="flex flex-row gap-2 py-2 px-3">
+              <PiggyBank className="w-4 h-4" />
+              <span>Tax Savings</span>
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex flex-row gap-2 py-2 px-3">
               <BarChart3 className="w-4 h-4" />
