@@ -1,26 +1,34 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SavingsOverview } from './SavingsOverview';
 import { SavingsTransactionHistory } from './SavingsTransactionHistory';
 import { WithdrawalManager } from './WithdrawalManager';
 import { useTaxSavings } from '@/hooks/useTaxSavings';
-import { PiggyBank, History, ArrowUpRight } from 'lucide-react';
+import { History, ArrowUpRight } from 'lucide-react';
 
 export function SavingsDashboard() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { verifyDeposit, refresh } = useTaxSavings();
+  const verifyingRef = useRef(false);
+  const processedRef = useRef<string | null>(null);
 
   useEffect(() => {
     const paymentStatus = searchParams.get('payment');
     const reference = searchParams.get('reference');
 
-    if (paymentStatus === 'success' && reference) {
-      verifyDeposit(reference);
-      // Clean up URL
-      window.history.replaceState({}, '', window.location.pathname + '?tab=savings');
+    // Only process if we have a success payment with reference, haven't already processed it, and aren't currently verifying
+    if (paymentStatus === 'success' && reference && !verifyingRef.current && processedRef.current !== reference) {
+      verifyingRef.current = true;
+      processedRef.current = reference;
+      
+      verifyDeposit(reference).finally(() => {
+        verifyingRef.current = false;
+        // Clean up URL params after verification
+        setSearchParams({ tab: 'savings' });
+      });
     }
-  }, [searchParams, verifyDeposit]);
+  }, [searchParams, setSearchParams]); // Removed verifyDeposit from deps - it causes re-runs
 
   return (
     <div className="space-y-6">
