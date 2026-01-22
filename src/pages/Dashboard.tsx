@@ -369,6 +369,11 @@ export default function Dashboard() {
             <TransactionManager />
           </TabsContent>
 
+          {/* Savings Tab */}
+          <TabsContent value="savings" className="space-y-6">
+            <SavingsDashboard />
+          </TabsContent>
+
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
             <AnalyticsTab />
