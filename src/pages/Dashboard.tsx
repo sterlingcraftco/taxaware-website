@@ -348,6 +348,10 @@ export default function Dashboard() {
               <Wallet className="w-4 h-4" />
               <span>Transactions</span>
             </TabsTrigger>
+            <TabsTrigger value="recurring" className="flex flex-row gap-2 py-2 px-3">
+              <CalendarClock className="w-4 h-4" />
+              <span>Recurring</span>
+            </TabsTrigger>
             {savingsEnabled && (
               <TabsTrigger value="savings" className="flex flex-row gap-2 py-2 px-3">
                 <PiggyBank className="w-4 h-4" />
@@ -357,10 +361,6 @@ export default function Dashboard() {
             <TabsTrigger value="analytics" className="flex flex-row gap-2 py-2 px-3">
               <BarChart3 className="w-4 h-4" />
               <span>Analytics</span>
-            </TabsTrigger>
-            <TabsTrigger value="recurring" className="flex flex-row gap-2 py-2 px-3">
-              <CalendarClock className="w-4 h-4" />
-              <span>Recurring</span>
             </TabsTrigger>
             <TabsTrigger value="calculations" className="flex flex-row gap-2 py-2 px-3">
               <Calculator className="w-4 h-4" />
