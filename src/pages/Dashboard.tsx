@@ -42,6 +42,7 @@ import { generateTaxPDF } from '@/lib/pdfGenerator';
 import { CompleteTaxResult, migrateToCompleteTaxResult } from '@/lib/taxCalculations';
 import { SavingsDashboard } from '@/components/savings';
 import { useAdmin } from '@/hooks/useAdmin';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 
 interface SavedCalculation {
   id: string;
@@ -142,6 +143,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user, loading, signOut } = useAuth();
   const { isAdmin } = useAdmin();
+  const { isEnabled: savingsEnabled } = useFeatureFlag('savings');
   const [calculations, setCalculations] = useState<SavedCalculation[]>([]);
   const [loadingCalcs, setLoadingCalcs] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -341,15 +343,17 @@ export default function Dashboard() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           {/* Desktop Tab List - hidden on mobile since we use bottom nav */}
-          <TabsList className="hidden md:grid w-full grid-cols-5 h-auto p-1">
+          <TabsList className={`hidden md:grid w-full ${savingsEnabled ? 'grid-cols-5' : 'grid-cols-4'} h-auto p-1`}>
             <TabsTrigger value="transactions" className="flex flex-row gap-2 py-2 px-3">
               <Wallet className="w-4 h-4" />
               <span>Transactions</span>
             </TabsTrigger>
-            <TabsTrigger value="savings" className="flex flex-row gap-2 py-2 px-3">
-              <PiggyBank className="w-4 h-4" />
-              <span>Tax Savings</span>
-            </TabsTrigger>
+            {savingsEnabled && (
+              <TabsTrigger value="savings" className="flex flex-row gap-2 py-2 px-3">
+                <PiggyBank className="w-4 h-4" />
+                <span>Tax Savings</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger value="analytics" className="flex flex-row gap-2 py-2 px-3">
               <BarChart3 className="w-4 h-4" />
               <span>Analytics</span>
@@ -370,9 +374,11 @@ export default function Dashboard() {
           </TabsContent>
 
           {/* Savings Tab */}
-          <TabsContent value="savings" className="space-y-6">
-            <SavingsDashboard />
-          </TabsContent>
+          {savingsEnabled && (
+            <TabsContent value="savings" className="space-y-6">
+              <SavingsDashboard />
+            </TabsContent>
+          )}
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
@@ -705,7 +711,7 @@ export default function Dashboard() {
       </Dialog>
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <MobileBottomNav activeTab={activeTab} onTabChange={setActiveTab} savingsEnabled={savingsEnabled} />
     </div>
   );
 }
