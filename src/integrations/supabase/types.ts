@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      feature_flag_targets: {
+        Row: {
+          created_at: string
+          email: string
+          flag_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          flag_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          flag_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_flag_targets_flag_id_fkey"
+            columns: ["flag_id"]
+            isOneToOne: false
+            referencedRelation: "feature_flags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feature_flags: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled: boolean
+          id: string
+          key: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          key: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          key?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

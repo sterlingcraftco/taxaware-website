@@ -16,7 +16,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   PiggyBank,
-  TrendingUp
+  TrendingUp,
+  ChevronDown
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -33,12 +34,18 @@ import {
   AlertDescription,
   AlertTitle,
 } from '@/components/ui/alert';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 export function AdminSettings() {
   const { stats, refresh } = useAdmin();
   const [calculatingInterest, setCalculatingInterest] = useState(false);
   const [resettingFlags, setResettingFlags] = useState(false);
   const [confirmAction, setConfirmAction] = useState<'interest' | 'reset' | null>(null);
+  const [savingsOpen, setSavingsOpen] = useState(false);
 
   const handleCalculateInterest = async () => {
     setCalculatingInterest(true);
@@ -93,176 +100,173 @@ export function AdminSettings() {
 
   return (
     <div className="space-y-6">
-      {/* Interest Configuration */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Percent className="h-5 w-5 text-primary" />
-            Interest Configuration
-          </CardTitle>
-          <CardDescription>
-            Current interest rate settings for tax savings accounts
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="h-4 w-4 text-green-600" />
-                <span className="text-sm font-medium text-muted-foreground">Annual Rate</span>
+      {/* Savings Section - Collapsible */}
+      <Collapsible open={savingsOpen} onOpenChange={setSavingsOpen}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <PiggyBank className="h-5 w-5 text-primary" />
+                  <div>
+                    <CardTitle className="text-base">Savings Configuration & Stats</CardTitle>
+                    <CardDescription>Interest rates, platform statistics, and manual actions</CardDescription>
+                  </div>
+                </div>
+                <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${savingsOpen ? 'rotate-180' : ''}`} />
               </div>
-              <p className="text-2xl font-bold text-green-600">10%</p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Calendar className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium text-muted-foreground">Quarterly Rate</span>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-6 pt-0">
+              {/* Interest Configuration */}
+              <div>
+                <h4 className="flex items-center gap-2 font-medium mb-3">
+                  <Percent className="h-4 w-4 text-primary" />
+                  Interest Configuration
+                </h4>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-muted-foreground">Annual Rate</span>
+                    </div>
+                    <p className="text-2xl font-bold text-green-600">10%</p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Calendar className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-medium text-muted-foreground">Quarterly Rate</span>
+                    </div>
+                    <p className="text-2xl font-bold text-primary">2.5%</p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium text-muted-foreground">Current Quarter</span>
+                    </div>
+                    <p className="text-2xl font-bold">Q{currentQuarter} {currentYear}</p>
+                  </div>
+                </div>
+                <Alert className="mt-4">
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>Interest Eligibility</AlertTitle>
+                  <AlertDescription>
+                    Users are eligible for quarterly interest only if they have not made any withdrawals during the current quarter.
+                    Interest is automatically credited to accounts at the end of each quarter.
+                  </AlertDescription>
+                </Alert>
               </div>
-              <p className="text-2xl font-bold text-primary">2.5%</p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground">Current Quarter</span>
-              </div>
-              <p className="text-2xl font-bold">Q{currentQuarter} {currentYear}</p>
-            </div>
-          </div>
 
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertTitle>Interest Eligibility</AlertTitle>
-            <AlertDescription>
-              Users are eligible for quarterly interest only if they have not made any withdrawals during the current quarter.
-              Interest is automatically credited to accounts at the end of each quarter.
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
-
-      {/* Platform Statistics */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <PiggyBank className="h-5 w-5 text-primary" />
-            Platform Statistics
-          </CardTitle>
-          <CardDescription>
-            Overview of the savings platform
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="p-4 border rounded-lg">
-              <p className="text-sm text-muted-foreground mb-1">Total Deposits</p>
-              <p className="text-xl font-bold text-green-600">
-                NGN {(stats?.totalDeposits || 0).toLocaleString('en-NG', { minimumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <p className="text-sm text-muted-foreground mb-1">Total Withdrawals</p>
-              <p className="text-xl font-bold text-red-600">
-                NGN {(stats?.totalWithdrawals || 0).toLocaleString('en-NG', { minimumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <p className="text-sm text-muted-foreground mb-1">Total Interest Paid</p>
-              <p className="text-xl font-bold text-amber-600">
-                NGN {(stats?.totalInterestPaid || 0).toLocaleString('en-NG', { minimumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <p className="text-sm text-muted-foreground mb-1">Net Balance</p>
-              <p className="text-xl font-bold text-primary">
-                NGN {(stats?.totalSavingsBalance || 0).toLocaleString('en-NG', { minimumFractionDigits: 2 })}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Admin Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5 text-primary" />
-            Administrative Actions
-          </CardTitle>
-          <CardDescription>
-            Manual triggers for scheduled tasks
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Alert variant="destructive" className="border-amber-200 bg-amber-50 text-amber-800">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Caution</AlertTitle>
-            <AlertDescription>
-              These actions are normally automated. Only use manual triggers if there's an issue with the scheduled tasks.
-            </AlertDescription>
-          </Alert>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="p-4 border rounded-lg space-y-3">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-green-600" />
-                <div>
-                  <h4 className="font-medium">Calculate Quarterly Interest</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Manually trigger interest calculation for all eligible accounts
-                  </p>
+              {/* Platform Statistics */}
+              <div>
+                <h4 className="font-medium mb-3">Platform Statistics</h4>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <div className="p-4 border rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Total Deposits</p>
+                    <p className="text-xl font-bold text-green-600">
+                      NGN {(stats?.totalDeposits || 0).toLocaleString('en-NG', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Total Withdrawals</p>
+                    <p className="text-xl font-bold text-destructive">
+                      NGN {(stats?.totalWithdrawals || 0).toLocaleString('en-NG', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Total Interest Paid</p>
+                    <p className="text-xl font-bold text-amber-600">
+                      NGN {(stats?.totalInterestPaid || 0).toLocaleString('en-NG', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Net Balance</p>
+                    <p className="text-xl font-bold text-primary">
+                      NGN {(stats?.totalSavingsBalance || 0).toLocaleString('en-NG', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
                 </div>
               </div>
-              <Button 
-                onClick={() => setConfirmAction('interest')}
-                disabled={calculatingInterest}
-                className="w-full"
-              >
-                {calculatingInterest ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Calculating...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Calculate Interest
-                  </>
-                )}
-              </Button>
-            </div>
 
-            <div className="p-4 border rounded-lg space-y-3">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-primary" />
-                <div>
-                  <h4 className="font-medium">Reset Quarterly Flags</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Reset withdrawal flags for all accounts (start of new quarter)
-                  </p>
+              {/* Admin Actions */}
+              <div>
+                <h4 className="flex items-center gap-2 font-medium mb-3">
+                  <Settings className="h-4 w-4 text-primary" />
+                  Administrative Actions
+                </h4>
+                <Alert variant="destructive" className="border-amber-200 bg-amber-50 text-amber-800 mb-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Caution</AlertTitle>
+                  <AlertDescription>
+                    These actions are normally automated. Only use manual triggers if there's an issue with the scheduled tasks.
+                  </AlertDescription>
+                </Alert>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="p-4 border rounded-lg space-y-3">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-green-600" />
+                      <div>
+                        <h4 className="font-medium">Calculate Quarterly Interest</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Manually trigger interest calculation for all eligible accounts
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={() => setConfirmAction('interest')}
+                      disabled={calculatingInterest}
+                      className="w-full"
+                    >
+                      {calculatingInterest ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Calculating...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Calculate Interest
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  <div className="p-4 border rounded-lg space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5 text-primary" />
+                      <div>
+                        <h4 className="font-medium">Reset Quarterly Flags</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Reset withdrawal flags for all accounts (start of new quarter)
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline"
+                      onClick={() => setConfirmAction('reset')}
+                      disabled={resettingFlags}
+                      className="w-full"
+                    >
+                      {resettingFlags ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Resetting...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Reset Flags
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
-              <Button 
-                variant="outline"
-                onClick={() => setConfirmAction('reset')}
-                disabled={resettingFlags}
-                className="w-full"
-              >
-                {resettingFlags ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Resetting...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Reset Flags
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* System Info */}
       <Card>

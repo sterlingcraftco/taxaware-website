@@ -6,13 +6,15 @@ import { Button } from '@/components/ui/button';
 import { AdminSavingsManager } from './AdminSavingsManager';
 import { AdminUsersManager } from './AdminUsersManager';
 import { AdminSettings } from './AdminSettings';
+import { FeatureFlagManager } from './FeatureFlagManager';
 import { 
   PiggyBank, 
   Users, 
   Settings, 
   ArrowLeft,
   Shield,
-  Loader2 
+  Loader2,
+  Flag
 } from 'lucide-react';
 
 export function AdminDashboard() {
@@ -77,7 +79,7 @@ export function AdminDashboard() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs defaultValue="savings" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsList className="grid w-full max-w-lg grid-cols-4">
             <TabsTrigger value="savings" className="flex items-center gap-2">
               <PiggyBank className="h-4 w-4" />
               <span className="hidden sm:inline">Savings</span>
@@ -85,6 +87,10 @@ export function AdminDashboard() {
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Users</span>
+            </TabsTrigger>
+            <TabsTrigger value="flags" className="flex items-center gap-2">
+              <Flag className="h-4 w-4" />
+              <span className="hidden sm:inline">Flags</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
@@ -100,6 +106,10 @@ export function AdminDashboard() {
             <AdminUsersManager />
           </TabsContent>
 
+          <TabsContent value="flags">
+            <FeatureFlagManager />
+          </TabsContent>
+
           <TabsContent value="settings">
             <AdminSettings />
           </TabsContent>
@@ -112,3 +122,4 @@ export function AdminDashboard() {
 export { AdminSavingsManager };
 export { AdminUsersManager };
 export { AdminSettings };
+export { FeatureFlagManager };

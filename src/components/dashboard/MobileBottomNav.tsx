@@ -1,12 +1,14 @@
 import { Wallet, BarChart3, CalendarClock, Calculator, PiggyBank } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useMemo } from 'react';
 
 interface MobileBottomNavProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  savingsEnabled?: boolean;
 }
 
-const tabs = [
+const allTabs = [
   { id: 'transactions', label: 'Trans', icon: Wallet },
   { id: 'savings', label: 'Savings', icon: PiggyBank },
   { id: 'analytics', label: 'Stats', icon: BarChart3 },
@@ -14,7 +16,12 @@ const tabs = [
   { id: 'calculations', label: 'Tax', icon: Calculator },
 ];
 
-export function MobileBottomNav({ activeTab, onTabChange }: MobileBottomNavProps) {
+export function MobileBottomNav({ activeTab, onTabChange, savingsEnabled = false }: MobileBottomNavProps) {
+  const tabs = useMemo(
+    () => allTabs.filter(tab => tab.id !== 'savings' || savingsEnabled),
+    [savingsEnabled]
+  );
+
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border safe-area-pb">
       <div className="flex items-center justify-around h-16">
