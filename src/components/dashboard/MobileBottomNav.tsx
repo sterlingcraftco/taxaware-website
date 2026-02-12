@@ -10,9 +10,9 @@ interface MobileBottomNavProps {
 
 const allTabs = [
   { id: 'transactions', label: 'Trans', icon: Wallet },
+  { id: 'recurring', label: 'Repeat', icon: CalendarClock },
   { id: 'savings', label: 'Savings', icon: PiggyBank },
   { id: 'analytics', label: 'Stats', icon: BarChart3 },
-  { id: 'recurring', label: 'Repeat', icon: CalendarClock },
   { id: 'calculations', label: 'Tax', icon: Calculator },
 ];
 
