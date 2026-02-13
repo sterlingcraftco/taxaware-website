@@ -43,6 +43,8 @@ import { CompleteTaxResult, migrateToCompleteTaxResult } from '@/lib/taxCalculat
 import { SavingsDashboard } from '@/components/savings';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+import { useSubscription } from '@/hooks/useSubscription';
+import { Badge } from '@/components/ui/badge';
 
 interface SavedCalculation {
   id: string;
@@ -144,6 +146,7 @@ export default function Dashboard() {
   const { user, loading, signOut } = useAuth();
   const { isAdmin } = useAdmin();
   const { isEnabled: savingsEnabled } = useFeatureFlag('savings');
+  const { isPro } = useSubscription();
   const [calculations, setCalculations] = useState<SavedCalculation[]>([]);
   const [loadingCalcs, setLoadingCalcs] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -282,7 +285,12 @@ export default function Dashboard() {
                 <Calculator className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h1 className="font-semibold">TaxAware Dashboard</h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="font-semibold">TaxAware Dashboard</h1>
+                  <Badge variant={isPro ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0">
+                    {isPro ? 'Pro' : 'Free'}
+                  </Badge>
+                </div>
                 <p className="text-sm text-muted-foreground">
                   {user.email}
                 </p>
