@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Wallet, TrendingUp, TrendingDown, Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Wallet, TrendingUp, TrendingDown, Download, FileSpreadsheet, FileText, Crown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,6 +28,8 @@ import { DocumentUpload } from './DocumentUpload';
 import { TransactionFiltersComponent, TransactionFilters } from './TransactionFilters';
 import { exportTransactionsToCSV, exportTransactionsToPDF } from '@/lib/transactionExport';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
+import { useSubscription } from '@/hooks/useSubscription';
+import { Badge } from '@/components/ui/badge';
 import { format, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 
 const defaultFilters: TransactionFilters = {
@@ -38,6 +41,7 @@ const defaultFilters: TransactionFilters = {
 };
 
 export function TransactionManager() {
+  const navigate = useNavigate();
   const {
     transactions,
     categories,
@@ -49,6 +53,7 @@ export function TransactionManager() {
     getCategoryById,
     refresh,
   } = useTransactions();
+  const { canAddTransaction, remainingTransactions, isPro, transactionLimit } = useSubscription();
 
   const [filters, setFilters] = useState<TransactionFilters>(defaultFilters);
 
@@ -153,6 +158,10 @@ export function TransactionManager() {
   };
 
   const handleAdd = () => {
+    if (!canAddTransaction) {
+      toast.error('You\'ve reached the free plan limit. Upgrade to add more transactions.');
+      return;
+    }
     setEditingTransaction(null);
     setFormOpen(true);
   };
@@ -288,6 +297,35 @@ export function TransactionManager() {
 
   return (
     <>
+      {/* Upgrade Banner for Free Users */}
+      {!isPro && (
+        <Card className={`mb-6 ${!canAddTransaction ? 'border-destructive bg-destructive/5' : 'border-primary/30 bg-primary/5'}`}>
+          <CardContent className="py-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <Crown className={`w-5 h-5 ${!canAddTransaction ? 'text-destructive' : 'text-primary'}`} />
+                <div>
+                  <p className="text-sm font-medium">
+                    {!canAddTransaction
+                      ? 'Transaction limit reached'
+                      : `${remainingTransactions} of ${transactionLimit} free transactions remaining this month`}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {!canAddTransaction
+                      ? 'Upgrade to TaxAware Subscription for unlimited transactions'
+                      : 'Upgrade for unlimited transactions and premium features'}
+                  </p>
+                </div>
+              </div>
+              <Button size="sm" variant={!canAddTransaction ? 'default' : 'outline'} className="gap-2 shrink-0" onClick={() => navigate('/subscription')}>
+                <Crown className="w-4 h-4" />
+                Upgrade
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <Card>
