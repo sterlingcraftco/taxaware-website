@@ -1,60 +1,58 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Phone, Clock, CheckCircle2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Phone, Crown } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export default function ConsultantScheduling() {
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 sm:p-3 rounded-lg bg-primary/10">
-              <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-            </div>
-            <div>
-              <CardTitle className="text-base sm:text-lg">Book a Call with TaxAware NG</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
-                Schedule a one-on-one consultation to discuss your tax questions
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50">
-              <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-medium">Pick a Time</p>
-                <p className="text-xs text-muted-foreground">Choose from available slots</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50">
-              <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-medium">Share Your Details</p>
-                <p className="text-xs text-muted-foreground">Name, email & topic</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50">
-              <Clock className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-medium">Get Confirmation</p>
-                <p className="text-xs text-muted-foreground">Calendar invite sent instantly</p>
-              </div>
-            </div>
-          </div>
+  const [open, setOpen] = useState(false);
 
+  return (
+    <>
+      <Card className="hover:shadow-lg transition-shadow">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="p-3 rounded-lg bg-primary/10 w-fit mb-2">
+              <Phone className="w-6 h-6 text-primary" />
+            </div>
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-1">
+              <Crown className="w-3 h-3" />
+              Premium
+            </Badge>
+          </div>
+          <CardTitle>Book a Call</CardTitle>
+          <CardDescription>
+            Schedule a one-on-one tax consultation with TaxAware NG
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={() => setOpen(true)} className="w-full">
+            Schedule Now
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-hidden p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Phone className="w-5 h-5" />
+              Book a Call with TaxAware NG
+            </DialogTitle>
+          </DialogHeader>
           <div className="rounded-lg overflow-hidden border border-border">
             <iframe
               src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ1jAw423pxGILK26uCuth0oSMBTJmQ9_4VCMtw-prhXJmecLeIHdD6HjBl1wJLVegCgEgsZisit?gv=true"
               style={{ border: 0 }}
               width="100%"
-              height="600"
+              height="550"
               frameBorder="0"
               title="Book a consultation with TaxAware NG"
             />
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
