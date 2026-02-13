@@ -16,7 +16,7 @@ export interface Subscription {
   updated_at: string;
 }
 
-const FREE_TRANSACTION_LIMIT = 5;
+const FREE_TRANSACTION_LIMIT = Infinity;
 
 export function useSubscription() {
   const { user } = useAuth();

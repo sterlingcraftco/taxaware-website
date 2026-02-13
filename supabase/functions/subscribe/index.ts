@@ -6,6 +6,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const ANNUAL_PRICE = 500000; // ₦5,000 in kobo
+const MIN_PRICE = 50000; // ₦500 in kobo
+
+function getProratedAmount(): number {
+  const now = new Date();
+  const year = now.getFullYear();
+  const startOfYear = new Date(year, 0, 1);
+  const endOfYear = new Date(year + 1, 0, 1);
+  const totalDays = (endOfYear.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24);
+  const remainingDays = (endOfYear.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+  
+  const prorated = Math.round((remainingDays / totalDays) * ANNUAL_PRICE);
+  return Math.max(prorated, MIN_PRICE);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -30,50 +45,12 @@ serve(async (req) => {
 
     if (authError || !user) throw new Error("Unauthorized");
 
-    const { plan, callback_url } = await req.json();
+    const { callback_url } = await req.json();
 
-    if (!plan || !['monthly', 'annual'].includes(plan)) {
-      throw new Error("Invalid plan. Must be 'monthly' or 'annual'");
-    }
+    const amount = getProratedAmount();
+    const year = new Date().getFullYear();
 
-    const amount = plan === 'monthly' ? 70000 : 600000; // kobo
-    const planName = plan === 'monthly' ? 'TaxAware Monthly' : 'TaxAware Annual';
-    const interval = plan === 'monthly' ? 'monthly' : 'annually';
-
-    // Create or get Paystack plan
-    // First try to find existing plan
-    const plansResponse = await fetch("https://api.paystack.co/plan", {
-      headers: { "Authorization": `Bearer ${paystackSecretKey}` },
-    });
-    const plansData = await plansResponse.json();
-    
-    let paystackPlan = plansData.data?.find(
-      (p: any) => p.name === planName && p.amount === amount && p.interval === interval
-    );
-
-    if (!paystackPlan) {
-      // Create the plan
-      const createPlanResponse = await fetch("https://api.paystack.co/plan", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${paystackSecretKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: planName,
-          amount,
-          interval,
-          currency: "NGN",
-        }),
-      });
-      const createPlanData = await createPlanResponse.json();
-      if (!createPlanData.status) {
-        throw new Error(createPlanData.message || "Failed to create plan");
-      }
-      paystackPlan = createPlanData.data;
-    }
-
-    // Initialize transaction with plan
+    // Initialize a one-time payment (not recurring subscription)
     const paystackResponse = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",
       headers: {
@@ -83,13 +60,14 @@ serve(async (req) => {
       body: JSON.stringify({
         email: user.email,
         amount,
-        plan: paystackPlan.plan_code,
         callback_url,
-        channels: ["card"],
+        channels: ["card", "bank", "ussd", "bank_transfer"],
         metadata: {
           user_id: user.id,
           type: "subscription",
-          plan,
+          plan: "annual",
+          year,
+          prorated_amount: amount,
         },
       }),
     });
@@ -97,7 +75,7 @@ serve(async (req) => {
     const paystackData = await paystackResponse.json();
 
     if (!paystackData.status) {
-      throw new Error(paystackData.message || "Failed to initialize subscription");
+      throw new Error(paystackData.message || "Failed to initialize payment");
     }
 
     return new Response(
@@ -107,6 +85,7 @@ serve(async (req) => {
           authorization_url: paystackData.data.authorization_url,
           access_code: paystackData.data.access_code,
           reference: paystackData.data.reference,
+          amount,
         },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
