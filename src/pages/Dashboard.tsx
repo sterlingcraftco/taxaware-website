@@ -356,7 +356,7 @@ export default function Dashboard() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           {/* Desktop Tab List - hidden on mobile since we use bottom nav */}
-          <TabsList className={`hidden md:grid w-full ${savingsEnabled ? 'grid-cols-6' : 'grid-cols-5'} h-auto p-1`}>
+          <TabsList className={`hidden md:grid w-full ${savingsEnabled ? 'grid-cols-5' : 'grid-cols-4'} h-auto p-1`}>
             <TabsTrigger value="calculations" className="flex flex-row gap-2 py-2 px-3">
               <Calculator className="w-4 h-4" />
               <span>Tax Tools</span>
@@ -380,10 +380,6 @@ export default function Dashboard() {
               <BarChart3 className="w-4 h-4" />
               <span>Analytics</span>
             </TabsTrigger>
-            <TabsTrigger value="scheduling" className="flex flex-row gap-2 py-2 px-3">
-              <Phone className="w-4 h-4" />
-              <span>Book a Call</span>
-            </TabsTrigger>
           </TabsList>
 
           {/* Transactions Tab */}
@@ -403,10 +399,6 @@ export default function Dashboard() {
             <AnalyticsTab />
           </TabsContent>
 
-          {/* Scheduling Tab */}
-          <TabsContent value="scheduling" className="space-y-6">
-            <ConsultantScheduling />
-          </TabsContent>
 
           {/* Recurring Tab */}
           <TabsContent value="recurring" className="space-y-6">
@@ -583,6 +575,9 @@ export default function Dashboard() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Book a Call */}
+              <ConsultantScheduling />
             </div>
           </TabsContent>
         </Tabs>
