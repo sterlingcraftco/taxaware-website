@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Calculator, Plus, Smartphone, Monitor, Zap, Sparkles, Database } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Calculator, Plus, Smartphone, Monitor, Zap, Sparkles, Database, Crown, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCanUseCompleteCalculator } from "@/hooks/useDeviceType";
 import { useTransactionTaxData } from "@/hooks/useTransactionTaxData";
+import { useSubscription } from "@/hooks/useSubscription";
 import { CompleteCalculator } from "@/components/CompleteCalculator";
 import SimpleCalculatorContent from "./SimpleCalculatorContent";
 
@@ -15,11 +17,13 @@ interface DashboardCalculatorProps {
 type CalculatorType = "choice" | "simple" | "complete";
 
 export default function DashboardCalculator({ onCalculationSaved }: DashboardCalculatorProps) {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [calculatorType, setCalculatorType] = useState<CalculatorType>("choice");
   const [useTransactionData, setUseTransactionData] = useState(false);
   const canUseComplete = useCanUseCompleteCalculator();
   const { data: transactionData, hasData: hasTransactionData } = useTransactionTaxData();
+  const { isPro } = useSubscription();
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
@@ -99,15 +103,20 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
 
               {/* Complete Calculator Option */}
               <div className={`group relative rounded-xl p-6 text-left transition-all border-2 ${
-                canUseComplete 
+                canUseComplete && isPro
                   ? "bg-primary/5 border-primary/20" 
                   : "bg-muted/30 border-transparent opacity-60"
               }`}>
+                {!isPro && (
+                  <div className="absolute top-3 right-3">
+                    <Lock className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                )}
                 <div className="flex items-center gap-3 mb-3">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
-                    canUseComplete ? "bg-primary/20" : "bg-muted"
+                    canUseComplete && isPro ? "bg-primary/20" : "bg-muted"
                   }`}>
-                    <Sparkles className={`w-6 h-6 ${canUseComplete ? "text-primary" : "text-muted-foreground"}`} />
+                    <Sparkles className={`w-6 h-6 ${canUseComplete && isPro ? "text-primary" : "text-muted-foreground"}`} />
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground">Complete</h3>
@@ -118,7 +127,17 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
                   Multiple income sources, all deductions (NHIS, life assurance, mortgage)
                 </p>
                 
-                {canUseComplete ? (
+                {!isPro ? (
+                  <Button
+                    onClick={() => navigate('/subscription')}
+                    variant="outline"
+                    className="w-full gap-2"
+                    size="sm"
+                  >
+                    <Crown className="w-4 h-4" />
+                    Upgrade to Unlock
+                  </Button>
+                ) : canUseComplete ? (
                   <div className="space-y-2">
                     {hasTransactionData && (
                       <Button
