@@ -368,6 +368,7 @@ export default function Dashboard() {
               <TabsTrigger value="savings" className="flex flex-row gap-2 py-2 px-3">
                 <PiggyBank className="w-4 h-4" />
                 <span>Tax Savings</span>
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 ml-1">Beta</Badge>
               </TabsTrigger>
             )}
             <TabsTrigger value="analytics" className="flex flex-row gap-2 py-2 px-3">
@@ -608,7 +609,7 @@ export default function Dashboard() {
             </DialogTitle>
           </DialogHeader>
 
-          {selectedCalculation && (
+          {selectedCalculation && isPro && (
             <Button
               variant="outline"
               size="sm"
@@ -616,6 +617,17 @@ export default function Dashboard() {
               className="absolute right-10 sm:right-12 top-3 sm:top-4 gap-1 sm:gap-2 h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm"
             >
               <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">PDF</span>
+            </Button>
+          )}
+          {selectedCalculation && !isPro && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/subscription')}
+              className="absolute right-10 sm:right-12 top-3 sm:top-4 gap-1 sm:gap-2 h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm"
+            >
+              <Crown className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">PDF</span>
             </Button>
           )}
