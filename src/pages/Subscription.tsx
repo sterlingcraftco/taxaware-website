@@ -31,7 +31,6 @@ const features = {
   free: [
     { icon: Wallet, label: 'Unlimited transactions' },
     { icon: Calculator, label: 'Simple & Advanced tax calculators' },
-    { icon: PiggyBank, label: 'Tax savings account (Beta)' },
     { icon: Download, label: 'PDF export & reports' },
   ],
   pro: [
