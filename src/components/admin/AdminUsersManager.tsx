@@ -54,6 +54,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { AdminUserPaymentHistory } from './AdminUserPaymentHistory';
 
 interface UserSubscription {
   id: string;
@@ -382,6 +383,9 @@ export function AdminUsersManager() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Payment History */}
+        <AdminUserPaymentHistory userId={detailUser.user_id} />
       </div>
     );
   }
