@@ -162,7 +162,7 @@ export default function Auth() {
             <div className="p-3 rounded-xl bg-accent/20 backdrop-blur-sm">
               <Calculator className="w-8 h-8 text-accent" />
             </div>
-            <h1 className="text-2xl font-bold text-primary-foreground">NTA 2025 Calculator</h1>
+            <h1 className="text-2xl font-bold text-primary-foreground">TaxAware</h1>
           </div>
           <p className="text-primary-foreground/70">
             Sign in to save your calculations and track your tax over time
