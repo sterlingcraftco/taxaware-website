@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ArrowLeft, Check, Crown, Loader2, Zap, MessageSquare, Phone, FileText, Calculator, PiggyBank, Download, Wallet } from 'lucide-react';
+import { PaymentHistory } from '@/components/PaymentHistory';
 import { toast } from 'sonner';
 
 const ANNUAL_PRICE = 5000; // ₦5,000
@@ -252,6 +253,9 @@ export default function Subscription() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Payment History */}
+        {user && <PaymentHistory userId={user.id} />}
 
         {/* Proration confirmation dialog */}
         <Dialog open={showConfirm} onOpenChange={setShowConfirm}>

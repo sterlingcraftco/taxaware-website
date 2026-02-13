@@ -74,6 +74,30 @@ serve(async (req) => {
       throw new Error("Failed to update subscription");
     }
 
+    // Log payment history
+    const { error: paymentError } = await supabaseClient
+      .from("subscription_payments")
+      .insert({
+        user_id: user.id,
+        amount,
+        plan,
+        status: 'success',
+        paystack_reference: reference,
+        period_start: now.toISOString(),
+        period_end: periodEnd.toISOString(),
+        metadata: {
+          paystack_transaction_id: transaction.id,
+          channel: transaction.channel,
+          currency: transaction.currency,
+          customer_code: customerCode,
+        },
+      });
+
+    if (paymentError) {
+      console.error("Payment log error:", paymentError);
+      // Don't throw — subscription was already activated
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
