@@ -11,17 +11,16 @@ import { toast } from 'sonner';
 
 const features = {
   free: [
-    { icon: Wallet, label: '5 transactions per month' },
-    { icon: Calculator, label: 'Basic tax calculator' },
+    { icon: Wallet, label: 'Unlimited transactions' },
+    { icon: Calculator, label: 'Simple & Advanced tax calculators' },
+    { icon: PiggyBank, label: 'Tax savings account (Beta)' },
+    { icon: Download, label: 'PDF export & reports' },
   ],
   pro: [
-    { icon: Wallet, label: 'Unlimited transactions' },
-    { icon: Calculator, label: 'Advanced tax calculator' },
-    { icon: PiggyBank, label: 'Tax savings account' },
-    { icon: Download, label: 'PDF export & reports' },
-    { icon: MessageSquare, label: 'AI tax assistant (coming soon)' },
-    { icon: Phone, label: 'Book a consultant call (coming soon)' },
-    { icon: FileText, label: 'Tax filing service (coming soon)' },
+    { icon: Check, label: 'Everything in Free, plus:' },
+    { icon: MessageSquare, label: 'AI tax assistant' },
+    { icon: Phone, label: 'Book a consultant call' },
+    { icon: FileText, label: 'Assisted tax filing service' },
   ],
 };
 
@@ -29,7 +28,7 @@ export default function Subscription() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { subscription, isPro, loading: subLoading, refresh } = useSubscription();
-  const [subscribing, setSubscribing] = useState<'monthly' | 'annual' | null>(null);
+  const [subscribing, setSubscribing] = useState(false);
   const [verifying, setVerifying] = useState(false);
 
   // Check for callback reference in URL
@@ -66,18 +65,18 @@ export default function Subscription() {
     handleVerifyCallback();
   }
 
-  const handleSubscribe = async (plan: 'monthly' | 'annual') => {
+  const handleSubscribe = async () => {
     if (!user) {
       navigate('/auth');
       return;
     }
 
-    setSubscribing(plan);
+    setSubscribing(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const response = await supabase.functions.invoke('subscribe', {
         body: {
-          plan,
+          plan: 'annual',
           callback_url: `${window.location.origin}/subscription?reference=`,
         },
         headers: { Authorization: `Bearer ${session?.access_token}` },
@@ -92,7 +91,7 @@ export default function Subscription() {
       console.error('Subscribe error:', error);
       toast.error(error.message || 'Failed to start subscription');
     } finally {
-      setSubscribing(null);
+      setSubscribing(false);
     }
   };
 
@@ -154,12 +153,12 @@ export default function Subscription() {
 
         <div className="text-center mb-8">
           <h2 className="text-2xl sm:text-3xl font-bold mb-2">
-            {isPro ? 'Your Subscription' : 'Upgrade to TaxAware Subscription'}
+            {isPro ? 'Your Subscription' : 'Upgrade to TaxAware Pro'}
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
             {isPro
               ? 'You have access to all premium features.'
-              : 'Unlock unlimited transactions, advanced tax tools, savings features, and more.'}
+              : 'Get access to upcoming premium features — AI tax assistant, consultant calls, and assisted filing.'}
           </p>
         </div>
 
@@ -171,10 +170,10 @@ export default function Subscription() {
                 <span>Free</span>
                 {!isPro && <Badge variant="outline">Current Plan</Badge>}
               </CardTitle>
-              <CardDescription>Basic tax management</CardDescription>
+              <CardDescription>Full tax management tools</CardDescription>
               <div className="pt-2">
                 <span className="text-3xl font-bold">₦0</span>
-                <span className="text-muted-foreground">/month</span>
+                <span className="text-muted-foreground"> forever</span>
               </div>
             </CardHeader>
             <CardContent>
@@ -195,19 +194,18 @@ export default function Subscription() {
               <CardTitle className="flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <Zap className="w-5 h-5 text-primary" />
-                  TaxAware Subscription
+                  TaxAware Pro
                 </span>
                 {isPro && <Badge>Active</Badge>}
               </CardTitle>
-              <CardDescription>Full access to all features</CardDescription>
+              <CardDescription>Premium features as they launch</CardDescription>
               <div className="pt-2 space-y-1">
                 <div>
-                  <span className="text-3xl font-bold">₦700</span>
-                  <span className="text-muted-foreground">/month</span>
+                  <span className="text-3xl font-bold">₦5,000</span>
+                  <span className="text-muted-foreground">/year</span>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  or <span className="font-semibold text-foreground">₦6,000</span>/year{' '}
-                  <Badge variant="secondary" className="ml-1 text-xs">Save ₦2,400</Badge>
+                  Jan 1 – Dec 31 · Prorated if you join mid-year (min ₦500)
                 </div>
               </div>
             </CardHeader>
@@ -222,31 +220,18 @@ export default function Subscription() {
               </ul>
 
               {!isPro && (
-                <div className="space-y-2 pt-2">
+                <div className="pt-2">
                   <Button
                     className="w-full gap-2"
-                    onClick={() => handleSubscribe('monthly')}
-                    disabled={!!subscribing}
+                    onClick={() => handleSubscribe()}
+                    disabled={subscribing}
                   >
-                    {subscribing === 'monthly' ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Zap className="w-4 h-4" />
-                    )}
-                    Subscribe Monthly — ₦700/mo
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full gap-2"
-                    onClick={() => handleSubscribe('annual')}
-                    disabled={!!subscribing}
-                  >
-                    {subscribing === 'annual' ? (
+                    {subscribing ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <Crown className="w-4 h-4" />
                     )}
-                    Subscribe Annually — ₦6,000/yr
+                    Subscribe — ₦5,000/yr (prorated)
                   </Button>
                 </div>
               )}

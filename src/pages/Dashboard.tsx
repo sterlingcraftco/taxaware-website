@@ -389,25 +389,7 @@ export default function Dashboard() {
           {/* Savings Tab */}
           {savingsEnabled && (
             <TabsContent value="savings" className="space-y-6">
-              {isPro ? (
-                <SavingsDashboard />
-              ) : (
-                <Card className="py-16">
-                  <CardContent className="flex flex-col items-center justify-center text-center">
-                    <div className="p-4 rounded-full bg-primary/10 mb-4">
-                      <PiggyBank className="w-10 h-10 text-primary" />
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">Tax Savings is a Pro Feature</h3>
-                    <p className="text-muted-foreground text-sm max-w-md mb-6">
-                      Save towards your tax liability and earn 10% annual interest. Upgrade to TaxAware Subscription to unlock.
-                    </p>
-                    <Button className="gap-2" onClick={() => navigate('/subscription')}>
-                      <Crown className="w-4 h-4" />
-                      Upgrade Now
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+              <SavingsDashboard />
             </TabsContent>
           )}
 
@@ -627,7 +609,7 @@ export default function Dashboard() {
             </DialogTitle>
           </DialogHeader>
 
-          {selectedCalculation && isPro && (
+          {selectedCalculation && (
             <Button
               variant="outline"
               size="sm"
@@ -635,17 +617,6 @@ export default function Dashboard() {
               className="absolute right-10 sm:right-12 top-3 sm:top-4 gap-1 sm:gap-2 h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm"
             >
               <Download className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">PDF</span>
-            </Button>
-          )}
-          {selectedCalculation && !isPro && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/subscription')}
-              className="absolute right-10 sm:right-12 top-3 sm:top-4 gap-1 sm:gap-2 h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm"
-            >
-              <Crown className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">PDF</span>
             </Button>
           )}
