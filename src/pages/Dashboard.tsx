@@ -282,7 +282,7 @@ export default function Dashboard() {
                 <Calculator className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h1 className="font-semibold">NTA 2025 Dashboard</h1>
+                <h1 className="font-semibold">TaxAware Dashboard</h1>
                 <p className="text-sm text-muted-foreground">
                   {user.email}
                 </p>
