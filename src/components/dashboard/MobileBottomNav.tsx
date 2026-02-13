@@ -9,11 +9,11 @@ interface MobileBottomNavProps {
 }
 
 const allTabs = [
+  { id: 'calculations', label: 'Tax', icon: Calculator },
   { id: 'transactions', label: 'Trans', icon: Wallet },
   { id: 'recurring', label: 'Repeat', icon: CalendarClock },
   { id: 'savings', label: 'Savings', icon: PiggyBank },
   { id: 'analytics', label: 'Stats', icon: BarChart3 },
-  { id: 'calculations', label: 'Tax', icon: Calculator },
 ];
 
 export function MobileBottomNav({ activeTab, onTabChange, savingsEnabled = false }: MobileBottomNavProps) {

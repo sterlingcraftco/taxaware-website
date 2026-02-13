@@ -153,7 +153,7 @@ export default function Dashboard() {
   const [calculationToDelete, setCalculationToDelete] = useState<string | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedCalculation, setSelectedCalculation] = useState<SavedCalculation | null>(null);
-  const [activeTab, setActiveTab] = useState('transactions');
+  const [activeTab, setActiveTab] = useState('calculations');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -356,6 +356,10 @@ export default function Dashboard() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           {/* Desktop Tab List - hidden on mobile since we use bottom nav */}
           <TabsList className={`hidden md:grid w-full ${savingsEnabled ? 'grid-cols-5' : 'grid-cols-4'} h-auto p-1`}>
+            <TabsTrigger value="calculations" className="flex flex-row gap-2 py-2 px-3">
+              <Calculator className="w-4 h-4" />
+              <span>Tax Tools</span>
+            </TabsTrigger>
             <TabsTrigger value="transactions" className="flex flex-row gap-2 py-2 px-3">
               <Wallet className="w-4 h-4" />
               <span>Transactions</span>
@@ -374,10 +378,6 @@ export default function Dashboard() {
             <TabsTrigger value="analytics" className="flex flex-row gap-2 py-2 px-3">
               <BarChart3 className="w-4 h-4" />
               <span>Analytics</span>
-            </TabsTrigger>
-            <TabsTrigger value="calculations" className="flex flex-row gap-2 py-2 px-3">
-              <Calculator className="w-4 h-4" />
-              <span>Tax Tools</span>
             </TabsTrigger>
           </TabsList>
 
