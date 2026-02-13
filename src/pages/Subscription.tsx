@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -49,39 +49,40 @@ export default function Subscription() {
   const [verifying, setVerifying] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Check for callback reference in URL
+  // Check for callback reference in URL (Paystack sends both `reference` and `trxref`)
   const urlParams = new URLSearchParams(window.location.search);
-  const callbackRef = urlParams.get('reference');
+  const callbackRef = urlParams.get('reference') || urlParams.get('trxref');
+  const verifyAttempted = useRef(false);
 
-  const handleVerifyCallback = async () => {
-    if (!callbackRef) return;
-    setVerifying(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const response = await supabase.functions.invoke('verify-subscription', {
-        body: { reference: callbackRef },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      });
+  useEffect(() => {
+    if (!callbackRef || verifying || isPro || verifyAttempted.current) return;
+    verifyAttempted.current = true;
 
-      if (response.error) throw new Error(response.error.message);
-      if (!response.data?.success) throw new Error(response.data?.error || 'Verification failed');
+    const verify = async () => {
+      setVerifying(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const response = await supabase.functions.invoke('verify-subscription', {
+          body: { reference: callbackRef },
+          headers: { Authorization: `Bearer ${session?.access_token}` },
+        });
 
-      toast.success('Subscription activated! Welcome to TaxAware Subscription.');
-      await refresh();
-      // Clear URL params
-      window.history.replaceState({}, '', '/subscription');
-    } catch (error: any) {
-      console.error('Verification error:', error);
-      toast.error(error.message || 'Failed to verify subscription');
-    } finally {
-      setVerifying(false);
-    }
-  };
+        if (response.error) throw new Error(response.error.message);
+        if (!response.data?.success) throw new Error(response.data?.error || 'Verification failed');
 
-  // Auto-verify on callback
-  if (callbackRef && !verifying && !isPro) {
-    handleVerifyCallback();
-  }
+        toast.success('Subscription activated! Welcome to TaxAware Pro.');
+        await refresh();
+        window.history.replaceState({}, '', '/subscription');
+      } catch (error: any) {
+        console.error('Verification error:', error);
+        toast.error(error.message || 'Failed to verify subscription');
+      } finally {
+        setVerifying(false);
+      }
+    };
+
+    verify();
+  }, [callbackRef]);
 
   const handleSubscribe = async () => {
     if (!user) {
