@@ -34,7 +34,7 @@ export default function ConsultantScheduling() {
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-hidden p-4 sm:p-6">
+        <DialogContent className="w-[95vw] max-w-[80vw] max-h-[90vh] overflow-hidden p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Phone className="w-5 h-5" />
