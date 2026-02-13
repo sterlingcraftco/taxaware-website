@@ -35,10 +35,10 @@ const features = {
     { icon: Download, label: 'PDF export & reports' },
   ],
   pro: [
-    { icon: Check, label: 'Everything in Free, plus:' },
-    { icon: MessageSquare, label: 'AI tax assistant' },
-    { icon: Phone, label: 'Book a consultant call' },
-    { icon: FileText, label: 'Assisted tax filing service' },
+    { icon: Check, label: 'Everything in Free, plus:', comingSoon: false },
+    { icon: MessageSquare, label: 'AI tax assistant', comingSoon: true },
+    { icon: Phone, label: 'Book a consultant call', comingSoon: false },
+    { icon: FileText, label: 'Assisted tax filing service', comingSoon: true },
   ],
 };
 
@@ -235,6 +235,9 @@ export default function Subscription() {
                   <li key={i} className="flex items-center gap-3">
                     <Check className="w-4 h-4 text-primary shrink-0" />
                     <span className="text-sm">{feature.label}</span>
+                    {feature.comingSoon && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Coming Soon</Badge>
+                    )}
                   </li>
                 ))}
               </ul>
