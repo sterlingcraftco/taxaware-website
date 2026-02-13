@@ -254,6 +254,45 @@ export type Database = {
           },
         ]
       }
+      subscription_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          metadata: Json | null
+          paystack_reference: string | null
+          period_end: string | null
+          period_start: string | null
+          plan: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          paystack_reference?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          plan?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          paystack_reference?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          plan?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           amount: number
