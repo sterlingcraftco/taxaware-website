@@ -46,14 +46,9 @@ serve(async (req) => {
     const plan = metadata.plan || 'monthly';
     const amount = transaction.amount / 100;
 
-    // Calculate period
+    // Calculate period — annual runs Jan 1 to Dec 31
     const now = new Date();
-    const periodEnd = new Date(now);
-    if (plan === 'annual') {
-      periodEnd.setFullYear(periodEnd.getFullYear() + 1);
-    } else {
-      periodEnd.setMonth(periodEnd.getMonth() + 1);
-    }
+    const periodEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
 
     // Get subscription code from Paystack if available
     const subscriptionCode = transaction.plan_object?.subscriptions?.[0]?.subscription_code || null;
