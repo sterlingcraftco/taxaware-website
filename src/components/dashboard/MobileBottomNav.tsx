@@ -1,4 +1,4 @@
-import { Wallet, BarChart3, CalendarClock, Calculator, PiggyBank } from 'lucide-react';
+import { Wallet, BarChart3, CalendarClock, Calculator, PiggyBank, Phone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
 
@@ -14,6 +14,7 @@ const allTabs = [
   { id: 'recurring', label: 'Repeat', icon: CalendarClock },
   { id: 'savings', label: 'Savings', icon: PiggyBank },
   { id: 'analytics', label: 'Stats', icon: BarChart3 },
+  { id: 'scheduling', label: 'Book', icon: Phone },
 ];
 
 export function MobileBottomNav({ activeTab, onTabChange, savingsEnabled = false }: MobileBottomNavProps) {

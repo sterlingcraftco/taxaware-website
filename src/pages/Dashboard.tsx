@@ -30,7 +30,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download, Wallet, CalendarClock, BarChart3, PiggyBank, Shield, Crown } from 'lucide-react';
+import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download, Wallet, CalendarClock, BarChart3, PiggyBank, Shield, Crown, Phone } from 'lucide-react';
 import { MobileBottomNav } from '@/components/dashboard/MobileBottomNav';
 import { toast } from 'sonner';
 import DashboardCalculator from '@/components/DashboardCalculator';
@@ -42,6 +42,7 @@ import { generateTaxPDF } from '@/lib/pdfGenerator';
 import { CompleteTaxResult, migrateToCompleteTaxResult } from '@/lib/taxCalculations';
 import { SavingsDashboard } from '@/components/savings';
 import { useAdmin } from '@/hooks/useAdmin';
+import ConsultantScheduling from '@/components/ConsultantScheduling';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useSubscription } from '@/hooks/useSubscription';
 import { Badge } from '@/components/ui/badge';
@@ -355,7 +356,7 @@ export default function Dashboard() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           {/* Desktop Tab List - hidden on mobile since we use bottom nav */}
-          <TabsList className={`hidden md:grid w-full ${savingsEnabled ? 'grid-cols-5' : 'grid-cols-4'} h-auto p-1`}>
+          <TabsList className={`hidden md:grid w-full ${savingsEnabled ? 'grid-cols-6' : 'grid-cols-5'} h-auto p-1`}>
             <TabsTrigger value="calculations" className="flex flex-row gap-2 py-2 px-3">
               <Calculator className="w-4 h-4" />
               <span>Tax Tools</span>
@@ -379,6 +380,10 @@ export default function Dashboard() {
               <BarChart3 className="w-4 h-4" />
               <span>Analytics</span>
             </TabsTrigger>
+            <TabsTrigger value="scheduling" className="flex flex-row gap-2 py-2 px-3">
+              <Phone className="w-4 h-4" />
+              <span>Book a Call</span>
+            </TabsTrigger>
           </TabsList>
 
           {/* Transactions Tab */}
@@ -396,6 +401,11 @@ export default function Dashboard() {
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
             <AnalyticsTab />
+          </TabsContent>
+
+          {/* Scheduling Tab */}
+          <TabsContent value="scheduling" className="space-y-6">
+            <ConsultantScheduling />
           </TabsContent>
 
           {/* Recurring Tab */}
