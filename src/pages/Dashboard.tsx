@@ -30,7 +30,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download, Wallet, CalendarClock, BarChart3, PiggyBank, Shield } from 'lucide-react';
+import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download, Wallet, CalendarClock, BarChart3, PiggyBank, Shield, Crown } from 'lucide-react';
 import { MobileBottomNav } from '@/components/dashboard/MobileBottomNav';
 import { toast } from 'sonner';
 import DashboardCalculator from '@/components/DashboardCalculator';
@@ -310,6 +310,10 @@ export default function Dashboard() {
               <DropdownMenuItem onClick={() => navigate('/profile')} className="gap-2 cursor-pointer">
                 <Settings className="w-4 h-4" />
                 Profile Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/subscription')} className="gap-2 cursor-pointer">
+                <Crown className="w-4 h-4" />
+                Subscription
               </DropdownMenuItem>
               {isAdmin && (
                 <>
