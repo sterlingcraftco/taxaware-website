@@ -6,8 +6,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ArrowLeft, Check, Crown, Loader2, Zap, MessageSquare, Phone, FileText, Calculator, PiggyBank, Download, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
+
+const ANNUAL_PRICE = 5000; // ₦5,000
+const MIN_PRICE = 500; // ₦500
+
+function getProratedInfo() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const startOfYear = new Date(year, 0, 1);
+  const endOfYear = new Date(year + 1, 0, 1);
+  const totalDays = Math.round((endOfYear.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24));
+  const remainingDays = Math.round((endOfYear.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const prorated = Math.round((remainingDays / totalDays) * ANNUAL_PRICE);
+  const finalAmount = Math.max(prorated, MIN_PRICE);
+
+  return { year, totalDays, remainingDays, annualPrice: ANNUAL_PRICE, prorated, finalAmount };
+}
 
 const features = {
   free: [
@@ -30,6 +47,7 @@ export default function Subscription() {
   const { subscription, isPro, loading: subLoading, refresh } = useSubscription();
   const [subscribing, setSubscribing] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // Check for callback reference in URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -223,14 +241,9 @@ export default function Subscription() {
                 <div className="pt-2">
                   <Button
                     className="w-full gap-2"
-                    onClick={() => handleSubscribe()}
-                    disabled={subscribing}
+                    onClick={() => setShowConfirm(true)}
                   >
-                    {subscribing ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Crown className="w-4 h-4" />
-                    )}
+                    <Crown className="w-4 h-4" />
                     Subscribe — ₦5,000/yr (prorated)
                   </Button>
                 </div>
@@ -238,6 +251,76 @@ export default function Subscription() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Proration confirmation dialog */}
+        <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Calculator className="w-5 h-5 text-primary" />
+                Subscription Breakdown
+              </DialogTitle>
+            </DialogHeader>
+            {(() => {
+              const info = getProratedInfo();
+              const today = new Date().toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' });
+              return (
+                <div className="space-y-4">
+                  <div className="rounded-lg border bg-muted/30 p-4 space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Annual price</span>
+                      <span className="font-medium">₦{info.annualPrice.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Period</span>
+                      <span>Jan 1 – Dec 31, {info.year}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Today</span>
+                      <span>{today}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Days remaining</span>
+                      <span>{info.remainingDays} of {info.totalDays} days</span>
+                    </div>
+                    <hr className="border-border" />
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Prorated calc</span>
+                      <span className="text-xs font-mono">
+                        {info.remainingDays}/{info.totalDays} × ₦{info.annualPrice.toLocaleString()} = ₦{info.prorated.toLocaleString()}
+                      </span>
+                    </div>
+                    {info.prorated < MIN_PRICE && (
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Minimum charge applies</span>
+                        <span>₦{MIN_PRICE.toLocaleString()}</span>
+                      </div>
+                    )}
+                    <hr className="border-border" />
+                    <div className="flex justify-between text-base font-semibold">
+                      <span>You pay today</span>
+                      <span className="text-primary">₦{info.finalAmount.toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Your subscription covers {info.year}. It does not auto-renew.
+                  </p>
+                </div>
+              );
+            })()}
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setShowConfirm(false)}>Cancel</Button>
+              <Button
+                className="gap-2"
+                onClick={() => { setShowConfirm(false); handleSubscribe(); }}
+                disabled={subscribing}
+              >
+                {subscribing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Crown className="w-4 h-4" />}
+                Pay Now
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
