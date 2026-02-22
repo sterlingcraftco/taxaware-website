@@ -1,4 +1,4 @@
-import { Shield, ArrowDown, User } from "lucide-react";
+import { Shield, ArrowDown, User, Calculator } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -80,11 +80,16 @@ const HeroSection = () => {
               <ArrowDown className="w-5 h-5 group-hover:translate-y-1 transition-transform" />
             </button>
             
-            <div className="text-sm text-primary-foreground/70 flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-primary-foreground/10 border border-primary-foreground/20">
-                Business/Company Tax — Coming Soon
-              </span>
-            </div>
+            <button
+              onClick={() => {
+                analytics.clickLearnMore();
+                document.getElementById("tax-calculator")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 text-primary-foreground font-medium hover:bg-primary-foreground/20 transition-all"
+            >
+              <Calculator className="w-4 h-4" />
+              Try the Tax Calculator
+            </button>
           </div>
         </div>
       </div>

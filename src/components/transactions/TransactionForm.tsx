@@ -48,12 +48,16 @@ const ALLOWED_TYPES = [
   'application/pdf',
 ];
 
+const currentYear = new Date().getFullYear();
+const taxYearOptions = Array.from({ length: 11 }, (_, i) => currentYear - i);
+
 const formSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   amount: z.number().positive('Amount must be positive'),
   type: z.enum(['income', 'expense']),
   category_id: z.string().optional(),
   transaction_date: z.date(),
+  tax_year: z.number().optional(),
   notes: z.string().optional(),
 });
 
@@ -92,6 +96,7 @@ export function TransactionForm({
       type: 'expense',
       category_id: undefined,
       transaction_date: new Date(),
+      tax_year: currentYear,
       notes: '',
     },
   });
@@ -104,6 +109,7 @@ export function TransactionForm({
         type: transaction.type,
         category_id: transaction.category_id || undefined,
         transaction_date: new Date(transaction.transaction_date),
+        tax_year: transaction.tax_year || currentYear,
         notes: transaction.notes || '',
       });
     } else {
@@ -113,6 +119,7 @@ export function TransactionForm({
         type: 'expense',
         category_id: undefined,
         transaction_date: new Date(),
+        tax_year: currentYear,
         notes: '',
       });
     }
@@ -356,7 +363,34 @@ export function TransactionForm({
               )}
             />
 
-            {/* Notes */}
+            {/* Tax Year */}
+            <FormField
+              control={form.control}
+              name="tax_year"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tax Year</FormLabel>
+                  <Select
+                    value={field.value?.toString() || ''}
+                    onValueChange={(value) => field.onChange(parseInt(value))}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select tax year" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {taxYearOptions.map((year) => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="notes"
