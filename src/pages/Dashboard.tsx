@@ -557,7 +557,16 @@ export default function Dashboard() {
               <TINLookup />
 
               {/* Tax Trends Card */}
-              <Card className="hover:shadow-lg transition-shadow">
+              <Card className="hover:shadow-lg transition-shadow relative overflow-hidden">
+                {/* Coming Soon Overlay */}
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                  <div className="text-center p-4">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium text-sm mb-2">
+                      Coming Soon
+                    </div>
+                    <p className="text-xs text-muted-foreground">This feature is under development</p>
+                  </div>
+                </div>
                 <CardHeader>
                   <div className="p-3 rounded-lg bg-green-500/10 w-fit mb-2">
                     <TrendingUp className="w-6 h-6 text-green-500" />
@@ -570,8 +579,7 @@ export default function Dashboard() {
                 <CardContent>
                   <div className="text-center py-8 text-muted-foreground">
                     <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p className="text-sm">Coming soon</p>
-                    <p className="text-xs mt-1">Visualize your tax history</p>
+                    <p className="text-sm">Visualize your tax history</p>
                   </div>
                 </CardContent>
               </Card>
