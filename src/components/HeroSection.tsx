@@ -25,8 +25,8 @@ const HeroSection = () => {
       <div className="container relative z-10 py-20 md:py-32">
         {/* Header with logo and sign in */}
         <div className="absolute top-4 left-4 md:top-8 md:left-8 flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 flex items-center justify-center">
-            <span className="text-accent font-bold text-lg">TA</span>
+          <div className="w-8 h-8 rounded-lg hero-gradient border border-primary-foreground/20 shadow-sm flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-sm">TA</span>
           </div>
           <span className="font-bold text-lg text-primary-foreground hidden sm:inline">TaxAware NG</span>
         </div>
@@ -67,7 +67,7 @@ const HeroSection = () => {
           </h1>
 
           <p className="text-lg md:text-xl text-primary-foreground/85 mb-10 animate-fade-up leading-relaxed max-w-2xl mx-auto" style={{ animationDelay: "0.1s" }}>
-            TaxAware Nigeria helps <strong>individuals</strong> understand the new tax system. 
+            TaxAware Nigeria helps <strong>individuals</strong> understand the new tax system.
             New tax bands, ₦800,000 tax-free threshold, and your personal deductions—explained simply.
           </p>
 
@@ -79,7 +79,7 @@ const HeroSection = () => {
               Learn What Changed
               <ArrowDown className="w-5 h-5 group-hover:translate-y-1 transition-transform" />
             </button>
-            
+
             <button
               onClick={() => {
                 analytics.clickLearnMore();
