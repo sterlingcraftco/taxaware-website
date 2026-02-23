@@ -1,5 +1,5 @@
-const GHOST_URL = 'https://sterlingcraftco-ghost-0262b4-82-208-20-55.traefik.me';
-const GHOST_CONTENT_KEY = '59d637c5b49593970b3d6a5731';
+const GHOST_URL = 'https://blog.taxaware.ng';
+const GHOST_CONTENT_KEY = 'c8d14d2627b14fcd75eb0b79f3';
 
 export interface GhostPost {
   id: string;
