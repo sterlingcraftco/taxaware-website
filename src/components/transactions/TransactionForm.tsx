@@ -355,6 +355,10 @@ export function TransactionForm({
                         onSelect={field.onChange}
                         disabled={(date) => date > new Date()}
                         initialFocus
+                        captionLayout="dropdown-buttons"
+                        fromYear={2010}
+                        toYear={currentYear}
+                        className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
