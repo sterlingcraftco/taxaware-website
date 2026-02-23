@@ -29,9 +29,12 @@ interface PayslipGeneratorProps {
   onSaved?: () => void;
   cloneData?: Partial<PayslipData> | null;
   onCloneConsumed?: () => void;
+  editId?: string | null;
+  editData?: Partial<PayslipData> | null;
+  onEditCleared?: () => void;
 }
 
-export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed }: PayslipGeneratorProps) {
+export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed, editId, editData, onEditCleared }: PayslipGeneratorProps) {
   const { user } = useAuth();
   const [data, setData] = useState<PayslipData>(getDefaultPayslipData());
   const [autoCalc, setAutoCalc] = useState(true);
@@ -54,6 +57,14 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed }
       onCloneConsumed?.();
     }
   }, [cloneData, onCloneConsumed]);
+
+  // Apply edit data
+  useEffect(() => {
+    if (editData) {
+      setAutoCalc(false); // preserve saved values
+      setData(prev => ({ ...prev, ...editData }));
+    }
+  }, [editData]);
 
 
   useEffect(() => {
@@ -157,7 +168,7 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed }
 
     setSaving(true);
     try {
-      const { error } = await supabase.from('payslips').insert({
+      const payload = {
         user_id: user.id,
         pay_period_month: data.payPeriodMonth,
         pay_period_year: data.payPeriodYear,
@@ -185,20 +196,34 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed }
         other_deductions: data.otherDeductions,
         total_deductions: totalDeductions,
         net_pay: netPay,
-        source: 'generated',
+        source: 'generated' as const,
         notes: data.notes || null,
-      });
+      };
 
-      if (error) throw error;
-      toast.success('Payslip saved!');
-      trackEvent('payslip_saved', { month: data.payPeriodMonth, year: data.payPeriodYear });
+      if (editId) {
+        const { error } = await supabase.from('payslips').update(payload).eq('id', editId);
+        if (error) throw error;
+        toast.success('Payslip updated!');
+        trackEvent('payslip_updated', { month: data.payPeriodMonth, year: data.payPeriodYear });
+      } else {
+        const { error } = await supabase.from('payslips').insert(payload);
+        if (error) throw error;
+        toast.success('Payslip saved!');
+        trackEvent('payslip_saved', { month: data.payPeriodMonth, year: data.payPeriodYear });
+      }
       onSaved?.();
     } catch (err: any) {
       console.error('Error saving payslip:', err);
-      toast.error('Failed to save payslip');
+      toast.error(editId ? 'Failed to update payslip' : 'Failed to save payslip');
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCancelEdit = () => {
+    setData(getDefaultPayslipData());
+    setAutoCalc(true);
+    onEditCleared?.();
   };
 
   const currentYear = new Date().getFullYear();
@@ -212,9 +237,9 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed }
             <Calculator className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <CardTitle className="text-base">Generate Payslip</CardTitle>
+            <CardTitle className="text-base">{editId ? 'Edit Payslip' : 'Generate Payslip'}</CardTitle>
             <CardDescription className="text-xs">
-              Create a payslip with auto-calculated deductions under NTA 2025
+              {editId ? 'Update this saved payslip' : 'Create a payslip with auto-calculated deductions under NTA 2025'}
             </CardDescription>
           </div>
         </div>
@@ -389,8 +414,13 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed }
             <Download className="w-4 h-4" /> Download PDF
           </Button>
           <Button onClick={handleSave} className="flex-1 gap-2" disabled={saving || grossPay <= 0}>
-            <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save to Account'}
+            <Save className="w-4 h-4" /> {saving ? 'Saving...' : editId ? 'Update Payslip' : 'Save to Account'}
           </Button>
+          {editId && (
+            <Button onClick={handleCancelEdit} variant="ghost" className="gap-2">
+              Cancel Edit
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

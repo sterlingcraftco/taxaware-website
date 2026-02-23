@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { FileText, Upload, Trash2, Download, Calendar, Copy } from 'lucide-react';
+import { FileText, Upload, Trash2, Download, Calendar, Copy, Pencil } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -43,9 +43,10 @@ interface PayslipRecord {
 interface PayslipListProps {
   refreshKey?: number;
   onClone?: (data: Partial<PayslipData>) => void;
+  onEdit?: (id: string, data: Partial<PayslipData>) => void;
 }
 
-export default function PayslipList({ refreshKey, onClone }: PayslipListProps) {
+export default function PayslipList({ refreshKey, onClone, onEdit }: PayslipListProps) {
   const { user } = useAuth();
   const [payslips, setPayslips] = useState<PayslipRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -162,9 +163,8 @@ export default function PayslipList({ refreshKey, onClone }: PayslipListProps) {
     }
   };
 
-  const handleClone = async (slip: PayslipRecord) => {
-    if (!onClone || slip.source !== 'generated') return;
-    // Fetch full payslip data
+  const handleEdit = async (slip: PayslipRecord) => {
+    if (!onEdit || slip.source !== 'generated') return;
     const { data: full } = await supabase
       .from('payslips')
       .select('*')
@@ -172,7 +172,45 @@ export default function PayslipList({ refreshKey, onClone }: PayslipListProps) {
       .single();
     if (!full) return;
 
-    // Advance to next month
+    onEdit(slip.id, {
+      employeeName: full.employee_name,
+      employeeId: full.employee_id || '',
+      department: full.department || '',
+      jobTitle: full.job_title || '',
+      companyName: full.company_name,
+      payPeriodMonth: full.pay_period_month,
+      payPeriodYear: full.pay_period_year,
+      taxYear: full.tax_year,
+      basicSalary: Number(full.basic_salary),
+      housingAllowance: Number(full.housing_allowance),
+      transportAllowance: Number(full.transport_allowance),
+      utilityAllowance: Number(full.utility_allowance),
+      mealAllowance: Number(full.meal_allowance),
+      leaveAllowance: Number(full.leave_allowance),
+      overtime: Number(full.overtime),
+      otherAllowances: Number(full.other_allowances),
+      loanRepayment: Number(full.loan_repayment),
+      otherDeductions: Number(full.other_deductions),
+      payeTax: Number(full.paye_tax),
+      pensionEmployee: Number(full.pension_employee),
+      pensionEmployer: Number(full.pension_employer),
+      nhf: Number(full.nhf),
+      nhis: Number(full.nhis),
+      notes: full.notes || '',
+    });
+    toast.success('Payslip loaded for editing');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleClone = async (slip: PayslipRecord) => {
+    if (!onClone || slip.source !== 'generated') return;
+    const { data: full } = await supabase
+      .from('payslips')
+      .select('*')
+      .eq('id', slip.id)
+      .single();
+    if (!full) return;
+
     let nextMonth = full.pay_period_month + 1;
     let nextYear = full.pay_period_year;
     if (nextMonth > 12) { nextMonth = 1; nextYear += 1; }
@@ -199,7 +237,6 @@ export default function PayslipList({ refreshKey, onClone }: PayslipListProps) {
       notes: '',
     });
     toast.success(`Cloned to ${MONTH_NAMES[nextMonth - 1]} ${nextYear}`);
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -301,6 +338,17 @@ export default function PayslipList({ refreshKey, onClone }: PayslipListProps) {
                     <span className="text-sm font-semibold text-primary hidden sm:block mr-2">
                       {formatCurrency(slip.net_pay)}
                     </span>
+                  )}
+                  {slip.source === 'generated' && onEdit && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      title="View & edit"
+                      onClick={() => handleEdit(slip)}
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
                   )}
                   {slip.source === 'generated' && onClone && (
                     <Button
