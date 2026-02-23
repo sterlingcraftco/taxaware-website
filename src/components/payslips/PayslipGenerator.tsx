@@ -20,7 +20,7 @@ import {
   calculateNetPay,
   MONTH_NAMES,
 } from '@/lib/payslipCalculations';
-import { generatePayslipPDF, YTDTotals } from '@/lib/payslipPdfGenerator';
+import { generatePayslipPDF, YTDTotals, PayslipTheme } from '@/lib/payslipPdfGenerator';
 import { formatCurrency } from '@/lib/taxCalculations';
 import { trackEvent } from '@/lib/analytics';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -36,6 +36,7 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed }
   const [data, setData] = useState<PayslipData>(getDefaultPayslipData());
   const [autoCalc, setAutoCalc] = useState(true);
   const [includeYTD, setIncludeYTD] = useState(false);
+  const [pdfTheme, setPdfTheme] = useState<PayslipTheme>('branded');
   const [saving, setSaving] = useState(false);
 
   // Pre-fill employee name from profile
@@ -140,7 +141,7 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed }
 
   const handleDownloadPDF = async () => {
     const ytd = await fetchYTDTotals();
-    generatePayslipPDF(data, true, ytd);
+    generatePayslipPDF(data, true, ytd, pdfTheme);
     trackEvent('payslip_download', { month: data.payPeriodMonth, year: data.payPeriodYear, ytd: includeYTD });
   };
 
@@ -360,12 +361,26 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed }
           />
         </div>
 
-        {/* YTD Option */}
-        <div className="flex items-center gap-2">
-          <Checkbox id="include-ytd" checked={includeYTD} onCheckedChange={(v) => setIncludeYTD(!!v)} />
-          <Label htmlFor="include-ytd" className="text-xs cursor-pointer">
-            Include Year-to-Date (YTD) totals in PDF
-          </Label>
+        {/* PDF Options */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Checkbox id="include-ytd" checked={includeYTD} onCheckedChange={(v) => setIncludeYTD(!!v)} />
+            <Label htmlFor="include-ytd" className="text-xs cursor-pointer">
+              Include YTD totals
+            </Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-xs">PDF Theme:</Label>
+            <Select value={pdfTheme} onValueChange={(v) => setPdfTheme(v as PayslipTheme)}>
+              <SelectTrigger className="h-8 text-xs w-[130px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="branded">TaxAware</SelectItem>
+                <SelectItem value="generic">Generic</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Actions */}
