@@ -584,8 +584,35 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              {/* Book a Call */}
-              <ConsultantScheduling />
+              {/* Book a Call — Pro users get direct access, free users see upgrade prompt */}
+              {isPro ? (
+                <ConsultantScheduling />
+              ) : (
+                <Card className="hover:shadow-lg transition-shadow relative overflow-hidden">
+                  <div className="absolute inset-0 bg-background/80 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                    <div className="text-center p-4">
+                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium text-sm mb-2">
+                        <Crown className="w-4 h-4" />
+                        Pro Feature
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3">Upgrade to Pro for unlimited consultations</p>
+                      <Button size="sm" variant="outline" onClick={() => navigate('/book-consultation')}>
+                        Or pay ₦1,000 per call
+                      </Button>
+                    </div>
+                  </div>
+                  <CardHeader>
+                    <div className="p-3 rounded-lg bg-primary/10 w-fit mb-2">
+                      <Phone className="w-6 h-6 text-primary" />
+                    </div>
+                    <CardTitle>Book a Call</CardTitle>
+                    <CardDescription>Schedule a one-on-one tax consultation</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button disabled className="w-full">Schedule Now</Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
         </Tabs>
