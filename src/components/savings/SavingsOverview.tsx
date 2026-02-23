@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PiggyBank, TrendingUp, ArrowUpRight, Loader2 } from 'lucide-react';
 import { useTaxSavings } from '@/hooks/useTaxSavings';
+import { analytics } from '@/lib/analytics';
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,7 @@ export function SavingsOverview() {
     }
 
     setIsDepositing(true);
+    analytics.initiateDeposit(amount);
     const callbackUrl = `${window.location.origin}/dashboard?tab=savings&payment=success`;
     const result = await initializeDeposit(amount, callbackUrl);
     

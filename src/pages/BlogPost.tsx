@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
 import { getPost } from '@/lib/ghost';
@@ -5,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Clock, Calendar } from 'lucide-react';
 import Footer from '@/components/Footer';
 import { format } from 'date-fns';
+import { analytics } from '@/lib/analytics';
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
@@ -14,6 +16,12 @@ export default function BlogPost() {
     queryFn: () => getPost(slug!),
     enabled: !!slug,
   });
+
+  useEffect(() => {
+    if (post) {
+      analytics.viewBlogPost(post.slug, post.title);
+    }
+  }, [post]);
 
   return (
     <main className="min-h-screen">

@@ -7,11 +7,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Clock, Calendar } from 'lucide-react';
 import Footer from '@/components/Footer';
+import { analytics } from '@/lib/analytics';
 import { format } from 'date-fns';
 
 function PostCard({ post }: { post: GhostPost }) {
   return (
-    <Link to={`/blog/${post.slug}`} className="group">
+    <Link to={`/blog/${post.slug}`} className="group" onClick={() => analytics.clickBlogPost(post.slug)}>
       <Card className="overflow-hidden h-full transition-shadow hover:shadow-lg border-border">
         {post.feature_image && (
           <div className="aspect-video overflow-hidden">
@@ -128,7 +129,7 @@ export default function Blog() {
                   variant="outline"
                   size="sm"
                   disabled={page === 1}
-                  onClick={() => setPage((p) => p - 1)}
+                  onClick={() => { analytics.blogPaginate(page - 1); setPage((p) => p - 1); }}
                 >
                   Previous
                 </Button>
@@ -139,7 +140,7 @@ export default function Blog() {
                   variant="outline"
                   size="sm"
                   disabled={page >= data.meta.pagination.pages}
-                  onClick={() => setPage((p) => p + 1)}
+                  onClick={() => { analytics.blogPaginate(page + 1); setPage((p) => p + 1); }}
                 >
                   Next
                 </Button>

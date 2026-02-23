@@ -4,6 +4,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { analytics } from "@/lib/analytics";
 
 const faqs = [
   {
@@ -65,7 +66,12 @@ const FAQSection = () => {
         </div>
 
         <div className="max-w-3xl mx-auto">
-          <Accordion type="single" collapsible className="space-y-4">
+          <Accordion type="single" collapsible className="space-y-4" onValueChange={(value) => {
+              if (value) {
+                const idx = parseInt(value.replace('item-', ''));
+                analytics.expandFAQ(faqs[idx].question);
+              }
+            }}>
             {faqs.map((faq, index) => (
               <AccordionItem
                 key={index}

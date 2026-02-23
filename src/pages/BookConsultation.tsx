@@ -11,6 +11,7 @@ import { isAuthEnabled } from '@/lib/featureFlags';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Footer from '@/components/Footer';
+import { analytics } from '@/lib/analytics';
 
 export default function BookConsultation() {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export default function BookConsultation() {
     }
 
     setLoading(true);
+    analytics.initiateConsultationPayment();
     try {
       const { data, error } = await supabase.functions.invoke('consultation-payment', {
         body: {
