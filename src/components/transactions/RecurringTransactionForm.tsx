@@ -314,6 +314,10 @@ export function RecurringTransactionForm({
                         selected={field.value}
                         onSelect={field.onChange}
                         initialFocus
+                        captionLayout="dropdown-buttons"
+                        fromYear={2010}
+                        toYear={new Date().getFullYear() + 5}
+                        className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
@@ -350,6 +354,10 @@ export function RecurringTransactionForm({
                         selected={field.value ?? undefined}
                         onSelect={field.onChange}
                         initialFocus
+                        captionLayout="dropdown-buttons"
+                        fromYear={2010}
+                        toYear={new Date().getFullYear() + 5}
+                        className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
