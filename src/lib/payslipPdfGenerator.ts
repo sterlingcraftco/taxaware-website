@@ -3,7 +3,14 @@ import { PayslipData, calculateGrossPay, calculateTotalDeductions, calculateNetP
 import { formatCurrencyPDF } from './taxCalculations';
 import { toast } from 'sonner';
 
-export const generatePayslipPDF = (data: PayslipData, save = true): jsPDF => {
+export interface YTDTotals {
+  grossPay: number;
+  totalDeductions: number;
+  netPay: number;
+  monthsCovered: number;
+}
+
+export const generatePayslipPDF = (data: PayslipData, save = true, ytd?: YTDTotals): jsPDF => {
   const doc = new jsPDF();
   const pw = doc.internal.pageSize.getWidth();
   const fmt = (v: number) => formatCurrencyPDF(v);
@@ -170,6 +177,38 @@ export const generatePayslipPDF = (data: PayslipData, save = true): jsPDF => {
     doc.setFont('helvetica', 'normal');
     const split = doc.splitTextToSize(data.notes, pw - 40);
     doc.text(split, 20, y + 6);
+    y += 6 + split.length * 4;
+  }
+
+  // YTD Section (optional)
+  if (ytd) {
+    y += 15;
+    doc.setFillColor(dark.r, dark.g, dark.b);
+    doc.rect(20, y - 5, pw - 40, 8, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`YEAR-TO-DATE (${data.taxYear}) — ${ytd.monthsCovered} month(s)`, 25, y);
+    y += 10;
+
+    doc.setTextColor(dark.r, dark.g, dark.b);
+    doc.setFontSize(9);
+    const ytdRows: [string, string][] = [
+      ['YTD Gross Pay', fmt(ytd.grossPay)],
+      ['YTD Total Deductions', fmt(ytd.totalDeductions)],
+      ['YTD Net Pay', fmt(ytd.netPay)],
+    ];
+    ytdRows.forEach(([label, value], i) => {
+      if (i % 2 === 0) {
+        doc.setFillColor(245, 250, 247);
+        doc.rect(20, y - 4, pw - 40, 7, 'F');
+      }
+      doc.setFont('helvetica', 'normal');
+      doc.text(label, 25, y);
+      doc.setFont('helvetica', 'bold');
+      doc.text(value, pw - 25, y, { align: 'right' });
+      y += 7;
+    });
   }
 
   // Disclaimer
