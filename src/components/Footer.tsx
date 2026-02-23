@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Phone, BookOpen } from "lucide-react";
+import { analytics } from "@/lib/analytics";
 
 const Footer = () => {
   return (
@@ -46,6 +47,7 @@ const Footer = () => {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               to="/blog"
+              onClick={() => analytics.clickFooterLink("blog")}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-medium hover:bg-secondary/80 transition-colors"
             >
               <BookOpen className="w-3.5 h-3.5" />
@@ -53,6 +55,7 @@ const Footer = () => {
             </Link>
             <Link
               to="/book-consultation"
+              onClick={() => analytics.clickBookConsultation("footer")}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
             >
               <Phone className="w-3.5 h-3.5" />

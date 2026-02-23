@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { ArrowLeft, Check, Crown, Loader2, Zap, MessageSquare, Phone, FileText, Calculator, PiggyBank, Download, Wallet } from 'lucide-react';
 import { PaymentHistory } from '@/components/PaymentHistory';
 import { toast } from 'sonner';
+import { analytics } from '@/lib/analytics';
 
 const ANNUAL_PRICE = 5000; // ₦5,000
 const MIN_PRICE = 500; // ₦500
@@ -70,6 +71,7 @@ export default function Subscription() {
         if (response.error) throw new Error(response.error.message);
         if (!response.data?.success) throw new Error(response.data?.error || 'Verification failed');
 
+        analytics.subscriptionVerified();
         toast.success('Subscription activated! Welcome to TaxAware Pro.');
         await refresh();
         window.history.replaceState({}, '', '/subscription');
@@ -91,6 +93,7 @@ export default function Subscription() {
     }
 
     setSubscribing(true);
+    analytics.clickSubscribe('annual', getProratedInfo().finalAmount);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const response = await supabase.functions.invoke('subscribe', {

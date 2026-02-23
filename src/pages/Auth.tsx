@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Calculator, Mail, Lock, User, Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
 import { z } from 'zod';
+import { analytics } from '@/lib/analytics';
 
 const emailSchema = z.string().email('Please enter a valid email address');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
@@ -61,6 +62,9 @@ export default function Auth() {
 
     setLoading(true);
     const { error } = await signInWithEmail(loginEmail, loginPassword);
+    if (!error) {
+      analytics.signIn();
+    }
     if (error) {
       toast({
         variant: 'destructive',
@@ -103,6 +107,7 @@ export default function Auth() {
         description: message,
       });
     } else {
+      analytics.signUp();
       toast({
         title: 'Account created!',
         description: 'You can now sign in with your credentials.',
@@ -128,6 +133,7 @@ export default function Auth() {
     }
 
     setLoading(true);
+    analytics.forgotPassword();
     const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
       redirectTo: `${window.location.origin}/reset-password`,
     });

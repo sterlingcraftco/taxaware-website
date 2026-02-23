@@ -15,6 +15,12 @@ export const trackEvent = (
   }
 };
 
+export const trackPageView = (path: string) => {
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", "page_view", { page_path: path });
+  }
+};
+
 // Pre-defined events for consistency
 export const analytics = {
   // Calculator events
@@ -41,9 +47,15 @@ export const analytics = {
   clickNRSHelpline: () =>
     trackEvent("click_cta", { cta_type: "nrs_helpline", location: "cta_section" }),
 
+  clickCreateAccount: () =>
+    trackEvent("click_cta", { cta_type: "create_account", location: "cta_section" }),
+
   // Hero events
   clickLearnMore: () =>
     trackEvent("click_cta", { cta_type: "learn_more", location: "hero" }),
+
+  clickTryCalculator: () =>
+    trackEvent("click_cta", { cta_type: "try_calculator", location: "hero" }),
 
   clickSignIn: () =>
     trackEvent("click_cta", { cta_type: "sign_in", location: "hero" }),
@@ -54,8 +66,52 @@ export const analytics = {
   // Auth events
   signUp: () => trackEvent("sign_up"),
   signIn: () => trackEvent("login"),
+  forgotPassword: () => trackEvent("forgot_password"),
+  resetPassword: () => trackEvent("reset_password"),
 
   // FAQ events
   expandFAQ: (question: string) =>
     trackEvent("expand_faq", { question: question.slice(0, 50) }),
+
+  // Blog events
+  viewBlogPost: (slug: string, title: string) =>
+    trackEvent("view_blog_post", { slug, title: title.slice(0, 50) }),
+
+  clickBlogPost: (slug: string) =>
+    trackEvent("click_blog_post", { slug }),
+
+  blogPaginate: (page: number) =>
+    trackEvent("blog_paginate", { page }),
+
+  // Subscription events
+  viewSubscription: () => trackEvent("view_subscription"),
+  clickSubscribe: (plan: string, amount: number) =>
+    trackEvent("click_subscribe", { plan, amount }),
+  subscriptionVerified: () => trackEvent("subscription_verified"),
+
+  // Consultation events
+  clickBookConsultation: (location: string) =>
+    trackEvent("click_cta", { cta_type: "book_consultation", location }),
+  initiateConsultationPayment: () =>
+    trackEvent("initiate_consultation_payment"),
+
+  // Transaction events
+  addTransaction: (type: string, amount: number) =>
+    trackEvent("add_transaction", { type, amount }),
+  editTransaction: (type: string) =>
+    trackEvent("edit_transaction", { type }),
+
+  // Savings events
+  initiateDeposit: (amount: number) =>
+    trackEvent("initiate_deposit", { amount }),
+  requestWithdrawal: (amount: number) =>
+    trackEvent("request_withdrawal", { amount }),
+
+  // Footer events
+  clickFooterLink: (link: string) =>
+    trackEvent("click_footer_link", { link }),
+
+  // Profile events
+  updateProfile: () => trackEvent("update_profile"),
+  changePassword: () => trackEvent("change_password"),
 };

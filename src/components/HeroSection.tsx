@@ -82,7 +82,7 @@ const HeroSection = () => {
 
             <button
               onClick={() => {
-                analytics.clickLearnMore();
+                analytics.clickTryCalculator();
                 document.getElementById("calculator")?.scrollIntoView({ behavior: "smooth" });
               }}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 text-primary-foreground font-medium hover:bg-primary-foreground/20 transition-all"

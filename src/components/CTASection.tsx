@@ -38,6 +38,7 @@ const CTASection = () => {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
                 <Link
                   to="/auth"
+                  onClick={() => analytics.clickCreateAccount()}
                   className="inline-flex items-center gap-2 px-8 py-4 rounded-full gold-gradient text-accent-foreground font-semibold text-lg transition-all hover:scale-105 hover:shadow-lg"
                 >
                   <UserCheck className="w-5 h-5" />
