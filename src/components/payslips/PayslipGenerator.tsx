@@ -27,9 +27,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 interface PayslipGeneratorProps {
   onSaved?: () => void;
+  cloneData?: Partial<PayslipData> | null;
+  onCloneConsumed?: () => void;
 }
 
-export default function PayslipGenerator({ onSaved }: PayslipGeneratorProps) {
+export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed }: PayslipGeneratorProps) {
   const { user } = useAuth();
   const [data, setData] = useState<PayslipData>(getDefaultPayslipData());
   const [autoCalc, setAutoCalc] = useState(true);
@@ -44,7 +46,15 @@ export default function PayslipGenerator({ onSaved }: PayslipGeneratorProps) {
     }
   }, [user]);
 
-  // Auto-calculate when earnings change and autoCalc is on
+  // Apply cloned data
+  useEffect(() => {
+    if (cloneData) {
+      setData(prev => ({ ...prev, ...cloneData }));
+      onCloneConsumed?.();
+    }
+  }, [cloneData, onCloneConsumed]);
+
+
   useEffect(() => {
     if (!autoCalc) return;
     const updates = autoCalculateDeductions(data);

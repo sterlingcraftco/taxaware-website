@@ -15,11 +15,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { FileText, Upload, Trash2, Download, Calendar } from 'lucide-react';
+import { FileText, Upload, Trash2, Download, Calendar, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { MONTH_NAMES } from '@/lib/payslipCalculations';
+import type { PayslipData } from '@/lib/payslipCalculations';
 import { formatCurrency } from '@/lib/taxCalculations';
 import { trackEvent } from '@/lib/analytics';
 
@@ -41,9 +42,10 @@ interface PayslipRecord {
 
 interface PayslipListProps {
   refreshKey?: number;
+  onClone?: (data: Partial<PayslipData>) => void;
 }
 
-export default function PayslipList({ refreshKey }: PayslipListProps) {
+export default function PayslipList({ refreshKey, onClone }: PayslipListProps) {
   const { user } = useAuth();
   const [payslips, setPayslips] = useState<PayslipRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -160,6 +162,47 @@ export default function PayslipList({ refreshKey }: PayslipListProps) {
     }
   };
 
+  const handleClone = async (slip: PayslipRecord) => {
+    if (!onClone || slip.source !== 'generated') return;
+    // Fetch full payslip data
+    const { data: full } = await supabase
+      .from('payslips')
+      .select('*')
+      .eq('id', slip.id)
+      .single();
+    if (!full) return;
+
+    // Advance to next month
+    let nextMonth = full.pay_period_month + 1;
+    let nextYear = full.pay_period_year;
+    if (nextMonth > 12) { nextMonth = 1; nextYear += 1; }
+
+    onClone({
+      employeeName: full.employee_name,
+      employeeId: full.employee_id || '',
+      department: full.department || '',
+      jobTitle: full.job_title || '',
+      companyName: full.company_name,
+      payPeriodMonth: nextMonth,
+      payPeriodYear: nextYear,
+      taxYear: nextYear,
+      basicSalary: Number(full.basic_salary),
+      housingAllowance: Number(full.housing_allowance),
+      transportAllowance: Number(full.transport_allowance),
+      utilityAllowance: Number(full.utility_allowance),
+      mealAllowance: Number(full.meal_allowance),
+      leaveAllowance: Number(full.leave_allowance),
+      overtime: Number(full.overtime),
+      otherAllowances: Number(full.other_allowances),
+      loanRepayment: Number(full.loan_repayment),
+      otherDeductions: Number(full.other_deductions),
+      notes: '',
+    });
+    toast.success(`Cloned to ${MONTH_NAMES[nextMonth - 1]} ${nextYear}`);
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleDownloadFile = async (filePath: string, fileName: string) => {
     try {
       const { data, error } = await supabase.storage.from('payslip-documents').download(filePath);
@@ -258,6 +301,17 @@ export default function PayslipList({ refreshKey }: PayslipListProps) {
                     <span className="text-sm font-semibold text-primary hidden sm:block mr-2">
                       {formatCurrency(slip.net_pay)}
                     </span>
+                  )}
+                  {slip.source === 'generated' && onClone && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      title="Clone for next month"
+                      onClick={() => handleClone(slip)}
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </Button>
                   )}
                   {slip.file_path && (
                     <Button
