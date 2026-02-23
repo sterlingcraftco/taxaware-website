@@ -20,9 +20,10 @@ import {
   calculateNetPay,
   MONTH_NAMES,
 } from '@/lib/payslipCalculations';
-import { generatePayslipPDF } from '@/lib/payslipPdfGenerator';
+import { generatePayslipPDF, YTDTotals } from '@/lib/payslipPdfGenerator';
 import { formatCurrency } from '@/lib/taxCalculations';
 import { trackEvent } from '@/lib/analytics';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface PayslipGeneratorProps {
   onSaved?: () => void;
@@ -32,6 +33,7 @@ export default function PayslipGenerator({ onSaved }: PayslipGeneratorProps) {
   const { user } = useAuth();
   const [data, setData] = useState<PayslipData>(getDefaultPayslipData());
   const [autoCalc, setAutoCalc] = useState(true);
+  const [includeYTD, setIncludeYTD] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Pre-fill employee name from profile
@@ -89,9 +91,47 @@ export default function PayslipGenerator({ onSaved }: PayslipGeneratorProps) {
   const totalDeductions = calculateTotalDeductions(data);
   const netPay = calculateNetPay(data);
 
-  const handleDownloadPDF = () => {
-    generatePayslipPDF(data);
-    trackEvent('payslip_download', { month: data.payPeriodMonth, year: data.payPeriodYear });
+  const fetchYTDTotals = async (): Promise<YTDTotals | undefined> => {
+    if (!user || !includeYTD) return undefined;
+    try {
+      const { data: slips } = await supabase
+        .from('payslips')
+        .select('gross_pay, total_deductions, net_pay')
+        .eq('tax_year', data.taxYear)
+        .eq('source', 'generated');
+
+      if (!slips || slips.length === 0) {
+        // Include current payslip only
+        return {
+          grossPay: grossPay,
+          totalDeductions: totalDeductions,
+          netPay: netPay,
+          monthsCovered: 1,
+        };
+      }
+
+      // Sum saved payslips + current
+      const ytd: YTDTotals = {
+        grossPay: grossPay,
+        totalDeductions: totalDeductions,
+        netPay: netPay,
+        monthsCovered: slips.length + 1,
+      };
+      slips.forEach(s => {
+        ytd.grossPay += Number(s.gross_pay);
+        ytd.totalDeductions += Number(s.total_deductions);
+        ytd.netPay += Number(s.net_pay);
+      });
+      return ytd;
+    } catch {
+      return undefined;
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    const ytd = await fetchYTDTotals();
+    generatePayslipPDF(data, true, ytd);
+    trackEvent('payslip_download', { month: data.payPeriodMonth, year: data.payPeriodYear, ytd: includeYTD });
   };
 
   const handleSave = async () => {
@@ -308,6 +348,14 @@ export default function PayslipGenerator({ onSaved }: PayslipGeneratorProps) {
             className="text-sm resize-none"
             rows={2}
           />
+        </div>
+
+        {/* YTD Option */}
+        <div className="flex items-center gap-2">
+          <Checkbox id="include-ytd" checked={includeYTD} onCheckedChange={(v) => setIncludeYTD(!!v)} />
+          <Label htmlFor="include-ytd" className="text-xs cursor-pointer">
+            Include Year-to-Date (YTD) totals in PDF
+          </Label>
         </div>
 
         {/* Actions */}
