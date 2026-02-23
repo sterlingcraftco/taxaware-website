@@ -1,3 +1,6 @@
+import { Link } from "react-router-dom";
+import { Phone } from "lucide-react";
+
 const Footer = () => {
   return (
     <footer className="py-12 border-t border-border">
@@ -36,10 +39,17 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-border text-center">
+        <div className="mt-8 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} TaxAware NG. Built with 💚 for Nigerians.
           </p>
+          <Link
+            to="/book-consultation"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+          >
+            <Phone className="w-3.5 h-3.5" />
+            Book a Tax Consultation — ₦1,000
+          </Link>
         </div>
       </div>
     </footer>

@@ -57,14 +57,6 @@ const CTASection = () => {
               </a>
               </div>
 
-              <Link
-                to="/book-consultation"
-                className="inline-flex items-center gap-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors mt-2"
-              >
-                <Phone className="w-4 h-4" />
-                <span className="text-sm font-medium">Book a Tax Consultation — ₦1,000</span>
-              </Link>
-
               <a
                 href="tel:+2342094602700"
                 onClick={() => analytics.clickNRSHelpline()}
