@@ -1,4 +1,4 @@
-import { Wallet, BarChart3, CalendarClock, Calculator, PiggyBank } from 'lucide-react';
+import { Wallet, BarChart3, CalendarClock, Calculator, PiggyBank, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
 
@@ -6,6 +6,7 @@ interface MobileBottomNavProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   savingsEnabled?: boolean;
+  payslipsEnabled?: boolean;
 }
 
 const allTabs = [
@@ -13,13 +14,17 @@ const allTabs = [
   { id: 'transactions', label: 'Trans', icon: Wallet },
   { id: 'recurring', label: 'Repeat', icon: CalendarClock },
   { id: 'savings', label: 'Savings', icon: PiggyBank },
+  { id: 'payslips', label: 'Payslips', icon: FileText },
   { id: 'analytics', label: 'Stats', icon: BarChart3 },
 ];
 
-export function MobileBottomNav({ activeTab, onTabChange, savingsEnabled = false }: MobileBottomNavProps) {
+export function MobileBottomNav({ activeTab, onTabChange, savingsEnabled = false, payslipsEnabled = false }: MobileBottomNavProps) {
   const tabs = useMemo(
-    () => allTabs.filter(tab => tab.id !== 'savings' || savingsEnabled),
-    [savingsEnabled]
+    () => allTabs.filter(tab => 
+      (tab.id !== 'savings' || savingsEnabled) &&
+      (tab.id !== 'payslips' || payslipsEnabled)
+    ),
+    [savingsEnabled, payslipsEnabled]
   );
 
   return (

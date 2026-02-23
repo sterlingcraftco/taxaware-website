@@ -30,7 +30,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download, Wallet, CalendarClock, BarChart3, PiggyBank, Shield, Crown, Phone } from 'lucide-react';
+import { Calculator, History, TrendingUp, Settings, LogOut, ArrowLeft, Trash2, User, ChevronDown, Download, Wallet, CalendarClock, BarChart3, PiggyBank, Shield, Crown, Phone, FileText } from 'lucide-react';
 import { MobileBottomNav } from '@/components/dashboard/MobileBottomNav';
 import { toast } from 'sonner';
 import DashboardCalculator from '@/components/DashboardCalculator';
@@ -41,6 +41,7 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { generateTaxPDF } from '@/lib/pdfGenerator';
 import { CompleteTaxResult, migrateToCompleteTaxResult } from '@/lib/taxCalculations';
 import { SavingsDashboard } from '@/components/savings';
+import { PayslipDashboard } from '@/components/payslips';
 import { useAdmin } from '@/hooks/useAdmin';
 import ConsultantScheduling from '@/components/ConsultantScheduling';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
@@ -147,6 +148,7 @@ export default function Dashboard() {
   const { user, loading, signOut } = useAuth();
   const { isAdmin } = useAdmin();
   const { isEnabled: savingsEnabled } = useFeatureFlag('savings');
+  const { isEnabled: payslipsEnabled } = useFeatureFlag('payslips');
   const { isPro } = useSubscription();
   const [calculations, setCalculations] = useState<SavedCalculation[]>([]);
   const [loadingCalcs, setLoadingCalcs] = useState(true);
@@ -356,7 +358,10 @@ export default function Dashboard() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           {/* Desktop Tab List - hidden on mobile since we use bottom nav */}
-          <TabsList className={`hidden md:grid w-full ${savingsEnabled ? 'grid-cols-5' : 'grid-cols-4'} h-auto p-1`}>
+          <TabsList className={`hidden md:grid w-full h-auto p-1 ${
+            savingsEnabled && payslipsEnabled ? 'grid-cols-6' :
+            savingsEnabled || payslipsEnabled ? 'grid-cols-5' : 'grid-cols-4'
+          }`}>
             <TabsTrigger value="calculations" className="flex flex-row gap-2 py-2 px-3">
               <Calculator className="w-4 h-4" />
               <span>Tax Tools</span>
@@ -373,6 +378,13 @@ export default function Dashboard() {
               <TabsTrigger value="savings" className="flex flex-row gap-2 py-2 px-3">
                 <PiggyBank className="w-4 h-4" />
                 <span>Tax Savings</span>
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 ml-1">Beta</Badge>
+              </TabsTrigger>
+            )}
+            {payslipsEnabled && (
+              <TabsTrigger value="payslips" className="flex flex-row gap-2 py-2 px-3">
+                <FileText className="w-4 h-4" />
+                <span>Payslips</span>
                 <Badge variant="outline" className="text-[10px] px-1.5 py-0 ml-1">Beta</Badge>
               </TabsTrigger>
             )}
@@ -404,6 +416,13 @@ export default function Dashboard() {
           <TabsContent value="recurring" className="space-y-6">
             <RecurringTransactionManager />
           </TabsContent>
+
+          {/* Payslips Tab */}
+          {payslipsEnabled && (
+            <TabsContent value="payslips" className="space-y-6">
+              <PayslipDashboard />
+            </TabsContent>
+          )}
 
           {/* Tax Calculations Tab */}
           <TabsContent value="calculations">
@@ -764,7 +783,7 @@ export default function Dashboard() {
       </Dialog>
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav activeTab={activeTab} onTabChange={setActiveTab} savingsEnabled={savingsEnabled} />
+      <MobileBottomNav activeTab={activeTab} onTabChange={setActiveTab} savingsEnabled={savingsEnabled} payslipsEnabled={payslipsEnabled} />
     </div>
   );
 }

@@ -73,6 +73,123 @@ export type Database = {
         }
         Relationships: []
       }
+      payslips: {
+        Row: {
+          basic_salary: number
+          company_name: string
+          created_at: string
+          department: string | null
+          employee_id: string | null
+          employee_name: string
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          gross_pay: number
+          housing_allowance: number
+          id: string
+          job_title: string | null
+          leave_allowance: number
+          loan_repayment: number
+          meal_allowance: number
+          mime_type: string | null
+          net_pay: number
+          nhf: number
+          nhis: number
+          notes: string | null
+          other_allowances: number
+          other_deductions: number
+          overtime: number
+          pay_period_month: number
+          pay_period_year: number
+          paye_tax: number
+          pension_employee: number
+          pension_employer: number
+          source: string
+          tax_year: number
+          total_deductions: number
+          transport_allowance: number
+          updated_at: string
+          user_id: string
+          utility_allowance: number
+        }
+        Insert: {
+          basic_salary?: number
+          company_name: string
+          created_at?: string
+          department?: string | null
+          employee_id?: string | null
+          employee_name: string
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          gross_pay?: number
+          housing_allowance?: number
+          id?: string
+          job_title?: string | null
+          leave_allowance?: number
+          loan_repayment?: number
+          meal_allowance?: number
+          mime_type?: string | null
+          net_pay?: number
+          nhf?: number
+          nhis?: number
+          notes?: string | null
+          other_allowances?: number
+          other_deductions?: number
+          overtime?: number
+          pay_period_month: number
+          pay_period_year: number
+          paye_tax?: number
+          pension_employee?: number
+          pension_employer?: number
+          source?: string
+          tax_year: number
+          total_deductions?: number
+          transport_allowance?: number
+          updated_at?: string
+          user_id: string
+          utility_allowance?: number
+        }
+        Update: {
+          basic_salary?: number
+          company_name?: string
+          created_at?: string
+          department?: string | null
+          employee_id?: string | null
+          employee_name?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          gross_pay?: number
+          housing_allowance?: number
+          id?: string
+          job_title?: string | null
+          leave_allowance?: number
+          loan_repayment?: number
+          meal_allowance?: number
+          mime_type?: string | null
+          net_pay?: number
+          nhf?: number
+          nhis?: number
+          notes?: string | null
+          other_allowances?: number
+          other_deductions?: number
+          overtime?: number
+          pay_period_month?: number
+          pay_period_year?: number
+          paye_tax?: number
+          pension_employee?: number
+          pension_employer?: number
+          source?: string
+          tax_year?: number
+          total_deductions?: number
+          transport_allowance?: number
+          updated_at?: string
+          user_id?: string
+          utility_allowance?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
