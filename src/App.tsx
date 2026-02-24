@@ -18,6 +18,9 @@ import Subscription from "./pages/Subscription";
 import BookConsultation from "./pages/BookConsultation";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import Resources from "./pages/Resources";
+import ResourceDetail from "./pages/ResourceDetail";
+import PublicDocument from "./pages/PublicDocument";
 import NotFound from "./pages/NotFound";
 
 function PageViewTracker() {
@@ -49,6 +52,9 @@ const App = () => (
             <Route path="/book-consultation" element={<BookConsultation />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/resources/:slug" element={<ResourceDetail />} />
+            <Route path="/public/:slug" element={<PublicDocument />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
