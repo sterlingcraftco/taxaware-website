@@ -34,7 +34,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
+import { MultiStepCalendar } from '@/components/ui/multi-step-calendar';
 import { cn } from '@/lib/utils';
 import type { TransactionCategory } from '@/hooks/useTransactions';
 import {
@@ -309,15 +309,11 @@ export function RecurringTransactionForm({
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
+                      <MultiStepCalendar
                         selected={field.value}
                         onSelect={field.onChange}
-                        initialFocus
-                        captionLayout="dropdown-buttons"
                         fromYear={2010}
                         toYear={new Date().getFullYear() + 5}
-                        className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
@@ -349,15 +345,11 @@ export function RecurringTransactionForm({
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
+                      <MultiStepCalendar
                         selected={field.value ?? undefined}
                         onSelect={field.onChange}
-                        initialFocus
-                        captionLayout="dropdown-buttons"
                         fromYear={2010}
                         toYear={new Date().getFullYear() + 5}
-                        className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
