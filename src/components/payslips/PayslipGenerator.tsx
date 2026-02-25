@@ -7,6 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Download, Save, Calculator, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -41,6 +51,8 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed, 
   const [includeYTD, setIncludeYTD] = useState(false);
   const [pdfTheme, setPdfTheme] = useState<PayslipTheme>('branded');
   const [saving, setSaving] = useState(false);
+  const [showUpdateTransPrompt, setShowUpdateTransPrompt] = useState(false);
+  const [pendingSavePayload, setPendingSavePayload] = useState<any>(null);
 
   // Pre-fill employee name from profile
   useEffect(() => {
@@ -157,53 +169,49 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed, 
     trackEvent('payslip_download', { month: data.payPeriodMonth, year: data.payPeriodYear, ytd: includeYTD });
   };
 
-  const handleSave = async () => {
-    if (!user) {
-      toast.error('Please sign in to save payslips');
-      return;
-    }
-    if (!data.employeeName || !data.companyName || grossPay <= 0) {
-      toast.error('Please fill in employee name, company name, and at least one earning');
-      return;
-    }
+  const buildPayload = () => ({
+    user_id: user!.id,
+    pay_period_month: data.payPeriodMonth,
+    pay_period_year: data.payPeriodYear,
+    tax_year: data.taxYear,
+    employee_name: data.employeeName,
+    employee_id: data.employeeId || null,
+    department: data.department || null,
+    job_title: data.jobTitle || null,
+    company_name: data.companyName,
+    basic_salary: data.basicSalary,
+    housing_allowance: data.housingAllowance,
+    transport_allowance: data.transportAllowance,
+    utility_allowance: data.utilityAllowance,
+    meal_allowance: data.mealAllowance,
+    leave_allowance: data.leaveAllowance,
+    overtime: data.overtime,
+    other_allowances: data.otherAllowances,
+    gross_pay: grossPay,
+    paye_tax: data.payeTax,
+    pension_employee: data.pensionEmployee,
+    pension_employer: data.pensionEmployer,
+    nhf: data.nhf,
+    nhis: data.nhis,
+    loan_repayment: data.loanRepayment,
+    other_deductions: data.otherDeductions,
+    total_deductions: totalDeductions,
+    net_pay: netPay,
+    source: 'generated' as const,
+    notes: data.notes || null,
+  });
 
+  const savePayslip = async (payload: any, updateTransactions: boolean) => {
     setSaving(true);
     try {
-      const payload = {
-        user_id: user.id,
-        pay_period_month: data.payPeriodMonth,
-        pay_period_year: data.payPeriodYear,
-        tax_year: data.taxYear,
-        employee_name: data.employeeName,
-        employee_id: data.employeeId || null,
-        department: data.department || null,
-        job_title: data.jobTitle || null,
-        company_name: data.companyName,
-        basic_salary: data.basicSalary,
-        housing_allowance: data.housingAllowance,
-        transport_allowance: data.transportAllowance,
-        utility_allowance: data.utilityAllowance,
-        meal_allowance: data.mealAllowance,
-        leave_allowance: data.leaveAllowance,
-        overtime: data.overtime,
-        other_allowances: data.otherAllowances,
-        gross_pay: grossPay,
-        paye_tax: data.payeTax,
-        pension_employee: data.pensionEmployee,
-        pension_employer: data.pensionEmployer,
-        nhf: data.nhf,
-        nhis: data.nhis,
-        loan_repayment: data.loanRepayment,
-        other_deductions: data.otherDeductions,
-        total_deductions: totalDeductions,
-        net_pay: netPay,
-        source: 'generated' as const,
-        notes: data.notes || null,
-      };
-
       if (editId) {
         const { error } = await supabase.from('payslips').update(payload).eq('id', editId);
         if (error) throw error;
+
+        if (updateTransactions) {
+          await updateLinkedTransactions(editId, payload);
+        }
+
         toast.success('Payslip updated!');
         trackEvent('payslip_updated', { month: data.payPeriodMonth, year: data.payPeriodYear });
       } else {
@@ -218,6 +226,96 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed, 
       toast.error(editId ? 'Failed to update payslip' : 'Failed to save payslip');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const updateLinkedTransactions = async (payslipId: string, payload: any) => {
+    try {
+      // Delete existing linked transactions and re-create with new amounts
+      await supabase.from('transactions').delete().eq('payslip_id', payslipId);
+
+      const monthLabel = `${MONTH_NAMES[payload.pay_period_month - 1]} ${payload.pay_period_year}`;
+      const txDate = `${payload.pay_period_year}-${String(payload.pay_period_month).padStart(2, '0')}-28`;
+
+      const txns: any[] = [{
+        user_id: payload.user_id,
+        description: `Salary - ${monthLabel}`,
+        type: 'income',
+        amount: Number(payload.net_pay),
+        transaction_date: txDate,
+        tax_year: payload.tax_year,
+        payslip_id: payslipId,
+        notes: `Auto-recorded from payslip: ${payload.company_name}`,
+      }];
+
+      const deductions = [
+        { amount: Number(payload.paye_tax), label: 'PAYE Tax' },
+        { amount: Number(payload.pension_employee), label: 'Pension (Employee)' },
+        { amount: Number(payload.nhf), label: 'NHF Contribution' },
+        { amount: Number(payload.nhis), label: 'NHIS Contribution' },
+        { amount: Number(payload.loan_repayment), label: 'Loan Repayment' },
+        { amount: Number(payload.other_deductions), label: 'Other Deductions' },
+      ];
+
+      for (const d of deductions) {
+        if (d.amount > 0) {
+          txns.push({
+            user_id: payload.user_id,
+            description: `${d.label} - ${monthLabel}`,
+            type: 'expense',
+            amount: d.amount,
+            transaction_date: txDate,
+            tax_year: payload.tax_year,
+            payslip_id: payslipId,
+            notes: `Auto-recorded from payslip: ${payload.company_name}`,
+          });
+        }
+      }
+
+      const { error } = await supabase.from('transactions').insert(txns);
+      if (error) throw error;
+      toast.success('Linked transactions updated');
+    } catch (err) {
+      console.error('Error updating linked transactions:', err);
+      toast.error('Payslip saved but failed to update linked transactions');
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user) {
+      toast.error('Please sign in to save payslips');
+      return;
+    }
+    if (!data.employeeName || !data.companyName || grossPay <= 0) {
+      toast.error('Please fill in employee name, company name, and at least one earning');
+      return;
+    }
+
+    const payload = buildPayload();
+
+    // If editing, check if there are linked transactions
+    if (editId) {
+      const { data: linked } = await supabase
+        .from('transactions')
+        .select('id')
+        .eq('payslip_id', editId)
+        .limit(1);
+
+      if (linked && linked.length > 0) {
+        setPendingSavePayload(payload);
+        setShowUpdateTransPrompt(true);
+        return;
+      }
+    }
+
+    await savePayslip(payload, false);
+  };
+
+  const handleConfirmUpdateTrans = async (update: boolean) => {
+    setShowUpdateTransPrompt(false);
+    if (pendingSavePayload) {
+      await savePayslip(pendingSavePayload, update);
+      setPendingSavePayload(null);
     }
   };
 
@@ -424,6 +522,25 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed, 
           )}
         </div>
       </CardContent>
+
+      <AlertDialog open={showUpdateTransPrompt} onOpenChange={setShowUpdateTransPrompt}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Update Linked Transactions?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This payslip has transactions recorded from it. Would you like to update those transactions to reflect the new amounts?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel onClick={() => handleConfirmUpdateTrans(false)}>
+              Save Payslip Only
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleConfirmUpdateTrans(true)}>
+              Update Both
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
