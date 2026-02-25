@@ -175,6 +175,21 @@ export function TransactionManager() {
     setTransactionToDelete(null);
   };
 
+  const handleUnlinkPayslip = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .update({ payslip_id: null })
+        .eq('id', id);
+      if (error) throw error;
+      toast.success('Transaction unlinked from payslip');
+      await refresh();
+    } catch (err) {
+      console.error('Error unlinking transaction:', err);
+      toast.error('Failed to unlink transaction');
+    }
+  };
+
   const handleViewDocuments = (transaction: Transaction) => {
     setSelectedTransactionForDocs(transaction);
     setDocumentDialogOpen(true);
@@ -420,6 +435,7 @@ export function TransactionManager() {
                   onEdit={handleEdit}
                   onDelete={handleDeleteClick}
                   onViewDocuments={handleViewDocuments}
+                  onUnlinkPayslip={handleUnlinkPayslip}
                   documentCounts={documentCounts}
                 />
               </PullToRefresh>
@@ -435,6 +451,7 @@ export function TransactionManager() {
                 onEdit={handleEdit}
                 onDelete={handleDeleteClick}
                 onViewDocuments={handleViewDocuments}
+                onUnlinkPayslip={handleUnlinkPayslip}
                 documentCounts={documentCounts}
               />
             </div>
