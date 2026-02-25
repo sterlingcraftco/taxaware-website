@@ -586,6 +586,7 @@ export type Database = {
           id: string
           is_recurring: boolean | null
           notes: string | null
+          payslip_id: string | null
           recurring_id: string | null
           status: Database["public"]["Enums"]["transaction_status"] | null
           tax_year: number | null
@@ -602,6 +603,7 @@ export type Database = {
           id?: string
           is_recurring?: boolean | null
           notes?: string | null
+          payslip_id?: string | null
           recurring_id?: string | null
           status?: Database["public"]["Enums"]["transaction_status"] | null
           tax_year?: number | null
@@ -618,6 +620,7 @@ export type Database = {
           id?: string
           is_recurring?: boolean | null
           notes?: string | null
+          payslip_id?: string | null
           recurring_id?: string | null
           status?: Database["public"]["Enums"]["transaction_status"] | null
           tax_year?: number | null
@@ -639,6 +642,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "transaction_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_payslip_id_fkey"
+            columns: ["payslip_id"]
+            isOneToOne: false
+            referencedRelation: "payslips"
             referencedColumns: ["id"]
           },
         ]

@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { MoreHorizontal, Pencil, Trash2, ArrowUpCircle, ArrowDownCircle, Paperclip } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, ArrowUpCircle, ArrowDownCircle, Paperclip, FileText } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -121,6 +121,12 @@ export function TransactionList({
                       {category.name}
                     </Badge>
                   )}
+                  {transaction.payslip_id && (
+                    <Badge variant="outline" className="text-xs flex items-center gap-1 border-primary/30 text-primary">
+                      <FileText className="w-2.5 h-2.5" />
+                      Payslip
+                    </Badge>
+                  )}
                   {documentCounts[transaction.id] > 0 && (
                     <Badge 
                       variant="outline" 
@@ -172,11 +178,19 @@ export function TransactionList({
                   <TableCell>
                     <div>
                       <p className="font-medium">{transaction.description}</p>
-                      {transaction.notes && (
-                        <p className="text-xs text-muted-foreground truncate max-w-[200px]">
-                          {transaction.notes}
-                        </p>
-                      )}
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {transaction.notes && (
+                          <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                            {transaction.notes}
+                          </p>
+                        )}
+                        {transaction.payslip_id && (
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 border-primary/30 text-primary">
+                            <FileText className="w-2.5 h-2.5 mr-0.5" />
+                            Payslip
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>

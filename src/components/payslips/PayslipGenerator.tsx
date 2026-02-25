@@ -100,11 +100,12 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed, 
       <Input
         type="number"
         min={0}
+        step="0.01"
         value={data[field] as number || ''}
         onChange={e => update(field, parseFloat(e.target.value) || 0)}
         disabled={disabled}
         className="h-9 text-sm"
-        placeholder="0"
+        placeholder="0.00"
       />
     </div>
   );
