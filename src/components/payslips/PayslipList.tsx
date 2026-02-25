@@ -68,7 +68,7 @@ export default function PayslipList({ refreshKey, onClone, onEdit }: PayslipList
   const [viewTransPayslipId, setViewTransPayslipId] = useState<string | null>(null);
   const [viewTransLabel, setViewTransLabel] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number | 'all'>(12);
+  const [pageSize, setPageSize] = useState<number | 'all'>(15);
   // Track which payslips have linked transactions
   const [linkedPayslipIds, setLinkedPayslipIds] = useState<Set<string>>(new Set());
 
@@ -500,8 +500,8 @@ export default function PayslipList({ refreshKey, onClone, onEdit }: PayslipList
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="12">12</SelectItem>
-                    <SelectItem value="24">24</SelectItem>
+                    <SelectItem value="15">15</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
                     <SelectItem value="50">50</SelectItem>
                     <SelectItem value="all">All</SelectItem>
                   </SelectContent>
