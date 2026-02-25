@@ -467,6 +467,15 @@ export default function PayslipList({ refreshKey, onClone, onEdit }: PayslipList
         onOpenChange={open => { if (!open) setViewTransPayslipId(null); }}
         payslipId={viewTransPayslipId}
         payslipLabel={viewTransLabel}
+        onUnlinked={() => {
+          if (viewTransPayslipId) {
+            setLinkedPayslipIds(prev => {
+              const next = new Set(prev);
+              next.delete(viewTransPayslipId);
+              return next;
+            });
+          }
+        }}
       />
     </>
   );
