@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Calendar, Filter, X, ChevronDown } from 'lucide-react';
+import { CategoryIcon } from '@/components/CategoryIcon';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -204,7 +205,10 @@ export function TransactionFiltersComponent({
                   <SelectItem value="all">All categories</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
-                      {category.icon} {category.name}
+                      <span className="flex items-center gap-2">
+                        <CategoryIcon name={category.icon} className="w-4 h-4" />
+                        {category.name}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
