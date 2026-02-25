@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { ArrowUpCircle, ArrowDownCircle, FileText, Trash2 } from 'lucide-react';
+import { ArrowUpCircle, ArrowDownCircle, FileText, Trash2, Unlink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/taxCalculations';
 import { format } from 'date-fns';
@@ -30,6 +30,8 @@ interface LinkedTransaction {
   amount: number;
   transaction_date: string;
 }
+
+type BulkAction = 'unlink' | 'delete' | null;
 
 interface PayslipTransactionsModalProps {
   open: boolean;
@@ -48,8 +50,8 @@ export default function PayslipTransactionsModal({
 }: PayslipTransactionsModalProps) {
   const [transactions, setTransactions] = useState<LinkedTransaction[]>([]);
   const [loading, setLoading] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [bulkAction, setBulkAction] = useState<BulkAction>(null);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     if (!open || !payslipId) return;
@@ -65,27 +67,62 @@ export default function PayslipTransactionsModal({
       });
   }, [open, payslipId]);
 
-  const handleDeleteAll = async () => {
-    if (!payslipId) return;
-    setDeleting(true);
+  const handleBulkAction = async () => {
+    if (!payslipId || !bulkAction) return;
+    setProcessing(true);
     try {
-      const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('payslip_id', payslipId);
-      if (error) throw error;
-      toast.success(`${transactions.length} transaction(s) deleted`);
+      if (bulkAction === 'delete') {
+        const { error } = await supabase
+          .from('transactions')
+          .delete()
+          .eq('payslip_id', payslipId);
+        if (error) throw error;
+        toast.success(`${transactions.length} transaction(s) deleted`);
+      } else {
+        const { error } = await supabase
+          .from('transactions')
+          .update({ payslip_id: null })
+          .eq('payslip_id', payslipId);
+        if (error) throw error;
+        toast.success(`${transactions.length} transaction(s) unlinked`);
+      }
       setTransactions([]);
-      setConfirmDelete(false);
+      setBulkAction(null);
       onUnlinked?.();
       onOpenChange(false);
     } catch (err) {
-      console.error('Error deleting linked transactions:', err);
-      toast.error('Failed to delete transactions');
+      console.error('Error processing transactions:', err);
+      toast.error('Failed to process transactions');
     } finally {
-      setDeleting(false);
+      setProcessing(false);
     }
   };
+
+  const handleUnlinkSingle = async (txId: string) => {
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .update({ payslip_id: null })
+        .eq('id', txId);
+      if (error) throw error;
+      setTransactions(prev => prev.filter(t => t.id !== txId));
+      toast.success('Transaction unlinked');
+      if (transactions.length <= 1) {
+        onUnlinked?.();
+      }
+    } catch (err) {
+      console.error('Error unlinking transaction:', err);
+      toast.error('Failed to unlink transaction');
+    }
+  };
+
+  const confirmTitle = bulkAction === 'delete'
+    ? 'Delete All Linked Transactions?'
+    : 'Unlink All Transactions?';
+
+  const confirmDesc = bulkAction === 'delete'
+    ? `This will permanently delete ${transactions.length} transaction(s) linked to this payslip. The payslip itself will not be affected.`
+    : `This will remove the payslip link from ${transactions.length} transaction(s) but keep them in your records.`;
 
   return (
     <>
@@ -106,55 +143,75 @@ export default function PayslipTransactionsModal({
               <div className="space-y-2 max-h-[50vh] overflow-y-auto">
                 {transactions.map(t => (
                   <div key={t.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
                       {t.type === 'income' ? (
                         <ArrowUpCircle className="w-4 h-4 text-green-500 shrink-0" />
                       ) : (
                         <ArrowDownCircle className="w-4 h-4 text-destructive shrink-0" />
                       )}
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium truncate">{t.description}</p>
                         <p className="text-xs text-muted-foreground">
                           {format(new Date(t.transaction_date), 'MMM d, yyyy')}
                         </p>
                       </div>
                     </div>
-                    <span className={`text-sm font-semibold shrink-0 ${t.type === 'income' ? 'text-green-600' : 'text-destructive'}`}>
-                      {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
-                    </span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className={`text-sm font-semibold ${t.type === 'income' ? 'text-green-600' : 'text-destructive'}`}>
+                        {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        title="Unlink from payslip"
+                        onClick={() => handleUnlinkSingle(t.id)}
+                      >
+                        <Unlink className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                className="w-full mt-2 gap-2"
-                onClick={() => setConfirmDelete(true)}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete All Linked Transactions
-              </Button>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 gap-2"
+                  onClick={() => setBulkAction('unlink')}
+                >
+                  <Unlink className="w-3.5 h-3.5" />
+                  Unlink All
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="flex-1 gap-2"
+                  onClick={() => setBulkAction('delete')}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete All
+                </Button>
+              </div>
             </>
           )}
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+      <AlertDialog open={!!bulkAction} onOpenChange={open => { if (!open) setBulkAction(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete All Linked Transactions?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete {transactions.length} transaction(s) linked to this payslip. The payslip itself will not be affected.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{confirmTitle}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmDesc}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={processing}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteAll}
-              disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleBulkAction}
+              disabled={processing}
+              className={bulkAction === 'delete' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
             >
-              {deleting ? 'Deleting...' : 'Delete All'}
+              {processing ? 'Processing...' : bulkAction === 'delete' ? 'Delete All' : 'Unlink All'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

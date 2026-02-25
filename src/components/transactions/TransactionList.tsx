@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { MoreHorizontal, Pencil, Trash2, ArrowUpCircle, ArrowDownCircle, Paperclip, FileText } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, ArrowUpCircle, ArrowDownCircle, Paperclip, FileText, Unlink } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -27,6 +27,7 @@ interface TransactionListProps {
   onEdit: (transaction: Transaction) => void;
   onDelete: (id: string) => void;
   onViewDocuments: (transaction: Transaction) => void;
+  onUnlinkPayslip?: (id: string) => void;
   documentCounts?: Record<string, number>;
 }
 
@@ -36,6 +37,7 @@ export function TransactionList({
   onEdit,
   onDelete,
   onViewDocuments,
+  onUnlinkPayslip,
   documentCounts = {},
 }: TransactionListProps) {
   const formatCurrency = (amount: number) => {
@@ -103,6 +105,12 @@ export function TransactionList({
                       <Pencil className="mr-2 h-4 w-4" />
                       Edit
                     </DropdownMenuItem>
+                    {transaction.payslip_id && onUnlinkPayslip && (
+                      <DropdownMenuItem onClick={() => onUnlinkPayslip(transaction.id)}>
+                        <Unlink className="mr-2 h-4 w-4" />
+                        Unlink from Payslip
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem
                       onClick={() => onDelete(transaction.id)}
                       className="text-destructive focus:text-destructive"
@@ -271,6 +279,12 @@ export function TransactionList({
                           <Pencil className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
+                        {transaction.payslip_id && onUnlinkPayslip && (
+                          <DropdownMenuItem onClick={() => onUnlinkPayslip(transaction.id)}>
+                            <Unlink className="mr-2 h-4 w-4" />
+                            Unlink from Payslip
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           onClick={() => onDelete(transaction.id)}
                           className="text-destructive focus:text-destructive"
