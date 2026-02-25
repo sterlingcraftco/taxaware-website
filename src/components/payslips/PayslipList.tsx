@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,15 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { FileText, Upload, Trash2, Download, Calendar, Copy, Pencil, ArrowRightLeft, Eye } from 'lucide-react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -58,6 +67,8 @@ export default function PayslipList({ refreshKey, onClone, onEdit }: PayslipList
   const [recordingId, setRecordingId] = useState<string | null>(null);
   const [viewTransPayslipId, setViewTransPayslipId] = useState<string | null>(null);
   const [viewTransLabel, setViewTransLabel] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number | 'all'>(12);
   // Track which payslips have linked transactions
   const [linkedPayslipIds, setLinkedPayslipIds] = useState<Set<string>>(new Set());
 
@@ -103,6 +114,29 @@ export default function PayslipList({ refreshKey, onClone, onEdit }: PayslipList
   useEffect(() => {
     fetchPayslips();
   }, [fetchPayslips, refreshKey]);
+
+  // Reset page when filter changes
+  useEffect(() => { setCurrentPage(1); }, [taxYearFilter]);
+
+  // Pagination logic
+  const totalItems = payslips.length;
+  const totalPages = pageSize === 'all' ? 1 : Math.ceil(totalItems / pageSize);
+  const paginatedPayslips = useMemo(() => {
+    if (pageSize === 'all') return payslips;
+    return payslips.slice((currentPage - 1) * (pageSize as number), currentPage * (pageSize as number));
+  }, [payslips, currentPage, pageSize]);
+
+  const getPaginationRange = () => {
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const pages: (number | 'ellipsis')[] = [1];
+    if (currentPage > 3) pages.push('ellipsis');
+    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+      pages.push(i);
+    }
+    if (currentPage < totalPages - 2) pages.push('ellipsis');
+    pages.push(totalPages);
+    return pages;
+  };
 
   // --- Upload handler ---
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -346,7 +380,7 @@ export default function PayslipList({ refreshKey, onClone, onEdit }: PayslipList
             </div>
           ) : (
             <div className="space-y-2">
-              {payslips.map(slip => {
+              {paginatedPayslips.map(slip => {
                 const hasLinked = linkedPayslipIds.has(slip.id);
                 return (
                   <div key={slip.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30 transition-colors">
@@ -438,6 +472,64 @@ export default function PayslipList({ refreshKey, onClone, onEdit }: PayslipList
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {!loading && payslips.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t mt-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Show</span>
+                <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(v === 'all' ? 'all' : Number(v)); setCurrentPage(1); }}>
+                  <SelectTrigger className="h-8 w-[80px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="12">12</SelectItem>
+                    <SelectItem value="24">24</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span>
+                  of {totalItems} payslip{totalItems !== 1 ? 's' : ''}
+                </span>
+              </div>
+              {totalPages > 1 && (
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                    {getPaginationRange().map((page, i) =>
+                      page === 'ellipsis' ? (
+                        <PaginationItem key={`e-${i}`}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      ) : (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            isActive={currentPage === page}
+                            onClick={() => setCurrentPage(page as number)}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )
+                    )}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
             </div>
           )}
         </CardContent>

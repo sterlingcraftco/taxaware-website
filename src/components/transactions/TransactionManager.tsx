@@ -27,6 +27,16 @@ import { DocumentUpload } from './DocumentUpload';
 import { TransactionFiltersComponent, TransactionFilters } from './TransactionFilters';
 import { exportTransactionsToCSV, exportTransactionsToPDF } from '@/lib/transactionExport';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 
 const defaultFilters: TransactionFilters = {
@@ -51,6 +61,9 @@ export function TransactionManager() {
   } = useTransactions();
 
   const [filters, setFilters] = useState<TransactionFilters>(defaultFilters);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number | 'all'>(15);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -279,8 +292,30 @@ export function TransactionManager() {
     }
   };
 
+  // Reset page when filters change
+  useEffect(() => { setCurrentPage(1); }, [filters]);
+
   const netBalance = filteredTotals.income - filteredTotals.expense;
   const hasActiveFilters = filters.dateFrom || filters.dateTo || filters.type !== 'all' || filters.categoryId || filters.taxYear;
+
+  // Pagination logic
+  const totalItems = filteredTransactions.length;
+  const totalPages = pageSize === 'all' ? 1 : Math.ceil(totalItems / pageSize);
+  const paginatedTransactions = pageSize === 'all'
+    ? filteredTransactions
+    : filteredTransactions.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const getPaginationRange = () => {
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const pages: (number | 'ellipsis')[] = [1];
+    if (currentPage > 3) pages.push('ellipsis');
+    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+      pages.push(i);
+    }
+    if (currentPage < totalPages - 2) pages.push('ellipsis');
+    pages.push(totalPages);
+    return pages;
+  };
 
   // Export handlers
   const handleExportCSV = () => {
@@ -430,7 +465,7 @@ export function TransactionManager() {
             <div className="md:hidden">
               <PullToRefresh onRefresh={handleRefresh}>
                 <TransactionList
-                  transactions={filteredTransactions}
+                  transactions={paginatedTransactions}
                   getCategoryById={getCategoryById}
                   onEdit={handleEdit}
                   onDelete={handleDeleteClick}
@@ -446,7 +481,7 @@ export function TransactionManager() {
           {!loading && (
             <div className="hidden md:block">
               <TransactionList
-                transactions={filteredTransactions}
+                transactions={paginatedTransactions}
                 getCategoryById={getCategoryById}
                 onEdit={handleEdit}
                 onDelete={handleDeleteClick}
@@ -454,6 +489,64 @@ export function TransactionManager() {
                 onUnlinkPayslip={handleUnlinkPayslip}
                 documentCounts={documentCounts}
               />
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {!loading && filteredTransactions.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Show</span>
+                <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(v === 'all' ? 'all' : Number(v)); setCurrentPage(1); }}>
+                  <SelectTrigger className="h-8 w-[80px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span>
+                  of {totalItems} transaction{totalItems !== 1 ? 's' : ''}
+                </span>
+              </div>
+              {totalPages > 1 && (
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                    {getPaginationRange().map((page, i) =>
+                      page === 'ellipsis' ? (
+                        <PaginationItem key={`e-${i}`}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      ) : (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            isActive={currentPage === page}
+                            onClick={() => setCurrentPage(page as number)}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )
+                    )}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
             </div>
           )}
         </CardContent>
