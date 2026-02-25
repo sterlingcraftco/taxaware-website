@@ -241,7 +241,6 @@ export default function PayslipList({ refreshKey, onClone, onEdit }: PayslipList
         type: 'income',
         amount: Number(full.net_pay),
         transaction_date: txDate,
-        tax_year: full.tax_year,
         payslip_id: slip.id,
         notes: `Auto-recorded from payslip: ${full.company_name}`,
       });
@@ -264,7 +263,6 @@ export default function PayslipList({ refreshKey, onClone, onEdit }: PayslipList
             type: 'expense',
             amount: d.amount,
             transaction_date: txDate,
-            tax_year: full.tax_year,
             payslip_id: slip.id,
             notes: `Auto-recorded from payslip: ${full.company_name}`,
           });
