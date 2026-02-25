@@ -262,6 +262,19 @@ export default function PayslipList({ refreshKey, onClone, onEdit }: PayslipList
       const { data: full } = await supabase.from('payslips').select('*').eq('id', slip.id).single();
       if (!full) throw new Error('Payslip not found');
 
+      // Fetch user's categories to map payslip items to category_ids
+      const { data: categories } = await supabase
+        .from('transaction_categories')
+        .select('id, name, type')
+        .eq('user_id', user.id);
+
+      const categoryMap: Record<string, string> = {};
+      (categories || []).forEach(c => {
+        categoryMap[`${c.type}:${c.name}`] = c.id;
+      });
+
+      const findCategory = (type: 'income' | 'expense', name: string) => categoryMap[`${type}:${name}`] || null;
+
       const monthLabel = `${MONTH_NAMES[full.pay_period_month - 1]} ${full.pay_period_year}`;
       const txDate = `${full.pay_period_year}-${String(full.pay_period_month).padStart(2, '0')}-28`;
 
@@ -276,17 +289,18 @@ export default function PayslipList({ refreshKey, onClone, onEdit }: PayslipList
         amount: Number(full.net_pay),
         transaction_date: txDate,
         payslip_id: slip.id,
+        category_id: findCategory('income', 'Salary'),
         notes: `Auto-recorded from payslip: ${full.company_name}`,
       });
 
-      // Expenses: statutory deductions
+      // Expenses: statutory deductions with category mapping
       const deductions = [
-        { amount: Number(full.paye_tax), label: 'PAYE Tax' },
-        { amount: Number(full.pension_employee), label: 'Pension (Employee)' },
-        { amount: Number(full.nhf), label: 'NHF Contribution' },
-        { amount: Number(full.nhis), label: 'NHIS Contribution' },
-        { amount: Number(full.loan_repayment), label: 'Loan Repayment' },
-        { amount: Number(full.other_deductions), label: 'Other Deductions' },
+        { amount: Number(full.paye_tax), label: 'PAYE Tax', category: 'Other Expense' },
+        { amount: Number(full.pension_employee), label: 'Pension (Employee)', category: 'Pension Contribution' },
+        { amount: Number(full.nhf), label: 'NHF Contribution', category: 'NHF Contribution' },
+        { amount: Number(full.nhis), label: 'NHIS Contribution', category: 'NHIS Contribution' },
+        { amount: Number(full.loan_repayment), label: 'Loan Repayment', category: 'Other Expense' },
+        { amount: Number(full.other_deductions), label: 'Other Deductions', category: 'Other Expense' },
       ];
 
       for (const d of deductions) {
@@ -298,6 +312,7 @@ export default function PayslipList({ refreshKey, onClone, onEdit }: PayslipList
             amount: d.amount,
             transaction_date: txDate,
             payslip_id: slip.id,
+            category_id: findCategory('expense', d.category),
             notes: `Auto-recorded from payslip: ${full.company_name}`,
           });
         }
