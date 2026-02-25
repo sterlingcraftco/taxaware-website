@@ -234,6 +234,19 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed, 
       // Delete existing linked transactions and re-create with new amounts
       await supabase.from('transactions').delete().eq('payslip_id', payslipId);
 
+      // Fetch user's categories to map payslip items to category_ids
+      const { data: categories } = await supabase
+        .from('transaction_categories')
+        .select('id, name, type')
+        .eq('user_id', payload.user_id);
+
+      const categoryMap: Record<string, string> = {};
+      (categories || []).forEach((c: any) => {
+        categoryMap[`${c.type}:${c.name}`] = c.id;
+      });
+
+      const findCategory = (type: 'income' | 'expense', name: string) => categoryMap[`${type}:${name}`] || null;
+
       const monthLabel = `${MONTH_NAMES[payload.pay_period_month - 1]} ${payload.pay_period_year}`;
       const txDate = `${payload.pay_period_year}-${String(payload.pay_period_month).padStart(2, '0')}-28`;
 
@@ -244,16 +257,17 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed, 
         amount: Number(payload.net_pay),
         transaction_date: txDate,
         payslip_id: payslipId,
+        category_id: findCategory('income', 'Salary'),
         notes: `Auto-recorded from payslip: ${payload.company_name}`,
       }];
 
       const deductions = [
-        { amount: Number(payload.paye_tax), label: 'PAYE Tax' },
-        { amount: Number(payload.pension_employee), label: 'Pension (Employee)' },
-        { amount: Number(payload.nhf), label: 'NHF Contribution' },
-        { amount: Number(payload.nhis), label: 'NHIS Contribution' },
-        { amount: Number(payload.loan_repayment), label: 'Loan Repayment' },
-        { amount: Number(payload.other_deductions), label: 'Other Deductions' },
+        { amount: Number(payload.paye_tax), label: 'PAYE Tax', category: 'Other Expense' },
+        { amount: Number(payload.pension_employee), label: 'Pension (Employee)', category: 'Pension Contribution' },
+        { amount: Number(payload.nhf), label: 'NHF Contribution', category: 'NHF Contribution' },
+        { amount: Number(payload.nhis), label: 'NHIS Contribution', category: 'NHIS Contribution' },
+        { amount: Number(payload.loan_repayment), label: 'Loan Repayment', category: 'Other Expense' },
+        { amount: Number(payload.other_deductions), label: 'Other Deductions', category: 'Other Expense' },
       ];
 
       for (const d of deductions) {
@@ -265,6 +279,7 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed, 
             amount: d.amount,
             transaction_date: txDate,
             payslip_id: payslipId,
+            category_id: findCategory('expense', d.category),
             notes: `Auto-recorded from payslip: ${payload.company_name}`,
           });
         }
