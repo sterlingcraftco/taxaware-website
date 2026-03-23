@@ -35,11 +35,16 @@ interface CompleteCalculatorProps {
   defaultTaxYear?: number;
 }
 
-export function CompleteCalculator({ onCalculationSaved, onClose, initialTransactionData }: CompleteCalculatorProps) {
+export function CompleteCalculator({ onCalculationSaved, onClose, initialTransactionData, defaultTaxYear }: CompleteCalculatorProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [inputPeriod, setInputPeriod] = useState<InputPeriod>("annual"); // Default to annual when pre-filled
+  // Auto-detect tax law based on tax year
+  const detectedTaxYear = defaultTaxYear || new Date().getFullYear();
+  const autoDetectedLaw: TaxLaw = detectedTaxYear < 2026 ? 'pita' : 'nta2025';
+  const [taxLawOverride, setTaxLawOverride] = useState<TaxLaw>(autoDetectedLaw);
+
+  const [inputPeriod, setInputPeriod] = useState<InputPeriod>("annual");
   const [income, setIncome] = useState<IncomeFormData>(() => 
     initialTransactionData ? createIncomeFromTransactions(initialTransactionData) : initialIncomeData
   );
