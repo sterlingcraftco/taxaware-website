@@ -32,6 +32,7 @@ interface CompleteCalculatorProps {
   onCalculationSaved?: () => void;
   onClose?: () => void;
   initialTransactionData?: TransactionTaxData | null;
+  defaultTaxYear?: number;
 }
 
 export function CompleteCalculator({ onCalculationSaved, onClose, initialTransactionData }: CompleteCalculatorProps) {
