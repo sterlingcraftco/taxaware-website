@@ -115,6 +115,32 @@ export default function SimpleCalculatorContent({ onCalculationSaved, onClose, d
 
   return (
     <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
+      {/* Tax Law Selection */}
+      <div className="flex items-center justify-between pb-4 border-b border-border">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">Tax Law</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Which tax law to calculate under</p>
+        </div>
+        <Select value={taxLaw} onValueChange={(v) => { setTaxLaw(v as TaxLaw); setResult(null); }}>
+          <SelectTrigger className="w-[220px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="nta2025">NTA 2025 (2026+)</SelectItem>
+            <SelectItem value="pita">Previous Law (PITA)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {taxLaw === 'pita' && (
+        <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+          <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-amber-800 dark:text-amber-300">
+            Using old PITA graduated bands (7%-24%) with CRA. For tax years before 2026.
+          </p>
+        </div>
+      )}
+
       {/* Period Toggle */}
       <div className="flex items-center justify-between pb-4 border-b border-border">
         <div>
