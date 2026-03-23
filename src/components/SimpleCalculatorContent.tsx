@@ -21,6 +21,7 @@ type InputPeriod = "monthly" | "annual";
 interface SimpleCalculatorContentProps {
   onCalculationSaved?: () => void;
   onClose?: () => void;
+  defaultTaxLaw?: TaxLaw;
 }
 
 export default function SimpleCalculatorContent({ onCalculationSaved, onClose }: SimpleCalculatorContentProps) {
