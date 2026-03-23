@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calculator, TrendingDown, Wallet, PiggyBank, Save, Download, Loader2, HelpCircle, Landmark } from "lucide-react";
+import { Calculator, TrendingDown, Wallet, PiggyBank, Save, Download, Loader2, HelpCircle, Landmark, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -7,10 +7,13 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { calculateSimpleTax, formatCurrency, CompleteTaxResult } from "@/lib/taxCalculations";
+import { calculateSimpleTax, formatCurrency, CompleteTaxResult, TaxLaw } from "@/lib/taxCalculations";
+import { calculateSimpleLegacyTax } from "@/lib/legacyTaxCalculations";
+import { generateTaxPDF } from "@/lib/pdfGenerator";
 import { generateTaxPDF } from "@/lib/pdfGenerator";
 
 type InputPeriod = "monthly" | "annual";
