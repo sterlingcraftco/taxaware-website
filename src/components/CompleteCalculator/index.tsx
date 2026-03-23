@@ -24,7 +24,8 @@ import {
   createIncomeFromTransactions,
   createDeductionsFromTransactions,
 } from "./types";
-import { calculateCompleteTax, formatCurrency, formatCurrencyPDF, CompleteTaxResult } from "@/lib/taxCalculations";
+import { calculateCompleteTax, formatCurrency, formatCurrencyPDF, CompleteTaxResult, TaxLaw } from "@/lib/taxCalculations";
+import { calculateLegacyTax } from "@/lib/legacyTaxCalculations";
 import { generateTaxPDF } from "@/lib/pdfGenerator";
 
 interface CompleteCalculatorProps {
