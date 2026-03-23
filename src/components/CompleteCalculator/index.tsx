@@ -117,6 +117,18 @@ export function CompleteCalculator({ onCalculationSaved, onClose, initialTransac
       ? (deductions.rentPeriod === "monthly" ? rentValue * 12 : rentValue)
       : 0;
 
+    if (taxLawOverride === 'pita') {
+      return calculateLegacyTax(
+        incomeSource,
+        pensionAmount,
+        nhfAmount,
+        nhisAmount,
+        lifeAssurance,
+        mortgageInterest,
+        annualRent
+      );
+    }
+
     return calculateCompleteTax(
       incomeSource,
       pensionAmount,
@@ -126,7 +138,7 @@ export function CompleteCalculator({ onCalculationSaved, onClose, initialTransac
       mortgageInterest,
       annualRent
     );
-  }, [income, deductions, inputPeriod]);
+  }, [income, deductions, inputPeriod, taxLawOverride]);
 
   const handleIncomeChange = (field: keyof IncomeFormData, value: string) => {
     setIncome(prev => ({ ...prev, [field]: value }));
