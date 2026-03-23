@@ -77,7 +77,9 @@ export default function SimpleCalculatorContent({ onCalculationSaved, onClose, d
 
     const annualRent = paysRent ? toAnnual(getNumericValue(rent)) : 0;
 
-    const taxResult = calculateSimpleTax(annualIncome, pensionAmount, nhfAmount, annualRent);
+    const taxResult = taxLaw === 'pita' 
+      ? calculateSimpleLegacyTax(annualIncome, pensionAmount, nhfAmount, annualRent)
+      : calculateSimpleTax(annualIncome, pensionAmount, nhfAmount, annualRent);
     setResult(taxResult);
   };
 
