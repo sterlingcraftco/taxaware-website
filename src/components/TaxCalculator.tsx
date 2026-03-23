@@ -14,6 +14,9 @@ import { useNavigate, Link } from "react-router-dom";
 import { isAuthEnabled } from "@/lib/featureFlags";
 import { analytics } from "@/lib/analytics";
 import { generateTaxPDF } from "@/lib/pdfGenerator";
+import { calculateSimpleLegacyTax } from "@/lib/legacyTaxCalculations";
+import { TaxLaw } from "@/lib/taxCalculations";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export interface TaxBreakdown {
   band: string;
