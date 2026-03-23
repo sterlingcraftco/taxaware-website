@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calculator, TrendingDown, Wallet, PiggyBank, Save, Download, Loader2, HelpCircle, Landmark } from "lucide-react";
+import { Calculator, TrendingDown, Wallet, PiggyBank, Save, Download, Loader2, HelpCircle, Landmark, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,6 +14,9 @@ import { useNavigate, Link } from "react-router-dom";
 import { isAuthEnabled } from "@/lib/featureFlags";
 import { analytics } from "@/lib/analytics";
 import { generateTaxPDF } from "@/lib/pdfGenerator";
+import { calculateSimpleLegacyTax } from "@/lib/legacyTaxCalculations";
+import { TaxLaw } from "@/lib/taxCalculations";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export interface TaxBreakdown {
   band: string;
@@ -121,6 +124,9 @@ export { formatCurrency };
 type InputPeriod = "monthly" | "annual";
 
 const TaxCalculator = () => {
+  // Tax law selection
+  const [taxLaw, setTaxLaw] = useState<TaxLaw>("nta2025");
+
   // Input period (monthly or annual)
   const [inputPeriod, setInputPeriod] = useState<InputPeriod>("annual");
 
@@ -203,7 +209,24 @@ const TaxCalculator = () => {
       annualRent = toAnnual(rentValue);
     }
 
-    const taxResult = calculateTaxWithDeductions(annualIncome, pensionAmount, nhfAmount, annualRent);
+    let taxResult: TaxResult;
+    if (taxLaw === 'pita') {
+      const legacyResult = calculateSimpleLegacyTax(annualIncome, pensionAmount, nhfAmount, annualRent);
+      taxResult = {
+        total: legacyResult.total,
+        breakdown: legacyResult.breakdown,
+        grossIncome: legacyResult.grossIncome,
+        chargeableIncome: legacyResult.chargeableIncome,
+        deductions: {
+          pension: legacyResult.deductions.pension,
+          nhf: legacyResult.deductions.nhf,
+          rentRelief: legacyResult.deductions.rentRelief,
+          totalDeductions: legacyResult.deductions.totalDeductions,
+        },
+      };
+    } else {
+      taxResult = calculateTaxWithDeductions(annualIncome, pensionAmount, nhfAmount, annualRent);
+    }
     setResult(taxResult);
     analytics.calculateTax(annualIncome, taxResult.total);
   };
@@ -280,7 +303,7 @@ const TaxCalculator = () => {
             Estimate Your Personal Tax
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Quick estimate for <strong>individual taxpayers</strong> based on Nigeria's 2026 progressive tax bands.
+            Quick estimate for <strong>individual taxpayers</strong> based on Nigeria's progressive tax bands.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
             <Link to="/auth" className="text-primary hover:underline font-medium">Sign in</Link> for a more comprehensive calculation with additional reliefs and saved history.
@@ -289,8 +312,34 @@ const TaxCalculator = () => {
 
         <div className="max-w-4xl mx-auto">
           <div className="bg-card rounded-2xl card-shadow border border-border overflow-hidden">
-            {/* Input Section */}
+            {/* Tax Law & Period Toggle */}
             <div className="p-8 md:p-10 border-b border-border">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-border">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">Tax Law</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Select which tax law to calculate under</p>
+                </div>
+                <Select value={taxLaw} onValueChange={(v) => { setTaxLaw(v as TaxLaw); setResult(null); }}>
+                  <SelectTrigger className="w-full sm:w-[260px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nta2025">NTA 2025 (2026 tax year onwards)</SelectItem>
+                    <SelectItem value="pita">Previous Law — PITA (pre-2026)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {taxLaw === 'pita' && (
+                <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 mb-6">
+                  <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-amber-800 dark:text-amber-300">
+                    <p className="font-medium">Calculating under the old PITA law</p>
+                    <p className="text-xs mt-1">This uses the previous graduated tax bands (7%-24%) with Consolidated Relief Allowance (CRA). Applicable for tax years before 2026.</p>
+                  </div>
+                </div>
+              )}
+
               {/* Period Toggle */}
               <div className="flex items-center justify-between mb-6 pb-6 border-b border-border">
                 <div>

@@ -71,7 +71,8 @@ export const generateTaxPDF = (result: CompleteTaxResult | null, options: PDFGen
 
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
-    doc.text("Tax Estimate Report", pageWidth / 2, 32, { align: "center" });
+    const lawLabel = result.taxLaw === 'pita' ? 'Previous Law (PITA)' : 'NTA 2025';
+    doc.text(`Tax Estimate Report — ${lawLabel}`, pageWidth / 2, 32, { align: "center" });
 
     // Date
     doc.setFontSize(10);
@@ -121,6 +122,16 @@ export const generateTaxPDF = (result: CompleteTaxResult | null, options: PDFGen
     doc.setFont("helvetica", "bold");
     doc.setTextColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
     doc.text("Deductions & Reliefs", 20, yPos);
+
+    // Show CRA if PITA
+    if (result.cra && result.cra > 0) {
+        yPos += 10;
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(darkText.r, darkText.g, darkText.b);
+        doc.text(`Consolidated Relief Allowance (CRA): ${safeFormat(result.cra)}`, 20, yPos);
+        yPos += 4;
+    }
 
     yPos += 12;
     doc.setFontSize(11);

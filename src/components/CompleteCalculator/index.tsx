@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, ArrowRight, Calculator, AlertCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, ArrowRight, Calculator, AlertCircle, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,20 +24,27 @@ import {
   createIncomeFromTransactions,
   createDeductionsFromTransactions,
 } from "./types";
-import { calculateCompleteTax, formatCurrency, formatCurrencyPDF, CompleteTaxResult } from "@/lib/taxCalculations";
+import { calculateCompleteTax, formatCurrency, formatCurrencyPDF, CompleteTaxResult, TaxLaw } from "@/lib/taxCalculations";
+import { calculateLegacyTax } from "@/lib/legacyTaxCalculations";
 import { generateTaxPDF } from "@/lib/pdfGenerator";
 
 interface CompleteCalculatorProps {
   onCalculationSaved?: () => void;
   onClose?: () => void;
   initialTransactionData?: TransactionTaxData | null;
+  defaultTaxYear?: number;
 }
 
-export function CompleteCalculator({ onCalculationSaved, onClose, initialTransactionData }: CompleteCalculatorProps) {
+export function CompleteCalculator({ onCalculationSaved, onClose, initialTransactionData, defaultTaxYear }: CompleteCalculatorProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [inputPeriod, setInputPeriod] = useState<InputPeriod>("annual"); // Default to annual when pre-filled
+  // Auto-detect tax law based on tax year
+  const detectedTaxYear = defaultTaxYear || new Date().getFullYear();
+  const autoDetectedLaw: TaxLaw = detectedTaxYear < 2026 ? 'pita' : 'nta2025';
+  const [taxLawOverride, setTaxLawOverride] = useState<TaxLaw>(autoDetectedLaw);
+
+  const [inputPeriod, setInputPeriod] = useState<InputPeriod>("annual");
   const [income, setIncome] = useState<IncomeFormData>(() => 
     initialTransactionData ? createIncomeFromTransactions(initialTransactionData) : initialIncomeData
   );
@@ -109,6 +117,18 @@ export function CompleteCalculator({ onCalculationSaved, onClose, initialTransac
       ? (deductions.rentPeriod === "monthly" ? rentValue * 12 : rentValue)
       : 0;
 
+    if (taxLawOverride === 'pita') {
+      return calculateLegacyTax(
+        incomeSource,
+        pensionAmount,
+        nhfAmount,
+        nhisAmount,
+        lifeAssurance,
+        mortgageInterest,
+        annualRent
+      );
+    }
+
     return calculateCompleteTax(
       incomeSource,
       pensionAmount,
@@ -118,7 +138,7 @@ export function CompleteCalculator({ onCalculationSaved, onClose, initialTransac
       mortgageInterest,
       annualRent
     );
-  }, [income, deductions, inputPeriod]);
+  }, [income, deductions, inputPeriod, taxLawOverride]);
 
   const handleIncomeChange = (field: keyof IncomeFormData, value: string) => {
     setIncome(prev => ({ ...prev, [field]: value }));
@@ -190,6 +210,43 @@ export function CompleteCalculator({ onCalculationSaved, onClose, initialTransac
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
       {/* Left Column - Form Steps */}
       <div className="lg:col-span-2 space-y-4 lg:space-y-6">
+        {/* Tax Law Selection */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 lg:pb-6 border-b border-border">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">Tax Law</h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Auto-detected for {detectedTaxYear} tax year
+            </p>
+          </div>
+          <Select value={taxLawOverride} onValueChange={(v) => setTaxLawOverride(v as TaxLaw)}>
+            <SelectTrigger className="w-full sm:w-[260px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="nta2025">NTA 2025 (2026+ tax year)</SelectItem>
+              <SelectItem value="pita">Previous Law — PITA (pre-2026)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {taxLawOverride !== autoDetectedLaw && (
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+            <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-amber-800 dark:text-amber-300">
+              You've overridden the auto-detected tax law. The {detectedTaxYear} tax year would normally use {autoDetectedLaw === 'nta2025' ? 'NTA 2025' : 'PITA'}.
+            </p>
+          </div>
+        )}
+
+        {taxLawOverride === 'pita' && taxLawOverride === autoDetectedLaw && (
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
+            <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-blue-800 dark:text-blue-300">
+              Using old PITA graduated bands (7%-24%) with CRA for pre-2026 tax year.
+            </p>
+          </div>
+        )}
+
         {/* Period Toggle */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 lg:pb-6 border-b border-border">
           <div>

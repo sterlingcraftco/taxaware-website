@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calculator, TrendingDown, Wallet, PiggyBank, Save, Download, Loader2, HelpCircle, Landmark } from "lucide-react";
+import { Calculator, TrendingDown, Wallet, PiggyBank, Save, Download, Loader2, HelpCircle, Landmark, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -7,10 +7,12 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { calculateSimpleTax, formatCurrency, CompleteTaxResult } from "@/lib/taxCalculations";
+import { calculateSimpleTax, formatCurrency, CompleteTaxResult, TaxLaw } from "@/lib/taxCalculations";
+import { calculateSimpleLegacyTax } from "@/lib/legacyTaxCalculations";
 import { generateTaxPDF } from "@/lib/pdfGenerator";
 
 type InputPeriod = "monthly" | "annual";
@@ -18,9 +20,11 @@ type InputPeriod = "monthly" | "annual";
 interface SimpleCalculatorContentProps {
   onCalculationSaved?: () => void;
   onClose?: () => void;
+  defaultTaxLaw?: TaxLaw;
 }
 
-export default function SimpleCalculatorContent({ onCalculationSaved, onClose }: SimpleCalculatorContentProps) {
+export default function SimpleCalculatorContent({ onCalculationSaved, onClose, defaultTaxLaw }: SimpleCalculatorContentProps) {
+  const [taxLaw, setTaxLaw] = useState<TaxLaw>(defaultTaxLaw || "nta2025");
   const [inputPeriod, setInputPeriod] = useState<InputPeriod>("monthly");
   const [income, setIncome] = useState("");
   const [hasPension, setHasPension] = useState(false);
@@ -72,7 +76,9 @@ export default function SimpleCalculatorContent({ onCalculationSaved, onClose }:
 
     const annualRent = paysRent ? toAnnual(getNumericValue(rent)) : 0;
 
-    const taxResult = calculateSimpleTax(annualIncome, pensionAmount, nhfAmount, annualRent);
+    const taxResult = taxLaw === 'pita' 
+      ? calculateSimpleLegacyTax(annualIncome, pensionAmount, nhfAmount, annualRent)
+      : calculateSimpleTax(annualIncome, pensionAmount, nhfAmount, annualRent);
     setResult(taxResult);
   };
 
@@ -108,6 +114,32 @@ export default function SimpleCalculatorContent({ onCalculationSaved, onClose }:
 
   return (
     <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
+      {/* Tax Law Selection */}
+      <div className="flex items-center justify-between pb-4 border-b border-border">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">Tax Law</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Which tax law to calculate under</p>
+        </div>
+        <Select value={taxLaw} onValueChange={(v) => { setTaxLaw(v as TaxLaw); setResult(null); }}>
+          <SelectTrigger className="w-[220px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="nta2025">NTA 2025 (2026+)</SelectItem>
+            <SelectItem value="pita">Previous Law (PITA)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {taxLaw === 'pita' && (
+        <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+          <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-amber-800 dark:text-amber-300">
+            Using old PITA graduated bands (7%-24%) with CRA. For tax years before 2026.
+          </p>
+        </div>
+      )}
+
       {/* Period Toggle */}
       <div className="flex items-center justify-between pb-4 border-b border-border">
         <div>

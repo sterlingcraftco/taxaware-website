@@ -23,7 +23,21 @@ export function ResultsStep({ result, onSave, onDownloadPDF, isSaving, isAuthent
         <p className="text-muted-foreground">
           Based on your income and deductions, here's your estimated tax liability.
         </p>
+        {result.taxLaw === 'pita' && (
+          <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 font-medium">
+            Calculated under Previous Law (PITA) — pre-2026 tax bands
+          </p>
+        )}
       </div>
+
+      {/* CRA info for PITA */}
+      {result.cra && result.cra > 0 && (
+        <div className="bg-blue-50 dark:bg-blue-950/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+          <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-1">Consolidated Relief Allowance (CRA)</h4>
+          <p className="text-lg font-bold text-blue-900 dark:text-blue-200">{formatCurrency(result.cra)}</p>
+          <p className="text-xs text-blue-700 dark:text-blue-400 mt-1">Higher of (₦200,000 or 1% of gross) + 20% of gross income</p>
+        </div>
+      )}
 
       {/* Income Sources Breakdown */}
       {(result.totalIncome.freelance > 0 || result.totalIncome.business > 0 || result.totalIncome.benefitsInKind > 0) && (

@@ -24,6 +24,8 @@ export interface Deductions {
   totalDeductions: number;
 }
 
+export type TaxLaw = 'nta2025' | 'pita';
+
 export interface CompleteTaxResult {
   total: number;
   breakdown: TaxBreakdown[];
@@ -32,6 +34,8 @@ export interface CompleteTaxResult {
   chargeableIncome: number;
   deductions: Deductions;
   monthlySavingsRecommended: number;
+  taxLaw?: TaxLaw;
+  cra?: number; // Consolidated Relief Allowance (PITA only)
 }
 
 export const TAX_BANDS = [
