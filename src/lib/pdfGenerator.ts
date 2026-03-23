@@ -71,7 +71,8 @@ export const generateTaxPDF = (result: CompleteTaxResult | null, options: PDFGen
 
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
-    doc.text("Tax Estimate Report", pageWidth / 2, 32, { align: "center" });
+    const lawLabel = result.taxLaw === 'pita' ? 'Previous Law (PITA)' : 'NTA 2025';
+    doc.text(`Tax Estimate Report — ${lawLabel}`, pageWidth / 2, 32, { align: "center" });
 
     // Date
     doc.setFontSize(10);
