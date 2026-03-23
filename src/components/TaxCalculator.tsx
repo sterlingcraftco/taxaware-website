@@ -312,8 +312,34 @@ const TaxCalculator = () => {
 
         <div className="max-w-4xl mx-auto">
           <div className="bg-card rounded-2xl card-shadow border border-border overflow-hidden">
-            {/* Input Section */}
+            {/* Tax Law & Period Toggle */}
             <div className="p-8 md:p-10 border-b border-border">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-border">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">Tax Law</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Select which tax law to calculate under</p>
+                </div>
+                <Select value={taxLaw} onValueChange={(v) => { setTaxLaw(v as TaxLaw); setResult(null); }}>
+                  <SelectTrigger className="w-full sm:w-[260px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nta2025">NTA 2025 (2026 tax year onwards)</SelectItem>
+                    <SelectItem value="pita">Previous Law — PITA (pre-2026)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {taxLaw === 'pita' && (
+                <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 mb-6">
+                  <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-amber-800 dark:text-amber-300">
+                    <p className="font-medium">Calculating under the old PITA law</p>
+                    <p className="text-xs mt-1">This uses the previous graduated tax bands (7%-24%) with Consolidated Relief Allowance (CRA). Applicable for tax years before 2026.</p>
+                  </div>
+                </div>
+              )}
+
               {/* Period Toggle */}
               <div className="flex items-center justify-between mb-6 pb-6 border-b border-border">
                 <div>
