@@ -303,7 +303,7 @@ const TaxCalculator = () => {
             Estimate Your Personal Tax
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Quick estimate for <strong>individual taxpayers</strong> based on Nigeria's 2026 progressive tax bands.
+            Quick estimate for <strong>individual taxpayers</strong> based on Nigeria's progressive tax bands.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
             <Link to="/auth" className="text-primary hover:underline font-medium">Sign in</Link> for a more comprehensive calculation with additional reliefs and saved history.
