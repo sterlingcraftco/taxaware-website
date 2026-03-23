@@ -24,7 +24,8 @@ interface SimpleCalculatorContentProps {
   defaultTaxLaw?: TaxLaw;
 }
 
-export default function SimpleCalculatorContent({ onCalculationSaved, onClose }: SimpleCalculatorContentProps) {
+export default function SimpleCalculatorContent({ onCalculationSaved, onClose, defaultTaxLaw }: SimpleCalculatorContentProps) {
+  const [taxLaw, setTaxLaw] = useState<TaxLaw>(defaultTaxLaw || "nta2025");
   const [inputPeriod, setInputPeriod] = useState<InputPeriod>("monthly");
   const [income, setIncome] = useState("");
   const [hasPension, setHasPension] = useState(false);
