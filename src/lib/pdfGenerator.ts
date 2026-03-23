@@ -123,6 +123,16 @@ export const generateTaxPDF = (result: CompleteTaxResult | null, options: PDFGen
     doc.setTextColor(primaryGreen.r, primaryGreen.g, primaryGreen.b);
     doc.text("Deductions & Reliefs", 20, yPos);
 
+    // Show CRA if PITA
+    if (result.cra && result.cra > 0) {
+        yPos += 10;
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(darkText.r, darkText.g, darkText.b);
+        doc.text(`Consolidated Relief Allowance (CRA): ${safeFormat(result.cra)}`, 20, yPos);
+        yPos += 4;
+    }
+
     yPos += 12;
     doc.setFontSize(11);
     doc.setTextColor(darkText.r, darkText.g, darkText.b);
