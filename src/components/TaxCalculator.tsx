@@ -124,6 +124,9 @@ export { formatCurrency };
 type InputPeriod = "monthly" | "annual";
 
 const TaxCalculator = () => {
+  // Tax law selection
+  const [taxLaw, setTaxLaw] = useState<TaxLaw>("nta2025");
+
   // Input period (monthly or annual)
   const [inputPeriod, setInputPeriod] = useState<InputPeriod>("annual");
 
