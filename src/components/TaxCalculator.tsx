@@ -209,7 +209,24 @@ const TaxCalculator = () => {
       annualRent = toAnnual(rentValue);
     }
 
-    const taxResult = calculateTaxWithDeductions(annualIncome, pensionAmount, nhfAmount, annualRent);
+    let taxResult: TaxResult;
+    if (taxLaw === 'pita') {
+      const legacyResult = calculateSimpleLegacyTax(annualIncome, pensionAmount, nhfAmount, annualRent);
+      taxResult = {
+        total: legacyResult.total,
+        breakdown: legacyResult.breakdown,
+        grossIncome: legacyResult.grossIncome,
+        chargeableIncome: legacyResult.chargeableIncome,
+        deductions: {
+          pension: legacyResult.deductions.pension,
+          nhf: legacyResult.deductions.nhf,
+          rentRelief: legacyResult.deductions.rentRelief,
+          totalDeductions: legacyResult.deductions.totalDeductions,
+        },
+      };
+    } else {
+      taxResult = calculateTaxWithDeductions(annualIncome, pensionAmount, nhfAmount, annualRent);
+    }
     setResult(taxResult);
     analytics.calculateTax(annualIncome, taxResult.total);
   };
