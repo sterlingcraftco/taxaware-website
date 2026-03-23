@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import { calculateSimpleTax, formatCurrency, CompleteTaxResult, TaxLaw } from "@/lib/taxCalculations";
 import { calculateSimpleLegacyTax } from "@/lib/legacyTaxCalculations";
 import { generateTaxPDF } from "@/lib/pdfGenerator";
-import { generateTaxPDF } from "@/lib/pdfGenerator";
 
 type InputPeriod = "monthly" | "annual";
 
