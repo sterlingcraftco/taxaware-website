@@ -316,6 +316,9 @@ export default function Profile() {
             </Card>
           )}
 
+          {/* Passkeys */}
+          <PasskeyManager />
+
           {/* Change Password */}
           <Card>
             <CardHeader>
