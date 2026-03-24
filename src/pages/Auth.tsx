@@ -8,9 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Calculator, Mail, Lock, User, Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
+import { Calculator, Mail, Lock, User, Eye, EyeOff, ArrowLeft, Loader2, Fingerprint } from 'lucide-react';
 import { z } from 'zod';
 import { analytics } from '@/lib/analytics';
+import { usePasskey } from '@/hooks/usePasskey';
 
 const emailSchema = z.string().email('Please enter a valid email address');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
@@ -19,6 +20,7 @@ export default function Auth() {
   const navigate = useNavigate();
   const { user, signInWithEmail, signUpWithEmail } = useAuth();
   const { toast } = useToast();
+  const { isSupported: passkeySupported, loading: passkeyLoading, authenticateWithPasskey } = usePasskey();
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   
@@ -388,7 +390,36 @@ export default function Auth() {
                   </TabsContent>
                 </Tabs>
 
-                <div className="mt-6 text-center">
+                {passkeySupported && (
+                  <div className="mt-6">
+                    <div className="relative mb-4">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-card px-2 text-muted-foreground">or</span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={async () => {
+                        const success = await authenticateWithPasskey();
+                        if (success) navigate('/dashboard');
+                      }}
+                      disabled={passkeyLoading}
+                    >
+                      {passkeyLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Fingerprint className="w-4 h-4" />
+                      )}
+                      Sign in with Passkey
+                    </Button>
+                  </div>
+                )}
+
+                <div className="mt-4 text-center">
                   <Button variant="link" onClick={() => navigate('/')}>
                     ← Back to Calculator
                   </Button>
