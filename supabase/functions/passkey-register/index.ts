@@ -1,0 +1,181 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  generateRegistrationOptions,
+  verifyRegistrationResponse,
+} from "npm:@simplewebauthn/server@11";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Get authenticated user
+    const authHeader = req.headers.get("Authorization")!;
+    const token = authHeader.replace("Bearer ", "");
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseAdmin.auth.getUser(token);
+
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { action, origin: clientOrigin, ...body } = await req.json();
+
+    // Derive RP ID from the client's origin
+    const originUrl = new URL(clientOrigin);
+    const rpID = originUrl.hostname;
+    const rpName = "TaxAware";
+
+    if (action === "options") {
+      // Get existing passkeys for this user
+      const { data: existingKeys } = await supabaseAdmin
+        .from("user_passkeys")
+        .select("credential_id")
+        .eq("user_id", user.id);
+
+      const excludeCredentials = (existingKeys || []).map((key: any) => ({
+        id: key.credential_id,
+        type: "public-key" as const,
+      }));
+
+      const options = await generateRegistrationOptions({
+        rpName,
+        rpID,
+        userName: user.email || user.id,
+        userDisplayName:
+          user.user_metadata?.full_name || user.email || "User",
+        attestationType: "none",
+        excludeCredentials,
+        authenticatorSelection: {
+          residentKey: "preferred",
+          userVerification: "preferred",
+        },
+      });
+
+      // Store challenge
+      await supabaseAdmin.from("passkey_challenges").insert({
+        user_id: user.id,
+        challenge: options.challenge,
+        type: "registration",
+      });
+
+      return new Response(JSON.stringify(options), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "verify") {
+      // Get stored challenge
+      const { data: challengeRow } = await supabaseAdmin
+        .from("passkey_challenges")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("type", "registration")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!challengeRow) {
+        return new Response(
+          JSON.stringify({ error: "No challenge found. Please try again." }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      const verification = await verifyRegistrationResponse({
+        response: body.credential,
+        expectedChallenge: challengeRow.challenge,
+        expectedOrigin: clientOrigin,
+        expectedRPID: rpID,
+      });
+
+      if (!verification.verified || !verification.registrationInfo) {
+        return new Response(
+          JSON.stringify({ error: "Verification failed" }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      const { credential, credentialDeviceType, credentialBackedUp } =
+        verification.registrationInfo;
+
+      // Store the credential - encode binary data as base64url
+      const credentialIdBase64 = btoa(
+        String.fromCharCode(...new Uint8Array(credential.id))
+      )
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
+
+      const publicKeyBase64 = btoa(
+        String.fromCharCode(...new Uint8Array(credential.publicKey))
+      )
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
+
+      await supabaseAdmin.from("user_passkeys").insert({
+        user_id: user.id,
+        credential_id: credentialIdBase64,
+        public_key: publicKeyBase64,
+        counter: Number(credential.counter),
+        device_type: credentialDeviceType,
+        backed_up: credentialBackedUp,
+        transports: credential.transports || [],
+        name: body.name || "My Passkey",
+      });
+
+      // Clean up challenge
+      await supabaseAdmin
+        .from("passkey_challenges")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("type", "registration");
+
+      return new Response(
+        JSON.stringify({ verified: true }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    return new Response(JSON.stringify({ error: "Invalid action" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Passkey registration error:", error);
+    return new Response(
+      JSON.stringify({ error: error.message || "Internal server error" }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  }
+});
