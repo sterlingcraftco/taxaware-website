@@ -8,9 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Calculator, Mail, Lock, User, Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
+import { Calculator, Mail, Lock, User, Eye, EyeOff, ArrowLeft, Loader2, Fingerprint } from 'lucide-react';
 import { z } from 'zod';
 import { analytics } from '@/lib/analytics';
+import { usePasskey } from '@/hooks/usePasskey';
 
 const emailSchema = z.string().email('Please enter a valid email address');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
