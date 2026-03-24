@@ -159,11 +159,11 @@ export function TransactionFiltersComponent({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <CalendarComponent
-                    mode="single"
+                  <MultiStepCalendar
                     selected={filters.dateTo}
                     onSelect={(date) => updateFilter('dateTo', date)}
-                    initialFocus
+                    fromYear={2010}
+                    toYear={new Date().getFullYear()}
                   />
                 </PopoverContent>
               </Popover>
