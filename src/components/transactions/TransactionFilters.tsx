@@ -15,7 +15,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { MultiStepCalendar } from '@/components/ui/multi-step-calendar';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -131,11 +131,11 @@ export function TransactionFiltersComponent({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <CalendarComponent
-                    mode="single"
+                  <MultiStepCalendar
                     selected={filters.dateFrom}
                     onSelect={(date) => updateFilter('dateFrom', date)}
-                    initialFocus
+                    fromYear={2010}
+                    toYear={new Date().getFullYear()}
                   />
                 </PopoverContent>
               </Popover>
@@ -159,11 +159,11 @@ export function TransactionFiltersComponent({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <CalendarComponent
-                    mode="single"
+                  <MultiStepCalendar
                     selected={filters.dateTo}
                     onSelect={(date) => updateFilter('dateTo', date)}
-                    initialFocus
+                    fromYear={2010}
+                    toYear={new Date().getFullYear()}
                   />
                 </PopoverContent>
               </Popover>
