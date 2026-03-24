@@ -37,6 +37,7 @@ import DashboardCalculator from '@/components/DashboardCalculator';
 import TINLookup from '@/components/TINLookup';
 import { TransactionManager, RecurringTransactionManager } from '@/components/transactions';
 import { IncomeExpenseChart, CategoryBreakdownChart, MonthlyTrendChart } from '@/components/dashboard';
+import { PasskeyPrompt } from '@/components/PasskeyPrompt';
 import { useTransactions } from '@/hooks/useTransactions';
 import { generateTaxPDF } from '@/lib/pdfGenerator';
 import { CompleteTaxResult, migrateToCompleteTaxResult } from '@/lib/taxCalculations';
