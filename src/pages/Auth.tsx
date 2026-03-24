@@ -390,7 +390,36 @@ export default function Auth() {
                   </TabsContent>
                 </Tabs>
 
-                <div className="mt-6 text-center">
+                {passkeySupported && (
+                  <div className="mt-6">
+                    <div className="relative mb-4">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-card px-2 text-muted-foreground">or</span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={async () => {
+                        const success = await authenticateWithPasskey();
+                        if (success) navigate('/dashboard');
+                      }}
+                      disabled={passkeyLoading}
+                    >
+                      {passkeyLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Fingerprint className="w-4 h-4" />
+                      )}
+                      Sign in with Passkey
+                    </Button>
+                  </div>
+                )}
+
+                <div className="mt-4 text-center">
                   <Button variant="link" onClick={() => navigate('/')}>
                     ← Back to Calculator
                   </Button>

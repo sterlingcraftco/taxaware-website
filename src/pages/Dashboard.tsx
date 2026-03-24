@@ -348,13 +348,16 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-4 sm:py-8">
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">
-            Welcome back{user.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ''}!
-          </h2>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Track your tax calculations and manage your financial planning
-          </p>
+        <div className="mb-6 sm:mb-8 space-y-4">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">
+              Welcome back{user.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ''}!
+            </h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Track your tax calculations and manage your financial planning
+            </p>
+          </div>
+          <PasskeyPrompt />
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
