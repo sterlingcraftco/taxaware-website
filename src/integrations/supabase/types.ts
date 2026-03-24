@@ -73,6 +73,30 @@ export type Database = {
         }
         Relationships: []
       }
+      passkey_challenges: {
+        Row: {
+          challenge: string
+          created_at: string
+          id: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          challenge: string
+          created_at?: string
+          id?: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          challenge?: string
+          created_at?: string
+          id?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       payslips: {
         Row: {
           basic_salary: number
@@ -652,6 +676,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_passkeys: {
+        Row: {
+          backed_up: boolean | null
+          counter: number
+          created_at: string
+          credential_id: string
+          device_type: string | null
+          id: string
+          name: string | null
+          public_key: string
+          transports: string[] | null
+          user_id: string
+        }
+        Insert: {
+          backed_up?: boolean | null
+          counter?: number
+          created_at?: string
+          credential_id: string
+          device_type?: string | null
+          id?: string
+          name?: string | null
+          public_key: string
+          transports?: string[] | null
+          user_id: string
+        }
+        Update: {
+          backed_up?: boolean | null
+          counter?: number
+          created_at?: string
+          credential_id?: string
+          device_type?: string | null
+          id?: string
+          name?: string | null
+          public_key?: string
+          transports?: string[] | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
