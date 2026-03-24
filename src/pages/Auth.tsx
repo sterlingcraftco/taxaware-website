@@ -20,6 +20,7 @@ export default function Auth() {
   const navigate = useNavigate();
   const { user, signInWithEmail, signUpWithEmail } = useAuth();
   const { toast } = useToast();
+  const { isSupported: passkeySupported, loading: passkeyLoading, authenticateWithPasskey } = usePasskey();
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   
