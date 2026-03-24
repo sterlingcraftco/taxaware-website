@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { ArrowLeft, User, Mail, Lock, Save, Loader2, Eye, EyeOff, Calendar, MapPin, Hash, FileText } from 'lucide-react';
 import { z } from 'zod';
+import { PasskeyManager } from '@/components/PasskeyManager';
 
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
 
