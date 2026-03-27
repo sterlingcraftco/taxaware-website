@@ -25,3 +25,13 @@ dist-ssr
 
 # Supabase
 supabase/.temp
+
+# Security
+.env
+.env.*
+.env.local
+.env.production
+*.pem
+*.key
+credentials.json
+service-account*.json
