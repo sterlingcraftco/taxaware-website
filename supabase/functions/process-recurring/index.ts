@@ -1,9 +1,6 @@
+import { getCorsHeaders } from "../_shared/cors.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.89.0';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-};
 
 interface RecurringTransaction {
   id: string;
@@ -51,9 +48,10 @@ function calculateNextOccurrence(currentDate: string, frequency: string): string
 }
 
 Deno.serve(async (req) => {
+  const headers = getCorsHeaders(req.headers.get("origin"));
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: headers });
   }
 
   try {
@@ -96,7 +94,7 @@ Deno.serve(async (req) => {
         if (!user) {
           return new Response(
             JSON.stringify({ error: 'Unauthorized' }),
-            { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            { status: 401, headers: { ...headers, 'Content-Type': 'application/json' } }
           );
         }
         
@@ -212,7 +210,7 @@ Deno.serve(async (req) => {
       }),
       { 
         status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...headers, 'Content-Type': 'application/json' } 
       }
     );
 
@@ -226,7 +224,7 @@ Deno.serve(async (req) => {
       }),
       { 
         status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...headers, 'Content-Type': 'application/json' } 
       }
     );
   }

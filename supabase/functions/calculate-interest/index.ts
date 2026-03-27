@@ -1,17 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 const ANNUAL_INTEREST_RATE = 0.10; // 10% per annum
 const QUARTERLY_RATE = ANNUAL_INTEREST_RATE / 4; // 2.5% per quarter
 
 serve(async (req) => {
+  const headers = getCorsHeaders(req.headers.get("origin"));
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers });
   }
 
   try {
@@ -39,7 +38,7 @@ serve(async (req) => {
           processed: 0,
         }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...headers, "Content-Type": "application/json" },
           status: 200,
         }
       );
@@ -104,7 +103,7 @@ serve(async (req) => {
         errors: errors.length > 0 ? errors : undefined,
       }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...headers, "Content-Type": "application/json" },
         status: 200,
       }
     );
@@ -114,7 +113,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...headers, "Content-Type": "application/json" },
         status: 400,
       }
     );

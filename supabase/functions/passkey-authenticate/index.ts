@@ -5,15 +5,13 @@ import {
   verifyAuthenticationResponse,
 } from "npm:@simplewebauthn/server@11";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
+  const headers = getCorsHeaders(req.headers.get("origin"));
+
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers });
   }
 
   try {
@@ -43,7 +41,7 @@ serve(async (req) => {
       });
 
       return new Response(JSON.stringify(options), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: { ...headers, "Content-Type": "application/json" },
       });
     }
 
@@ -62,7 +60,7 @@ serve(async (req) => {
           JSON.stringify({ error: "No challenge found. Please try again." }),
           {
             status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: { ...headers, "Content-Type": "application/json" },
           }
         );
       }
@@ -82,7 +80,7 @@ serve(async (req) => {
           JSON.stringify({ error: "Passkey not found. Please sign in with email and password." }),
           {
             status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: { ...headers, "Content-Type": "application/json" },
           }
         );
       }
@@ -113,7 +111,7 @@ serve(async (req) => {
           JSON.stringify({ error: "Authentication failed" }),
           {
             status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: { ...headers, "Content-Type": "application/json" },
           }
         );
       }
@@ -142,7 +140,7 @@ serve(async (req) => {
           JSON.stringify({ error: "User profile not found" }),
           {
             status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: { ...headers, "Content-Type": "application/json" },
           }
         );
       }
@@ -160,7 +158,7 @@ serve(async (req) => {
           JSON.stringify({ error: "Failed to create session" }),
           {
             status: 500,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: { ...headers, "Content-Type": "application/json" },
           }
         );
       }
@@ -172,14 +170,14 @@ serve(async (req) => {
           email: profile.email,
         }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...headers, "Content-Type": "application/json" },
         }
       );
     }
 
     return new Response(JSON.stringify({ error: "Invalid action" }), {
       status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...headers, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Passkey authentication error:", error);
@@ -187,7 +185,7 @@ serve(async (req) => {
       JSON.stringify({ error: error.message || "Internal server error" }),
       {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...headers, "Content-Type": "application/json" },
       }
     );
   }

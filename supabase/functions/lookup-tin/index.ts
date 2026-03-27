@@ -1,9 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 interface TINLookupRequest {
   nin: string;
@@ -13,9 +10,11 @@ interface TINLookupRequest {
 }
 
 serve(async (req) => {
+  const headers = getCorsHeaders(req.headers.get("origin"));
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers });
   }
 
   try {
@@ -25,7 +24,7 @@ serve(async (req) => {
     if (!nin || !firstName || !lastName || !dateOfBirth) {
       return new Response(
         JSON.stringify({ error: 'All fields are required: nin, firstName, lastName, dateOfBirth' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -34,7 +33,7 @@ serve(async (req) => {
       console.error('NIMC_API_KEY not configured');
       return new Response(
         JSON.stringify({ error: 'API configuration error' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -81,20 +80,20 @@ serve(async (req) => {
       console.error('NIMC API error:', data);
       return new Response(
         JSON.stringify({ error: data.message || 'Failed to retrieve TIN', details: data }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: response.status, headers: { ...headers, 'Content-Type': 'application/json' } }
       );
     }
 
     return new Response(
       JSON.stringify(data),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...headers, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Error in lookup-tin function:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
       JSON.stringify({ error: 'Internal server error', message: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
     );
   }
 });
