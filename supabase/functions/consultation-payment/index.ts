@@ -9,7 +9,7 @@ const CONSULTATION_FEE = 100000; // ₦1,000 in kobo
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
