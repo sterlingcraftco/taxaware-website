@@ -129,30 +129,31 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed, 
   const fetchYTDTotals = async (): Promise<YTDTotals | undefined> => {
     if (!user || !includeYTD) return undefined;
     try {
-      const { data: slips } = await supabase
+      // Fetch all saved payslips for the year, excluding the current one to avoid double-counting
+      let query = supabase
         .from('payslips')
         .select('gross_pay, total_deductions, net_pay')
         .eq('tax_year', data.taxYear)
         .eq('source', 'generated');
 
-      if (!slips || slips.length === 0) {
-        // Include current payslip only
-        return {
-          grossPay: grossPay,
-          totalDeductions: totalDeductions,
-          netPay: netPay,
-          monthsCovered: 1,
-        };
+      // If editing a saved payslip, exclude it from the query
+      if (editId) {
+        query = query.neq('id', editId);
+      } else {
+        // If creating new, exclude by matching month/year to avoid duplicates
+        query = query.neq('pay_period_month', data.payPeriodMonth);
       }
 
-      // Sum saved payslips + current
+      const { data: slips } = await query;
+
+      // Start with current payslip values
       const ytd: YTDTotals = {
         grossPay: grossPay,
         totalDeductions: totalDeductions,
         netPay: netPay,
-        monthsCovered: slips.length + 1,
+        monthsCovered: 1 + (slips?.length || 0),
       };
-      slips.forEach(s => {
+      slips?.forEach(s => {
         ytd.grossPay += Number(s.gross_pay);
         ytd.totalDeductions += Number(s.total_deductions);
         ytd.netPay += Number(s.net_pay);
