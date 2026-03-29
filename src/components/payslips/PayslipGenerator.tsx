@@ -137,12 +137,11 @@ export default function PayslipGenerator({ onSaved, cloneData, onCloneConsumed, 
         .eq('source', 'generated');
 
       // If editing a saved payslip, exclude it from the query
-      if (editingPayslip) {
-        query = query.neq('id', editingPayslip.id);
+      if (editId) {
+        query = query.neq('id', editId);
       } else {
         // If creating new, exclude by matching month/year to avoid duplicates
-        query = query.not('pay_period_month', 'eq', data.payPeriodMonth)
-          .not('pay_period_year', 'eq', data.payPeriodYear);
+        query = query.neq('pay_period_month', data.payPeriodMonth);
       }
 
       const { data: slips } = await query;
