@@ -21,19 +21,36 @@ serve(async (req) => {
     );
 
     // Get authenticated user
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    console.log("Auth header present:", !!authHeader);
+    
+    if (!authHeader) {
+      console.error("Missing Authorization header");
+      return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
+        status: 401,
+        headers: { ...headers, "Content-Type": "application/json" },
+      });
+    }
+
     const token = authHeader.replace("Bearer ", "");
+    console.log("Token length:", token.length);
+    
     const {
       data: { user },
       error: userError,
     } = await supabaseAdmin.auth.getUser(token);
 
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      console.error("Auth error:", userError?.message || "User not found");
+      return new Response(JSON.stringify({ 
+        error: "Unauthorized", 
+        details: userError?.message 
+      }), {
         status: 401,
         headers: { ...headers, "Content-Type": "application/json" },
       });
     }
+    console.log("Authenticated user:", user.id);
 
     const { action, origin: clientOrigin, ...body } = await req.json();
 
