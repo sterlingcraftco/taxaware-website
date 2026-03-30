@@ -597,6 +597,15 @@ export function TransactionManager() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Bank Statement Import */}
+      {importEnabled && (
+        <BankStatementImport
+          open={importDialogOpen}
+          onOpenChange={setImportDialogOpen}
+          onImportComplete={refresh}
+        />
+      )}
     </>
   );
 }
