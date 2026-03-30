@@ -22,8 +22,14 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
   const [open, setOpen] = useState(false);
   const [calculatorType, setCalculatorType] = useState<CalculatorType>("choice");
   const [useTransactionData, setUseTransactionData] = useState(false);
+  const [selectedTaxYear, setSelectedTaxYear] = useState(new Date().getFullYear());
   const canUseComplete = useCanUseCompleteCalculator();
-  const { data: transactionData, hasData: hasTransactionData } = useTransactionTaxData();
+  const { data: transactionData, hasData: hasTransactionData } = useTransactionTaxData(selectedTaxYear);
+
+  const taxYearOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 11 }, (_, i) => currentYear - i);
+  }, []);
   
 
   const handleOpenChange = (isOpen: boolean) => {
