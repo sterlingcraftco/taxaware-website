@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   generateAuthenticationOptions,
   verifyAuthenticationResponse,
-} from "npm:@simplewebauthn/server@11";
+} from "https://esm.sh/@simplewebauthn/server@11.0.0?target=deno";
 
 import { getCorsHeaders } from "../_shared/cors.ts";
 
