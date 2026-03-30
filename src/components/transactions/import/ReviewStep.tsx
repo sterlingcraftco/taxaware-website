@@ -287,7 +287,7 @@ export function ReviewStep({
                           <SelectValue placeholder="Select...">
                             {cat ? (
                               <span className="flex items-center gap-1.5">
-                                {cat.icon && <CategoryIcon iconName={cat.icon} className="w-3 h-3" />}
+                                {cat.icon && <CategoryIcon name={cat.icon} className="w-3 h-3" />}
                                 <span className="truncate">{cat.name}</span>
                               </span>
                             ) : (
