@@ -45,6 +45,7 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
     setOpen(false);
     setCalculatorType("choice");
     setUseTransactionData(false);
+    setSelectedTaxYear(new Date().getFullYear());
   };
 
   const handleSelectComplete = (prefill: boolean) => {
