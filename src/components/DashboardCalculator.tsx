@@ -37,6 +37,7 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
     if (!isOpen) {
       setCalculatorType("choice");
       setUseTransactionData(false);
+      setSelectedTaxYear(new Date().getFullYear());
     }
   };
 
