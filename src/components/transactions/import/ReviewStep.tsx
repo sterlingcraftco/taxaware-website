@@ -300,7 +300,7 @@ export function ReviewStep({
                           {relevantCats.map((c) => (
                             <SelectItem key={c.id} value={c.id}>
                               <span className="flex items-center gap-1.5">
-                                {c.icon && <CategoryIcon iconName={c.icon} className="w-3.5 h-3.5" />}
+                                {c.icon && <CategoryIcon name={c.icon} className="w-3.5 h-3.5" />}
                                 {c.name}
                               </span>
                             </SelectItem>
