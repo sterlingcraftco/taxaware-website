@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Wallet, TrendingUp, TrendingDown, Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { Plus, Wallet, TrendingUp, TrendingDown, Download, FileSpreadsheet, FileText, FileUp } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,6 +27,8 @@ import { DocumentUpload } from './DocumentUpload';
 import { TransactionFiltersComponent, TransactionFilters } from './TransactionFilters';
 import { exportTransactionsToCSV, exportTransactionsToPDF } from '@/lib/transactionExport';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+import { BankStatementImport } from './import/BankStatementImport';
 import {
   Pagination,
   PaginationContent,
@@ -74,6 +76,8 @@ export function TransactionManager() {
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
   const [selectedTransactionForDocs, setSelectedTransactionForDocs] = useState<Transaction | null>(null);
   const [documentCounts, setDocumentCounts] = useState<Record<string, number>>({});
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const { isEnabled: importEnabled } = useFeatureFlag('bank_statement_import');
 
   // Apply filters to transactions
   const filteredTransactions = useMemo(() => {
@@ -442,6 +446,12 @@ export function TransactionManager() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              {importEnabled && (
+                <Button variant="outline" onClick={() => setImportDialogOpen(true)} className="gap-2">
+                  <FileUp className="w-4 h-4" />
+                  <span className="hidden sm:inline">Import</span>
+                </Button>
+              )}
               <Button onClick={handleAdd} className="gap-2">
                 <Plus className="w-4 h-4" />
                 Add Transaction
@@ -589,6 +599,15 @@ export function TransactionManager() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Bank Statement Import */}
+      {importEnabled && (
+        <BankStatementImport
+          open={importDialogOpen}
+          onOpenChange={setImportDialogOpen}
+          onImportComplete={refresh}
+        />
+      )}
     </>
   );
 }
