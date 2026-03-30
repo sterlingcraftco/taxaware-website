@@ -125,7 +125,7 @@ export const autoCalculateDeductions = (data: PayslipData): Partial<PayslipData>
     remainingIncome -= taxableInBand;
   }
 
-  const monthlyPaye = Math.round(annualTax / 12);
+  const monthlyPaye = round2(annualTax / 12);
 
   return {
     pensionEmployee,
