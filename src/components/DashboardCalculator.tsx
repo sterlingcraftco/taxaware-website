@@ -81,7 +81,7 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
               <Alert className="border-primary/30 bg-primary/5">
                 <Database className="h-4 w-4 text-primary" />
                 <AlertDescription className="text-sm">
-                  <span className="font-medium">Transaction data available!</span> You can auto-populate the calculator with your {transactionData.taxYear} logged income and deductions.
+                  <span className="font-medium">Transaction data available!</span> You can auto-populate the calculator with your {selectedTaxYear} logged income and deductions.
                 </AlertDescription>
               </Alert>
             )}
