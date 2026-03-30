@@ -76,6 +76,8 @@ export function TransactionManager() {
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
   const [selectedTransactionForDocs, setSelectedTransactionForDocs] = useState<Transaction | null>(null);
   const [documentCounts, setDocumentCounts] = useState<Record<string, number>>({});
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const { isEnabled: importEnabled } = useFeatureFlag('bank_statement_import');
 
   // Apply filters to transactions
   const filteredTransactions = useMemo(() => {
