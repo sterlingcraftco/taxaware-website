@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calculator, Plus, Smartphone, Monitor, Zap, Sparkles, Database } from "lucide-react";
+import { Calculator, Plus, Smartphone, Monitor, Zap, Sparkles, Database, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCanUseCompleteCalculator } from "@/hooks/useDeviceType";
 import { useTransactionTaxData } from "@/hooks/useTransactionTaxData";
 
@@ -21,8 +22,14 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
   const [open, setOpen] = useState(false);
   const [calculatorType, setCalculatorType] = useState<CalculatorType>("choice");
   const [useTransactionData, setUseTransactionData] = useState(false);
+  const [selectedTaxYear, setSelectedTaxYear] = useState(new Date().getFullYear());
   const canUseComplete = useCanUseCompleteCalculator();
-  const { data: transactionData, hasData: hasTransactionData } = useTransactionTaxData();
+  const { data: transactionData, hasData: hasTransactionData } = useTransactionTaxData(selectedTaxYear);
+
+  const taxYearOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 11 }, (_, i) => currentYear - i);
+  }, []);
   
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -30,6 +37,7 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
     if (!isOpen) {
       setCalculatorType("choice");
       setUseTransactionData(false);
+      setSelectedTaxYear(new Date().getFullYear());
     }
   };
 
@@ -37,6 +45,7 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
     setOpen(false);
     setCalculatorType("choice");
     setUseTransactionData(false);
+    setSelectedTaxYear(new Date().getFullYear());
   };
 
   const handleSelectComplete = (prefill: boolean) => {
@@ -72,7 +81,7 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
               <Alert className="border-primary/30 bg-primary/5">
                 <Database className="h-4 w-4 text-primary" />
                 <AlertDescription className="text-sm">
-                  <span className="font-medium">Transaction data available!</span> You can auto-populate the calculator with your {transactionData.taxYear} logged income and deductions.
+                  <span className="font-medium">Transaction data available!</span> You can auto-populate the calculator with your {selectedTaxYear} logged income and deductions.
                 </AlertDescription>
               </Alert>
             )}
@@ -124,6 +133,22 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
                 
                 {canUseComplete ? (
                   <div className="space-y-2">
+                    {/* Year selector for auto-fill */}
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <Select value={selectedTaxYear.toString()} onValueChange={(v) => setSelectedTaxYear(parseInt(v))}>
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {taxYearOptions.map(year => (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year} Tax Year {year < 2026 ? "(PITA)" : "(NTA 2025)"}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                     {hasTransactionData && (
                       <Button
                         onClick={() => handleSelectComplete(true)}
@@ -131,7 +156,7 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
                         size="sm"
                       >
                         <Database className="w-4 h-4" />
-                        Auto-fill from Transactions
+                        Auto-fill from {selectedTaxYear} Transactions
                       </Button>
                     )}
                     <Button
@@ -173,6 +198,7 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
             onCalculationSaved={onCalculationSaved}
             onClose={handleClose}
             initialTransactionData={useTransactionData ? transactionData : null}
+            defaultTaxYear={selectedTaxYear}
           />
         )}
       </DialogContent>
