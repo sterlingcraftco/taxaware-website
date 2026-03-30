@@ -444,6 +444,12 @@ export function TransactionManager() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              {importEnabled && (
+                <Button variant="outline" onClick={() => setImportDialogOpen(true)} className="gap-2">
+                  <FileUp className="w-4 h-4" />
+                  <span className="hidden sm:inline">Import</span>
+                </Button>
+              )}
               <Button onClick={handleAdd} className="gap-2">
                 <Plus className="w-4 h-4" />
                 Add Transaction
