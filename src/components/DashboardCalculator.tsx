@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calculator, Plus, Smartphone, Monitor, Zap, Sparkles, Database } from "lucide-react";
+import { Calculator, Plus, Smartphone, Monitor, Zap, Sparkles, Database, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCanUseCompleteCalculator } from "@/hooks/useDeviceType";
 import { useTransactionTaxData } from "@/hooks/useTransactionTaxData";
 
