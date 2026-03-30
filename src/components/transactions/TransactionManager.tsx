@@ -27,6 +27,8 @@ import { DocumentUpload } from './DocumentUpload';
 import { TransactionFiltersComponent, TransactionFilters } from './TransactionFilters';
 import { exportTransactionsToCSV, exportTransactionsToPDF } from '@/lib/transactionExport';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+import { BankStatementImport } from './import/BankStatementImport';
 import {
   Pagination,
   PaginationContent,
