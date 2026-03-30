@@ -209,17 +209,18 @@ export default function PayslipList({ refreshKey, onClone, onEdit }: PayslipList
     const { data: full } = await supabase.from('payslips').select('*').eq('id', slip.id).single();
     if (!full) return;
 
+    const r = (v: any) => Math.round(Number(v) * 100) / 100;
     onEdit(slip.id, {
       employeeName: full.employee_name, employeeId: full.employee_id || '', department: full.department || '',
       jobTitle: full.job_title || '', companyName: full.company_name, payPeriodMonth: full.pay_period_month,
-      payPeriodYear: full.pay_period_year, taxYear: full.tax_year, basicSalary: Number(full.basic_salary),
-      housingAllowance: Number(full.housing_allowance), transportAllowance: Number(full.transport_allowance),
-      utilityAllowance: Number(full.utility_allowance), mealAllowance: Number(full.meal_allowance),
-      leaveAllowance: Number(full.leave_allowance), overtime: Number(full.overtime),
-      otherAllowances: Number(full.other_allowances), loanRepayment: Number(full.loan_repayment),
-      otherDeductions: Number(full.other_deductions), payeTax: Number(full.paye_tax),
-      pensionEmployee: Number(full.pension_employee), pensionEmployer: Number(full.pension_employer),
-      nhf: Number(full.nhf), nhis: Number(full.nhis), notes: full.notes || '',
+      payPeriodYear: full.pay_period_year, taxYear: full.tax_year, basicSalary: r(full.basic_salary),
+      housingAllowance: r(full.housing_allowance), transportAllowance: r(full.transport_allowance),
+      utilityAllowance: r(full.utility_allowance), mealAllowance: r(full.meal_allowance),
+      leaveAllowance: r(full.leave_allowance), overtime: r(full.overtime),
+      otherAllowances: r(full.other_allowances), loanRepayment: r(full.loan_repayment),
+      otherDeductions: r(full.other_deductions), payeTax: r(full.paye_tax),
+      pensionEmployee: r(full.pension_employee), pensionEmployer: r(full.pension_employer),
+      nhf: r(full.nhf), nhis: r(full.nhis), notes: full.notes || '',
     });
     toast.success('Payslip loaded for editing');
     window.scrollTo({ top: 0, behavior: 'smooth' });
