@@ -198,6 +198,7 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
             onCalculationSaved={onCalculationSaved}
             onClose={handleClose}
             initialTransactionData={useTransactionData ? transactionData : null}
+            defaultTaxYear={selectedTaxYear}
           />
         )}
       </DialogContent>
