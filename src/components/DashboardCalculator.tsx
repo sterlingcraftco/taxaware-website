@@ -133,6 +133,22 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
                 
                 {canUseComplete ? (
                   <div className="space-y-2">
+                    {/* Year selector for auto-fill */}
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <Select value={selectedTaxYear.toString()} onValueChange={(v) => setSelectedTaxYear(parseInt(v))}>
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {taxYearOptions.map(year => (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year} Tax Year {year < 2026 ? "(PITA)" : "(NTA 2025)"}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                     {hasTransactionData && (
                       <Button
                         onClick={() => handleSelectComplete(true)}
@@ -140,7 +156,7 @@ export default function DashboardCalculator({ onCalculationSaved }: DashboardCal
                         size="sm"
                       >
                         <Database className="w-4 h-4" />
-                        Auto-fill from Transactions
+                        Auto-fill from {selectedTaxYear} Transactions
                       </Button>
                     )}
                     <Button
