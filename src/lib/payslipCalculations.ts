@@ -100,11 +100,12 @@ export const calculateNetPay = (data: PayslipData): number => {
  * - PAYE: Monthly PAYE based on annualized income through NTA 2025 bands
  */
 export const autoCalculateDeductions = (data: PayslipData): Partial<PayslipData> => {
+  const round2 = (n: number) => Math.round(n * 100) / 100;
   const pensionBase = data.basicSalary + data.housingAllowance + data.transportAllowance;
-  const pensionEmployee = Math.round(pensionBase * 0.08);
-  const pensionEmployer = Math.round(pensionBase * 0.10);
-  const nhf = Math.round(data.basicSalary * 0.025);
-  const nhis = Math.round(data.basicSalary * 0.05);
+  const pensionEmployee = round2(pensionBase * 0.08);
+  const pensionEmployer = round2(pensionBase * 0.10);
+  const nhf = round2(data.basicSalary * 0.025);
+  const nhis = round2(data.basicSalary * 0.05);
 
   // Calculate monthly PAYE
   const monthlyGross = calculateGrossPay({ ...data });
@@ -124,7 +125,7 @@ export const autoCalculateDeductions = (data: PayslipData): Partial<PayslipData>
     remainingIncome -= taxableInBand;
   }
 
-  const monthlyPaye = Math.round(annualTax / 12);
+  const monthlyPaye = round2(annualTax / 12);
 
   return {
     pensionEmployee,
