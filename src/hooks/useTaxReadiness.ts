@@ -86,9 +86,6 @@ export function useTaxReadiness(taxYear?: number) {
         setDeductionTotals({ pension, nhf, nhis });
       }
 
-      // Tax savings balance
-      const balance = savingsRes.data ? Number(savingsRes.data.balance) : 0;
-      setTaxSaved(balance);
     } catch (error) {
       console.error('Error fetching tax readiness data:', error);
     } finally {
