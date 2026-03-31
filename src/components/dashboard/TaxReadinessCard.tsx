@@ -88,7 +88,7 @@ export function TaxReadinessCard() {
                 <Info className="w-4 h-4 text-muted-foreground" />
               </TooltipTrigger>
               <TooltipContent side="left" className="max-w-[240px]">
-                <p className="text-xs">Based on your {data.taxYear} income transactions, payslip PAYE deductions, and tax savings balance.</p>
+                <p className="text-xs">Based on your {data.taxYear} income transactions and payslip PAYE deductions.</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
