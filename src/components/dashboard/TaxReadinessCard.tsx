@@ -116,35 +116,31 @@ export function TaxReadinessCard() {
                 <span className="font-semibold text-primary">{formatCurrency(data.payePaid)}</span>
               </div>
             )}
-            {data.taxSaved > 0 && (
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <PiggyBank className="w-3.5 h-3.5" /> Tax Saved
-                </span>
-                <span className="font-semibold text-primary">{formatCurrency(data.taxSaved)}</span>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Shortfall bar */}
-        {data.shortfall > 0 && (
+        {/* Remaining liability */}
+        {data.remainingLiability > 0 && (
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Shortfall</span>
-              <span className="font-medium text-destructive">{formatCurrency(data.shortfall)}</span>
+              <span className="text-muted-foreground flex items-center gap-1.5">
+                <Wallet className="w-3.5 h-3.5" /> You should save
+              </span>
+              <span className="font-medium text-destructive">{formatCurrency(data.remainingLiability)}</span>
             </div>
             <Progress value={data.readinessPercent} className="h-2" />
-            <p className="text-[11px] text-muted-foreground">
-              Save ~{formatCurrency(Math.ceil(data.shortfall / Math.max(1, 12 - new Date().getMonth())))}/mo to cover
-            </p>
+            {data.monthlyRecommendation > 0 && (
+              <p className="text-[11px] text-muted-foreground">
+                ~{formatCurrency(data.monthlyRecommendation)}/mo for the rest of the year
+              </p>
+            )}
           </div>
         )}
 
-        {data.readinessPercent >= 100 && data.totalCovered > data.estimatedLiability && (
+        {data.readinessPercent >= 100 && data.payePaid >= data.estimatedLiability && (
           <div className="rounded-md bg-primary/10 px-3 py-2 text-xs text-primary flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 flex-shrink-0" />
-            You've covered your estimated tax — potential overpayment of {formatCurrency(data.totalCovered - data.estimatedLiability)}
+            Your PAYE covers your estimated tax — potential overpayment of {formatCurrency(data.payePaid - data.estimatedLiability)}
           </div>
         )}
       </CardContent>
