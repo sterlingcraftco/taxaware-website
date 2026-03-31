@@ -5,14 +5,13 @@ import { calculateCompleteTax, calculateSimpleTax } from '@/lib/taxCalculations'
 export interface TaxReadinessData {
   estimatedLiability: number;
   payePaid: number;
-  taxSaved: number;
-  totalCovered: number;
-  shortfall: number;
+  remainingLiability: number;
   readinessPercent: number;
   grossIncome: number;
   taxYear: number;
   loading: boolean;
   hasData: boolean;
+  monthlyRecommendation: number;
 }
 
 export function useTaxReadiness(taxYear?: number) {
@@ -20,7 +19,6 @@ export function useTaxReadiness(taxYear?: number) {
   const [incomeTotal, setIncomeTotal] = useState(0);
   const [deductionTotals, setDeductionTotals] = useState({ pension: 0, nhf: 0, nhis: 0 });
   const [payePaid, setPayePaid] = useState(0);
-  const [taxSaved, setTaxSaved] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -29,7 +27,7 @@ export function useTaxReadiness(taxYear?: number) {
       if (!userData.user) return;
 
       // Fetch all data in parallel
-      const [transactionsRes, categoriesRes, payslipsRes, savingsRes] = await Promise.all([
+      const [transactionsRes, categoriesRes, payslipsRes] = await Promise.all([
         supabase
           .from('transactions')
           .select('amount, type, category_id, transaction_date, tax_year')
@@ -41,11 +39,6 @@ export function useTaxReadiness(taxYear?: number) {
           .from('payslips')
           .select('paye_tax, pension_employee, nhf, nhis, tax_year')
           .eq('tax_year', currentYear),
-        supabase
-          .from('tax_savings_accounts')
-          .select('balance')
-          .eq('user_id', userData.user.id)
-          .single(),
       ]);
 
       // Process income transactions for the year
@@ -93,9 +86,6 @@ export function useTaxReadiness(taxYear?: number) {
         setDeductionTotals({ pension, nhf, nhis });
       }
 
-      // Tax savings balance
-      const balance = savingsRes.data ? Number(savingsRes.data.balance) : 0;
-      setTaxSaved(balance);
     } catch (error) {
       console.error('Error fetching tax readiness data:', error);
     } finally {
@@ -120,25 +110,27 @@ export function useTaxReadiness(taxYear?: number) {
         );
 
     const estimatedLiability = taxResult.total;
-    const totalCovered = payePaid + taxSaved;
-    const shortfall = Math.max(0, estimatedLiability - totalCovered);
+    const remainingLiability = Math.max(0, estimatedLiability - payePaid);
     const readinessPercent = estimatedLiability > 0
-      ? Math.min(100, Math.round((totalCovered / estimatedLiability) * 100))
+      ? Math.min(100, Math.round((payePaid / estimatedLiability) * 100))
       : incomeTotal > 0 ? 100 : 0;
+
+    // Calculate monthly recommendation for remaining months in the year
+    const monthsLeft = Math.max(1, 12 - new Date().getMonth());
+    const monthlyRecommendation = remainingLiability > 0 ? Math.ceil(remainingLiability / monthsLeft) : 0;
 
     return {
       estimatedLiability,
       payePaid,
-      taxSaved,
-      totalCovered,
-      shortfall,
+      remainingLiability,
       readinessPercent,
       grossIncome: incomeTotal,
       taxYear: currentYear,
       loading,
       hasData: incomeTotal > 0 || payePaid > 0,
+      monthlyRecommendation,
     };
-  }, [incomeTotal, deductionTotals, payePaid, taxSaved, currentYear, loading]);
+  }, [incomeTotal, deductionTotals, payePaid, currentYear, loading]);
 
   return readiness;
 }
