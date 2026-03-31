@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { TaxReadinessCard } from '@/components/dashboard/TaxReadinessCard';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -575,6 +576,9 @@ export default function Dashboard() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Tax Readiness Card */}
+              <TaxReadinessCard />
 
               {/* TIN Lookup Card */}
               <TINLookup />
