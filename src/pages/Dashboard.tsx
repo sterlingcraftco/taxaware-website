@@ -577,6 +577,9 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
+              {/* Tax Readiness Card */}
+              <TaxReadinessCard />
+
               {/* TIN Lookup Card */}
               <TINLookup />
 
