@@ -27,7 +27,7 @@ export function useTaxReadiness(taxYear?: number) {
       if (!userData.user) return;
 
       // Fetch all data in parallel
-      const [transactionsRes, categoriesRes, payslipsRes, savingsRes] = await Promise.all([
+      const [transactionsRes, categoriesRes, payslipsRes] = await Promise.all([
         supabase
           .from('transactions')
           .select('amount, type, category_id, transaction_date, tax_year')
@@ -39,11 +39,6 @@ export function useTaxReadiness(taxYear?: number) {
           .from('payslips')
           .select('paye_tax, pension_employee, nhf, nhis, tax_year')
           .eq('tax_year', currentYear),
-        supabase
-          .from('tax_savings_accounts')
-          .select('balance')
-          .eq('user_id', userData.user.id)
-          .single(),
       ]);
 
       // Process income transactions for the year
