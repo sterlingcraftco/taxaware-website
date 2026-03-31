@@ -5,14 +5,13 @@ import { calculateCompleteTax, calculateSimpleTax } from '@/lib/taxCalculations'
 export interface TaxReadinessData {
   estimatedLiability: number;
   payePaid: number;
-  taxSaved: number;
-  totalCovered: number;
-  shortfall: number;
+  remainingLiability: number;
   readinessPercent: number;
   grossIncome: number;
   taxYear: number;
   loading: boolean;
   hasData: boolean;
+  monthlyRecommendation: number;
 }
 
 export function useTaxReadiness(taxYear?: number) {
