@@ -110,25 +110,27 @@ export function useTaxReadiness(taxYear?: number) {
         );
 
     const estimatedLiability = taxResult.total;
-    const totalCovered = payePaid + taxSaved;
-    const shortfall = Math.max(0, estimatedLiability - totalCovered);
+    const remainingLiability = Math.max(0, estimatedLiability - payePaid);
     const readinessPercent = estimatedLiability > 0
-      ? Math.min(100, Math.round((totalCovered / estimatedLiability) * 100))
+      ? Math.min(100, Math.round((payePaid / estimatedLiability) * 100))
       : incomeTotal > 0 ? 100 : 0;
+
+    // Calculate monthly recommendation for remaining months in the year
+    const monthsLeft = Math.max(1, 12 - new Date().getMonth());
+    const monthlyRecommendation = remainingLiability > 0 ? Math.ceil(remainingLiability / monthsLeft) : 0;
 
     return {
       estimatedLiability,
       payePaid,
-      taxSaved,
-      totalCovered,
-      shortfall,
+      remainingLiability,
       readinessPercent,
       grossIncome: incomeTotal,
       taxYear: currentYear,
       loading,
       hasData: incomeTotal > 0 || payePaid > 0,
+      monthlyRecommendation,
     };
-  }, [incomeTotal, deductionTotals, payePaid, taxSaved, currentYear, loading]);
+  }, [incomeTotal, deductionTotals, payePaid, currentYear, loading]);
 
   return readiness;
 }
