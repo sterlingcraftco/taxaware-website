@@ -1,7 +1,7 @@
 import { useTaxReadiness } from '@/hooks/useTaxReadiness';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ShieldCheck, AlertTriangle, TrendingUp, PiggyBank, Briefcase, Info } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, TrendingUp, Briefcase, Info, Wallet } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const formatCurrency = (amount: number) =>
