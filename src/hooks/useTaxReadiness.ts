@@ -53,7 +53,15 @@ export function useTaxReadiness(taxYear?: number) {
         return yr === currentYear;
       });
       const totalIncome = yearIncome.reduce((sum, t) => sum + Number(t.amount), 0);
+      
+      // Calculate employment income from payslips
+      const payslips = payslipsRes.data || [];
+      const empIncome = payslips.reduce((s, p) => s + Number(p.gross_pay), 0);
+      const nonEmpIncome = Math.max(0, totalIncome - empIncome);
+      
       setIncomeTotal(totalIncome);
+      setEmploymentIncome(empIncome);
+      setNonEmploymentIncome(nonEmpIncome);
 
       // Process expense transactions for deductions
       const expenseRes = await supabase
