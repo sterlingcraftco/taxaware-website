@@ -20,6 +20,8 @@ export interface TaxReadinessData {
 export function useTaxReadiness(taxYear?: number) {
   const currentYear = taxYear || new Date().getFullYear();
   const [incomeTotal, setIncomeTotal] = useState(0);
+  const [employmentIncome, setEmploymentIncome] = useState(0);
+  const [nonEmploymentIncome, setNonEmploymentIncome] = useState(0);
   const [deductionTotals, setDeductionTotals] = useState({ pension: 0, nhf: 0, nhis: 0 });
   const [payePaid, setPayePaid] = useState(0);
   const [loading, setLoading] = useState(true);
