@@ -1,7 +1,7 @@
-import { useTaxReadiness } from '@/hooks/useTaxReadiness';
+import { useTaxReadiness, TaxReadinessData } from '@/hooks/useTaxReadiness';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ShieldCheck, AlertTriangle, TrendingUp, Briefcase, Info, Wallet } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const formatCurrency = (amount: number) =>
@@ -16,7 +16,7 @@ function ReadinessRing({ percent }: { percent: number }) {
   const color = percent >= 80 ? 'hsl(var(--primary))' : percent >= 40 ? 'hsl(var(--accent))' : 'hsl(var(--destructive))';
 
   return (
-    <div className="relative w-24 h-24 flex-shrink-0">
+    <div className="relative w-20 h-20 flex-shrink-0">
       <svg className="w-full h-full -rotate-90" viewBox="0 0 96 96">
         <circle cx="48" cy="48" r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth={stroke} />
         <circle
@@ -37,6 +37,87 @@ function ReadinessRing({ percent }: { percent: number }) {
   );
 }
 
+function ScenarioSummary({ data }: { data: TaxReadinessData }) {
+  const { scenario, grossIncome, employmentIncome, nonEmploymentIncome, estimatedLiability, payePaid, remainingLiability, monthlyRecommendation, taxYear } = data;
+
+  if (scenario === 'employment_only') {
+    if (payePaid >= estimatedLiability && estimatedLiability > 0) {
+      const overpayment = payePaid - estimatedLiability;
+      return (
+        <div className="space-y-2 text-sm">
+          <p>You've earned <strong>{formatCurrency(employmentIncome)}</strong> through employment in {taxYear}.</p>
+          <p>Estimated tax: <strong>{formatCurrency(estimatedLiability)}</strong>. Your payslips show you've paid <strong>{formatCurrency(payePaid)}</strong> in PAYE already.</p>
+          {overpayment > 0 && (
+            <p className="text-primary">You may have overpaid by {formatCurrency(overpayment)} — consider checking with your employer.</p>
+          )}
+          {overpayment === 0 && (
+            <p className="text-primary">Your PAYE fully covers your estimated tax. You're on track!</p>
+          )}
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-2 text-sm">
+        <p>You've earned <strong>{formatCurrency(employmentIncome)}</strong> through employment in {taxYear}.</p>
+        <p>Estimated tax: <strong>{formatCurrency(estimatedLiability)}</strong>. Your payslips show <strong>{formatCurrency(payePaid)}</strong> paid in PAYE so far.</p>
+        {remainingLiability > 0 && (
+          <p className="text-destructive">
+            You still have <strong>{formatCurrency(remainingLiability)}</strong> in estimated tax not yet covered by PAYE.
+            {monthlyRecommendation > 0 && <> That's about <strong>{formatCurrency(monthlyRecommendation)}/mo</strong> for the rest of the year.</>}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (scenario === 'self_employed') {
+    return (
+      <div className="space-y-2 text-sm">
+        <p>You've earned <strong>{formatCurrency(grossIncome)}</strong> this tax year ({taxYear}).</p>
+        <p>Estimated tax: <strong>{formatCurrency(estimatedLiability)}</strong>.</p>
+        {estimatedLiability > 0 ? (
+          <p className="text-destructive">
+            You should have <strong>{formatCurrency(estimatedLiability)}</strong> saved for tax.
+            {monthlyRecommendation > 0 && <> That's about <strong>{formatCurrency(monthlyRecommendation)}/mo</strong> for the rest of the year.</>}
+          </p>
+        ) : (
+          <p className="text-primary">Your income falls within the tax-free threshold. No tax liability estimated.</p>
+        )}
+      </div>
+    );
+  }
+
+  if (scenario === 'mixed') {
+    const nonEmpTaxShare = estimatedLiability > 0
+      ? Math.max(0, remainingLiability)
+      : 0;
+
+    return (
+      <div className="space-y-2 text-sm">
+        <p>You've earned <strong>{formatCurrency(grossIncome)}</strong> total in {taxYear}.</p>
+        <p>
+          <strong>{formatCurrency(employmentIncome)}</strong> from employment
+          {nonEmploymentIncome > 0 && <> and <strong>{formatCurrency(nonEmploymentIncome)}</strong> from other sources</>}.
+        </p>
+        <p>Estimated tax: <strong>{formatCurrency(estimatedLiability)}</strong>.</p>
+        {payePaid > 0 && (
+          <p>Your payslips show <strong>{formatCurrency(payePaid)}</strong> already paid in PAYE.</p>
+        )}
+        {nonEmpTaxShare > 0 ? (
+          <p className="text-destructive">
+            Outside employment, you should save <strong>{formatCurrency(nonEmpTaxShare)}</strong> for tax.
+            {monthlyRecommendation > 0 && <> (~{formatCurrency(monthlyRecommendation)}/mo remaining)</>}
+          </p>
+        ) : (
+          <p className="text-primary">Your PAYE covers your estimated tax — you're on track!</p>
+        )}
+      </div>
+    );
+  }
+
+  return null;
+}
+
 export function TaxReadinessCard() {
   const data = useTaxReadiness();
 
@@ -50,7 +131,7 @@ export function TaxReadinessCard() {
     );
   }
 
-  if (!data.hasData) {
+  if (!data.hasData || data.scenario === 'no_data') {
     return (
       <Card>
         <CardHeader className="pb-3">
@@ -71,7 +152,7 @@ export function TaxReadinessCard() {
   }
 
   const statusColor = data.readinessPercent >= 80 ? 'text-primary' : data.readinessPercent >= 40 ? 'text-accent-foreground' : 'text-destructive';
-  const statusLabel = data.readinessPercent >= 80 ? 'On Track' : data.readinessPercent >= 40 ? 'Partial' : 'Underprepared';
+  const statusLabel = data.readinessPercent >= 80 ? 'On Track' : data.readinessPercent >= 40 ? 'Partial' : 'Needs Attention';
   const StatusIcon = data.readinessPercent >= 80 ? ShieldCheck : AlertTriangle;
 
   return (
@@ -98,50 +179,15 @@ export function TaxReadinessCard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Ring + Key Figure */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-start gap-4">
           <ReadinessRing percent={data.readinessPercent} />
-          <div className="flex-1 space-y-1.5 min-w-0">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground flex items-center gap-1.5">
-                <TrendingUp className="w-3.5 h-3.5" /> Estimated Tax
-              </span>
-              <span className="font-semibold">{formatCurrency(data.estimatedLiability)}</span>
-            </div>
-            {data.payePaid > 0 && (
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <Briefcase className="w-3.5 h-3.5" /> PAYE Paid
-                </span>
-                <span className="font-semibold text-primary">{formatCurrency(data.payePaid)}</span>
-              </div>
-            )}
+          <div className="flex-1 min-w-0">
+            <ScenarioSummary data={data} />
           </div>
         </div>
 
-        {/* Remaining liability */}
         {data.remainingLiability > 0 && (
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground flex items-center gap-1.5">
-                <Wallet className="w-3.5 h-3.5" /> You should save
-              </span>
-              <span className="font-medium text-destructive">{formatCurrency(data.remainingLiability)}</span>
-            </div>
-            <Progress value={data.readinessPercent} className="h-2" />
-            {data.monthlyRecommendation > 0 && (
-              <p className="text-[11px] text-muted-foreground">
-                ~{formatCurrency(data.monthlyRecommendation)}/mo for the rest of the year
-              </p>
-            )}
-          </div>
-        )}
-
-        {data.readinessPercent >= 100 && data.payePaid >= data.estimatedLiability && (
-          <div className="rounded-md bg-primary/10 px-3 py-2 text-xs text-primary flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 flex-shrink-0" />
-            Your PAYE covers your estimated tax — potential overpayment of {formatCurrency(data.payePaid - data.estimatedLiability)}
-          </div>
+          <Progress value={data.readinessPercent} className="h-2" />
         )}
       </CardContent>
     </Card>
