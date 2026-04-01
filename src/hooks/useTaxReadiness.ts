@@ -8,10 +8,13 @@ export interface TaxReadinessData {
   remainingLiability: number;
   readinessPercent: number;
   grossIncome: number;
+  employmentIncome: number;
+  nonEmploymentIncome: number;
   taxYear: number;
   loading: boolean;
   hasData: boolean;
   monthlyRecommendation: number;
+  scenario: 'no_data' | 'employment_only' | 'self_employed' | 'mixed';
 }
 
 export function useTaxReadiness(taxYear?: number) {
