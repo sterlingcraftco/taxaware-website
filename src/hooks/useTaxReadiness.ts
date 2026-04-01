@@ -31,7 +31,6 @@ export function useTaxReadiness(taxYear?: number) {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
 
-      // Fetch all data in parallel
       const [transactionsRes, categoriesRes, payslipsRes] = await Promise.all([
         supabase
           .from('transactions')
@@ -42,7 +41,7 @@ export function useTaxReadiness(taxYear?: number) {
           .select('id, name, type'),
         supabase
           .from('payslips')
-          .select('paye_tax, pension_employee, nhf, nhis, tax_year')
+          .select('paye_tax, pension_employee, nhf, nhis, tax_year, gross_pay')
           .eq('tax_year', currentYear),
       ]);
 
@@ -53,12 +52,12 @@ export function useTaxReadiness(taxYear?: number) {
         return yr === currentYear;
       });
       const totalIncome = yearIncome.reduce((sum, t) => sum + Number(t.amount), 0);
-      
-      // Calculate employment income from payslips
+
+      // Employment income from payslips
       const payslips = payslipsRes.data || [];
       const empIncome = payslips.reduce((s, p) => s + Number(p.gross_pay), 0);
       const nonEmpIncome = Math.max(0, totalIncome - empIncome);
-      
+
       setIncomeTotal(totalIncome);
       setEmploymentIncome(empIncome);
       setNonEmploymentIncome(nonEmpIncome);
@@ -68,7 +67,7 @@ export function useTaxReadiness(taxYear?: number) {
         .from('transactions')
         .select('amount, category_id, transaction_date, tax_year')
         .eq('type', 'expense');
-      
+
       const expenseTransactions = (expenseRes.data || []).filter(t => {
         const yr = t.tax_year || new Date(t.transaction_date).getFullYear();
         return yr === currentYear;
@@ -87,7 +86,6 @@ export function useTaxReadiness(taxYear?: number) {
       setDeductionTotals({ pension, nhf, nhis });
 
       // Sum PAYE from payslips
-      const payslips = payslipsRes.data || [];
       const totalPaye = payslips.reduce((sum, p) => sum + Number(p.paye_tax), 0);
       setPayePaid(totalPaye);
 
@@ -111,7 +109,6 @@ export function useTaxReadiness(taxYear?: number) {
   }, [fetchData]);
 
   const readiness = useMemo((): TaxReadinessData => {
-    // Use the appropriate tax law based on year
     const taxResult = currentYear < 2026
       ? calculateSimpleTax(incomeTotal, deductionTotals.pension, deductionTotals.nhf, 0)
       : calculateCompleteTax(
@@ -128,9 +125,16 @@ export function useTaxReadiness(taxYear?: number) {
       ? Math.min(100, Math.round((payePaid / estimatedLiability) * 100))
       : incomeTotal > 0 ? 100 : 0;
 
-    // Calculate monthly recommendation for remaining months in the year
     const monthsLeft = Math.max(1, 12 - new Date().getMonth());
     const monthlyRecommendation = remainingLiability > 0 ? Math.ceil(remainingLiability / monthsLeft) : 0;
+
+    // Determine scenario
+    const hasEmployment = employmentIncome > 0;
+    const hasOtherIncome = nonEmploymentIncome > 0;
+    let scenario: TaxReadinessData['scenario'] = 'no_data';
+    if (hasEmployment && hasOtherIncome) scenario = 'mixed';
+    else if (hasEmployment) scenario = 'employment_only';
+    else if (hasOtherIncome || incomeTotal > 0) scenario = 'self_employed';
 
     return {
       estimatedLiability,
@@ -138,12 +142,15 @@ export function useTaxReadiness(taxYear?: number) {
       remainingLiability,
       readinessPercent,
       grossIncome: incomeTotal,
+      employmentIncome,
+      nonEmploymentIncome,
       taxYear: currentYear,
       loading,
       hasData: incomeTotal > 0 || payePaid > 0,
       monthlyRecommendation,
+      scenario,
     };
-  }, [incomeTotal, deductionTotals, payePaid, currentYear, loading]);
+  }, [incomeTotal, employmentIncome, nonEmploymentIncome, deductionTotals, payePaid, currentYear, loading]);
 
   return readiness;
 }
