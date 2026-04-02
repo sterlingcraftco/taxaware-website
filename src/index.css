@@ -342,3 +342,96 @@
   height: 5rem;
   object-fit: cover;
 }
+
+/* Ghost file cards (PDF downloads etc.) */
+.prose .kg-file-card {
+  display: flex;
+  align-items: center;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  padding: 1em 1.25em;
+  margin: 1.5em 0;
+  gap: 1em;
+  background: hsl(var(--muted));
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s;
+}
+
+.prose .kg-file-card:hover {
+  border-color: hsl(var(--primary));
+}
+
+.prose .kg-file-card-container {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+}
+
+.prose .kg-file-card-contents {
+  flex: 1;
+  min-width: 0;
+}
+
+.prose .kg-file-card-title {
+  font-weight: 600;
+  font-size: 1em;
+  color: hsl(var(--foreground));
+  margin: 0;
+}
+
+.prose .kg-file-card-caption {
+  font-size: 0.875em;
+  color: hsl(var(--muted-foreground));
+  margin-top: 0.125em;
+}
+
+.prose .kg-file-card-metadata {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 0.75em;
+  color: hsl(var(--muted-foreground));
+  margin-top: 0.25em;
+}
+
+.prose .kg-file-card-filename {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prose .kg-file-card-filesize {
+  white-space: nowrap;
+}
+
+.prose .kg-file-card-icon {
+  flex-shrink: 0;
+  width: 1.5em;
+  height: 1.5em;
+  color: hsl(var(--primary));
+}
+
+.prose .kg-file-card-icon svg {
+  width: 1.5em;
+  height: 1.5em;
+}
+
+/* Hide the massive raw SVG that Ghost injects */
+.prose .kg-file-card svg.kg-file-card-icon {
+  width: 1.5em;
+  height: 1.5em;
+  flex-shrink: 0;
+}
+
+.prose a.kg-file-card-container {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+}
