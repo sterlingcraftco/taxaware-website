@@ -1,6 +1,6 @@
 import { useTaxReadiness, TaxReadinessData } from '@/hooks/useTaxReadiness';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ShieldCheck, AlertTriangle, Info, Briefcase, TrendingUp, Wallet } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Info, Briefcase, TrendingUp, Wallet, Building2, CalendarClock, RotateCcw } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const formatCurrency = (amount: number) =>
