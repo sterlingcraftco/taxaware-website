@@ -15,6 +15,10 @@ export interface TaxReadinessData {
   hasData: boolean;
   monthlyRecommendation: number;
   scenario: 'no_data' | 'employment_only' | 'self_employed' | 'mixed';
+  isPartialYear: boolean;
+  monthsOfData: number;
+  employerCount: number;
+  potentialRefund: number;
 }
 
 export function useTaxReadiness(taxYear?: number) {
@@ -24,6 +28,8 @@ export function useTaxReadiness(taxYear?: number) {
   const [nonEmploymentIncome, setNonEmploymentIncome] = useState(0);
   const [deductionTotals, setDeductionTotals] = useState({ pension: 0, nhf: 0, nhis: 0 });
   const [payePaid, setPayePaid] = useState(0);
+  const [employerCount, setEmployerCount] = useState(0);
+  const [monthsOfData, setMonthsOfData] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -41,7 +47,7 @@ export function useTaxReadiness(taxYear?: number) {
           .select('id, name, type'),
         supabase
           .from('payslips')
-          .select('paye_tax, pension_employee, nhf, nhis, tax_year, gross_pay')
+          .select('paye_tax, pension_employee, nhf, nhis, tax_year, gross_pay, company_name, pay_period_month')
           .eq('tax_year', currentYear),
       ]);
 
@@ -57,6 +63,20 @@ export function useTaxReadiness(taxYear?: number) {
       const payslips = payslipsRes.data || [];
       const empIncome = payslips.reduce((s, p) => s + Number(p.gross_pay), 0);
       const nonEmpIncome = Math.max(0, totalIncome - empIncome);
+
+      // Detect multiple employers
+      const uniqueEmployers = new Set(payslips.map(p => p.company_name));
+      setEmployerCount(uniqueEmployers.size);
+
+      // Detect months of data coverage
+      const allMonths = new Set<number>();
+      yearIncome.forEach(t => {
+        allMonths.add(new Date(t.transaction_date).getMonth());
+      });
+      payslips.forEach(p => {
+        allMonths.add(p.pay_period_month - 1); // 1-indexed to 0-indexed
+      });
+      setMonthsOfData(allMonths.size);
 
       setIncomeTotal(totalIncome);
       setEmploymentIncome(empIncome);
@@ -136,6 +156,14 @@ export function useTaxReadiness(taxYear?: number) {
     else if (hasEmployment) scenario = 'employment_only';
     else if (hasOtherIncome || incomeTotal > 0) scenario = 'self_employed';
 
+    // Detect partial year and potential refund
+    const currentMonth = new Date().getMonth() + 1; // 1-12
+    const isCurrentYear = currentYear === new Date().getFullYear();
+    const isPartialYear = isCurrentYear && monthsOfData > 0 && monthsOfData < Math.min(currentMonth, 12);
+    const potentialRefund = (estimatedLiability === 0 && payePaid > 0)
+      ? payePaid
+      : Math.max(0, payePaid - estimatedLiability);
+
     return {
       estimatedLiability,
       payePaid,
@@ -149,8 +177,12 @@ export function useTaxReadiness(taxYear?: number) {
       hasData: incomeTotal > 0 || payePaid > 0,
       monthlyRecommendation,
       scenario,
+      isPartialYear,
+      monthsOfData,
+      employerCount,
+      potentialRefund,
     };
-  }, [incomeTotal, employmentIncome, nonEmploymentIncome, deductionTotals, payePaid, currentYear, loading]);
+  }, [incomeTotal, employmentIncome, nonEmploymentIncome, deductionTotals, payePaid, currentYear, loading, monthsOfData, employerCount]);
 
   return readiness;
 }
