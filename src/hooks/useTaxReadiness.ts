@@ -47,7 +47,7 @@ export function useTaxReadiness(taxYear?: number) {
           .select('id, name, type'),
         supabase
           .from('payslips')
-          .select('paye_tax, pension_employee, nhf, nhis, tax_year, gross_pay')
+          .select('paye_tax, pension_employee, nhf, nhis, tax_year, gross_pay, company_name, pay_period_month')
           .eq('tax_year', currentYear),
       ]);
 
