@@ -15,6 +15,10 @@ export interface TaxReadinessData {
   hasData: boolean;
   monthlyRecommendation: number;
   scenario: 'no_data' | 'employment_only' | 'self_employed' | 'mixed';
+  isPartialYear: boolean;
+  monthsOfData: number;
+  employerCount: number;
+  potentialRefund: number;
 }
 
 export function useTaxReadiness(taxYear?: number) {
