@@ -64,6 +64,20 @@ export function useTaxReadiness(taxYear?: number) {
       const empIncome = payslips.reduce((s, p) => s + Number(p.gross_pay), 0);
       const nonEmpIncome = Math.max(0, totalIncome - empIncome);
 
+      // Detect multiple employers
+      const uniqueEmployers = new Set(payslips.map(p => p.company_name));
+      setEmployerCount(uniqueEmployers.size);
+
+      // Detect months of data coverage
+      const allMonths = new Set<number>();
+      yearIncome.forEach(t => {
+        allMonths.add(new Date(t.transaction_date).getMonth());
+      });
+      payslips.forEach(p => {
+        allMonths.add(p.pay_period_month - 1); // 1-indexed to 0-indexed
+      });
+      setMonthsOfData(allMonths.size);
+
       setIncomeTotal(totalIncome);
       setEmploymentIncome(empIncome);
       setNonEmploymentIncome(nonEmpIncome);
