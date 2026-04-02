@@ -190,6 +190,56 @@ function ScenarioSummary({ data }: { data: TaxReadinessData }) {
   return null;
 }
 
+function EdgeCaseNotices({ data }: { data: TaxReadinessData }) {
+  const notices: { icon: React.ReactNode; text: string; variant: 'info' | 'warning' | 'success' }[] = [];
+
+  // Partial year data
+  if (data.isPartialYear) {
+    notices.push({
+      icon: <CalendarClock className="w-4 h-4 flex-shrink-0" />,
+      text: `Estimates based on ${data.monthsOfData} month${data.monthsOfData !== 1 ? 's' : ''} of data. Full-year liability may differ.`,
+      variant: 'info',
+    });
+  }
+
+  // Multiple employers
+  if (data.employerCount > 1) {
+    notices.push({
+      icon: <Building2 className="w-4 h-4 flex-shrink-0" />,
+      text: `Payslips from ${data.employerCount} employers detected. Combined income may push you into a higher tax band.`,
+      variant: 'warning',
+    });
+  }
+
+  // Potential refund: PAYE paid but zero or lower liability
+  if (data.potentialRefund > 0 && data.payePaid > 0 && data.estimatedLiability < data.payePaid) {
+    notices.push({
+      icon: <RotateCcw className="w-4 h-4 flex-shrink-0" />,
+      text: `You may have overpaid by ${formatCurrency(data.potentialRefund)}. After reliefs, your actual liability is ${data.estimatedLiability > 0 ? formatCurrency(data.estimatedLiability) : '₦0'}. You could be entitled to a refund.`,
+      variant: 'success',
+    });
+  }
+
+  if (notices.length === 0) return null;
+
+  const variantStyles = {
+    info: 'bg-muted text-muted-foreground',
+    warning: 'bg-accent/10 text-accent-foreground',
+    success: 'bg-primary/10 text-primary',
+  };
+
+  return (
+    <div className="space-y-2">
+      {notices.map((notice, i) => (
+        <div key={i} className={`flex items-start gap-2 rounded-lg px-3 py-2 text-xs ${variantStyles[notice.variant]}`}>
+          {notice.icon}
+          <span>{notice.text}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function TaxReadinessCard() {
   const data = useTaxReadiness();
 
