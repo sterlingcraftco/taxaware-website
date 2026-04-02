@@ -1,7 +1,6 @@
 import { useTaxReadiness, TaxReadinessData } from '@/hooks/useTaxReadiness';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { ShieldCheck, AlertTriangle, Info } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Info, Briefcase, TrendingUp, Wallet } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const formatCurrency = (amount: number) =>
@@ -33,6 +32,79 @@ function ReadinessRing({ percent }: { percent: number }) {
         <span className="text-lg font-bold">{percent}%</span>
         <span className="text-[10px] text-muted-foreground">Ready</span>
       </div>
+    </div>
+  );
+}
+
+function TaxBreakdownBar({ data }: { data: TaxReadinessData }) {
+  const { estimatedLiability, payePaid, remainingLiability } = data;
+  if (estimatedLiability <= 0) return null;
+
+  const payePercent = Math.min(100, (payePaid / estimatedLiability) * 100);
+  const remainPercent = 100 - payePercent;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>Tax Coverage</span>
+        <span>{formatCurrency(estimatedLiability)} estimated</span>
+      </div>
+      <div className="h-3 rounded-full bg-muted overflow-hidden flex">
+        {payePercent > 0 && (
+          <div
+            className="h-full bg-primary rounded-l-full transition-all duration-700 ease-out"
+            style={{ width: `${payePercent}%` }}
+          />
+        )}
+        {remainPercent > 0 && payePercent > 0 && (
+          <div
+            className="h-full bg-destructive/30 transition-all duration-700 ease-out"
+            style={{ width: `${remainPercent}%` }}
+          />
+        )}
+      </div>
+      <div className="flex items-center gap-4 text-xs">
+        {payePaid > 0 && (
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+            <span className="text-muted-foreground">PAYE Paid: {formatCurrency(payePaid)}</span>
+          </div>
+        )}
+        {remainingLiability > 0 && (
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-destructive/30" />
+            <span className="text-muted-foreground">Remaining: {formatCurrency(remainingLiability)}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function IncomeBreakdownPills({ data }: { data: TaxReadinessData }) {
+  const { employmentIncome, nonEmploymentIncome, grossIncome } = data;
+  if (grossIncome <= 0) return null;
+
+  const pills: { icon: React.ReactNode; label: string; amount: number }[] = [];
+
+  if (employmentIncome > 0) {
+    pills.push({ icon: <Briefcase className="w-3 h-3" />, label: 'Employment', amount: employmentIncome });
+  }
+  if (nonEmploymentIncome > 0) {
+    pills.push({ icon: <TrendingUp className="w-3 h-3" />, label: 'Other', amount: nonEmploymentIncome });
+  }
+
+  if (pills.length <= 1) return null;
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {pills.map((pill) => (
+        <div key={pill.label} className="flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs">
+          {pill.icon}
+          <span className="text-muted-foreground">{pill.label}:</span>
+          <span className="font-medium">{formatCurrency(pill.amount)}</span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -186,8 +258,19 @@ export function TaxReadinessCard() {
           </div>
         </div>
 
-        {data.remainingLiability > 0 && (
-          <Progress value={data.readinessPercent} className="h-2" />
+        <IncomeBreakdownPills data={data} />
+
+        {data.estimatedLiability > 0 && (
+          <TaxBreakdownBar data={data} />
+        )}
+
+        {data.monthlyRecommendation > 0 && (
+          <div className="flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-xs">
+            <Wallet className="w-4 h-4 text-destructive flex-shrink-0" />
+            <span>
+              Save <strong className="text-destructive">{formatCurrency(data.monthlyRecommendation)}/mo</strong> to cover your remaining tax by year-end
+            </span>
+          </div>
         )}
       </CardContent>
     </Card>
