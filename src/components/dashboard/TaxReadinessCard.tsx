@@ -272,6 +272,9 @@ export function TaxReadinessCard() {
             </span>
           </div>
         )}
+
+        {/* Edge case notices */}
+        <EdgeCaseNotices data={data} />
       </CardContent>
     </Card>
   );
