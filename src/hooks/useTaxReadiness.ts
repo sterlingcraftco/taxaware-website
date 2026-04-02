@@ -156,6 +156,14 @@ export function useTaxReadiness(taxYear?: number) {
     else if (hasEmployment) scenario = 'employment_only';
     else if (hasOtherIncome || incomeTotal > 0) scenario = 'self_employed';
 
+    // Detect partial year and potential refund
+    const currentMonth = new Date().getMonth() + 1; // 1-12
+    const isCurrentYear = currentYear === new Date().getFullYear();
+    const isPartialYear = isCurrentYear && monthsOfData > 0 && monthsOfData < Math.min(currentMonth, 12);
+    const potentialRefund = (estimatedLiability === 0 && payePaid > 0)
+      ? payePaid
+      : Math.max(0, payePaid - estimatedLiability);
+
     return {
       estimatedLiability,
       payePaid,
@@ -169,8 +177,12 @@ export function useTaxReadiness(taxYear?: number) {
       hasData: incomeTotal > 0 || payePaid > 0,
       monthlyRecommendation,
       scenario,
+      isPartialYear,
+      monthsOfData,
+      employerCount,
+      potentialRefund,
     };
-  }, [incomeTotal, employmentIncome, nonEmploymentIncome, deductionTotals, payePaid, currentYear, loading]);
+  }, [incomeTotal, employmentIncome, nonEmploymentIncome, deductionTotals, payePaid, currentYear, loading, monthsOfData, employerCount]);
 
   return readiness;
 }
